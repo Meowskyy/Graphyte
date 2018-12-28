@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.1)
 project(Graphyte)
 
 # Source files
-set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
-set(SOURCES "${SRC_DIR}/Graphyte.cpp")
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(SOURCES "${SRC_DIR}/main.cpp")
 
 # Executable definition and properties
 add_executable(${PROJECT_NAME} ${SOURCES})
