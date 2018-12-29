@@ -5,7 +5,6 @@ project(Graphyte)
 # Source files
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps")
-# set(SOURCES ${SRC_DIR}/main.cpp)
 
 set(SOURCES 
 	"${SRC_DIR}/main.cpp"
@@ -28,6 +27,10 @@ set(SOURCES
 	"${SRC_DIR}/Rendering/Material/Texture.cpp"
 
 	"${SRC_DIR}/Resources/ResourceManager.cpp"
+	
+	"${SRC_DIR}/Text/TextRenderer.cpp"
+
+	"${SRC_DIR}/Time/Timers.cpp"
 )
 
 set(HEADERS
@@ -56,6 +59,11 @@ set(HEADERS
 	"${SRC_DIR}/Rendering/Material/Texture.h"
 
 	"${SRC_DIR}/Scripting/BehaviourScript.h"
+
+	"${SRC_DIR}/Text/Font.h"
+	"${SRC_DIR}/Text/TextRenderer.h"
+
+	"${SRC_DIR}/Time/Timers.h"
 )
 
 # Executable definition and properties
@@ -101,25 +109,28 @@ set(GLM_DIR "${LIB_DIR}/glm")
 set(GLM_TEST_ENABLE OFF CACHE INTERNAL "Build unit tests")
 add_subdirectory("${GLM_DIR}")
 target_link_libraries(${PROJECT_NAME} "glm" "${GLM_LIBRARIES}")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/glm")
 
 # IMGUI
 set(IMGUI_DIR "${LIB_DIR}/imgui")
 target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
+# You can probably include files easier some other way that i dont know of
+file(GLOB IMGUI_SOURCES
+    "${IMGUI_DIR}/*.h"
+    "${IMGUI_DIR}/*.cpp"
+)
+	
+target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
+
 # SFML
+set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_DIR "${LIB_DIR}/SFML")
 add_subdirectory("${SFML_DIR}")
 target_link_libraries(${PROJECT_NAME} "sfml-audio" "${SFML_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${SFML_DIR}/include")
-set(SFML_STATIC_LIBRARIES TRUE)
-set(SFML_USE_STATIC_STD_LIBS ON CACHE INTERNAL "TRUE to statically link to the standard libraries, FALSE to use them as DLLs")
-
-# set(SFML_STATIC_LIBRARIES TRUE)
-# set(SFML_DIR "${LIB_DIR}/SFML")
-# add_subdirectory("${SFML_DIR}")
-# find_package(SFML 2.5 COMPONENTS graphics audio REQUIRED)
-# target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-audio)
+set(SFML_USE_STATIC_STD_LIBS FALSE CACHE INTERNAL "TRUE to statically link to the standard libraries, FALSE to use them as DLLs")
 
 # ASSIMP
 set(ASSIMP_DIR "${LIB_DIR}/assimp")
@@ -129,4 +140,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${ASSIMP_DIR}/include")
 
 # STB
 set(STB_DIR "${LIB_DIR}/stb")
-target_include_directories(${PROJECT_NAME} PRIVATE "${STB_DIR}")
+target_include_directories(${PROJECT_NAME} PUBLIC "${STB_DIR}")

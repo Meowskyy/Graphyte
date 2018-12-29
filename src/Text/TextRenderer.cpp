@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+/*
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
@@ -136,3 +137,4 @@ void TextRenderer::RenderText(Shader &newShader, std::string text, GLfloat x, GL
 
 }
 
+*/

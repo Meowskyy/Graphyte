@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include <stb_image.h>
+#include "stb_image.h"
 
 std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName, std::string directory);
 unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = true);
@@ -181,6 +181,7 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
+	
 	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 	if (data)
 	{
@@ -206,8 +207,9 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 	else
 	{
 		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
+		//stbi_image_free(data);
 	}
+	
 
 	return textureID;
 }
