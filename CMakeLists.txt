@@ -4,6 +4,8 @@ project(Graphyte)
 
 # Source files
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps")
+target_include_directories(test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR/src})
 set(SOURCES "${SRC_DIR}/main.cpp")
 
 # Executable definition and properties
@@ -13,7 +15,16 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
-target_include_directories${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
+
+if (OPENGL_FOUND)
+    message("opengl found")
+    message("include dir: ${OPENGL_INCLUDE_DIR}")
+    message("link libraries: ${OPENGL_gl_LIBRARY}")
+else (OPENGL_FOUND)
+    message("opengl not found")
+endif()
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} "glfw" ${OPENGL_gl_LIBRARY})
 
 # GLFW
