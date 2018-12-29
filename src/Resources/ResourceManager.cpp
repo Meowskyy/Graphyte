@@ -27,7 +27,7 @@ Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *fSha
 	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 
 	// TODO: Move these somewhere more appropriate
-	glm::mat4 projection = glm::perspective(glm::radians(65.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(70.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 	Shaders[name].SetMatrix4("projection", projection, GL_TRUE);
 
 	return Shaders[name];
@@ -61,6 +61,8 @@ void ResourceManager::Clear()
 
 Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
 {
+	//std::cout << vShaderFile << std::endl;
+
 	// 1. Retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
 	std::string fragmentCode;

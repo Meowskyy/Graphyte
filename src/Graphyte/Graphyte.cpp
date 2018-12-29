@@ -1,6 +1,7 @@
 #include "Graphyte.h"
 
 #include <iostream>
+#include <filesystem>
 
 // STANDARD
 #include "Cursor\Cursor.h"
@@ -44,6 +45,8 @@ enum test_enum {
 	Item2,
 	Item3
 };
+
+std::string getexepath();
 
 void Graphyte::run() 
 {
@@ -358,8 +361,27 @@ void Graphyte::cleanup()
 // TODO: Moving these somewhere more appropriate
 void Graphyte::loadShaders() 
 {
-	ResourceManager::LoadShader("Shaders/Standard.vert", "Shaders/Standard.frag", nullptr, "Standard");
+	std::string vert = getexepath() + "/Shaders/Standard.vert";
+	std::string frag = getexepath() + "/Shaders/Standard.frag";
+	ResourceManager::LoadShader(vert.c_str(), frag.c_str(), nullptr, "Standard");
 }
+
+#define WINDOWS  /* uncomment this line to use it for windows.*/ 
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
+std::string getexepath() {
+	char buff[FILENAME_MAX];
+	GetCurrentDir(buff, FILENAME_MAX);
+	std::string current_working_dir(buff);
+	return current_working_dir;
+}
+
 
 // TODO: Moving these somewhere more appropriate
 void Graphyte::loadModels()
