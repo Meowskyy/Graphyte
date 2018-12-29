@@ -2,7 +2,7 @@
 #include "glad\glad.h"
 #include "GLFW\glfw3.h"
 
-#include "Scene.h"
+#include "Objects\Scene.h"
 
 #include <vector>
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "BehaviourScript.h"
+#include "Scripting\BehaviourScript.h"
 
 #include "SFML\Audio.hpp"
 
-#include "Input.h"
+#include "Input\Input.h"
 
 // IMPORTANT: SFML Supports a maximum of 256 sounds playing simultaneously
 class AudioEmitter : public BehaviourScript {

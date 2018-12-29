@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include "Screen.h"
+#include "Rendering\Screen.h"
 
 // Redirect callbacks to IMGUI
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
+#include "examples\imgui_impl_glfw.h"
 
 KeyStates Input::keys[1024];
 KeyStates Input::oldKeys[1024];

@@ -12,7 +12,7 @@
 #include <sstream>
 #include <fstream>
 
-#include "soil2\SOIL2.h"
+#include "stb_image.h"
 
 // TODO: Temporary
 #include "glm\gtc\matrix_transform.hpp"
@@ -112,11 +112,11 @@ Texture2D ResourceManager::loadTextureFromFile(const GLchar *file, GLboolean alp
 		texture.Image_Format = GL_RGBA;
 	}
 	// Load image
-	int width, height;
-	unsigned char* image = SOIL_load_image(file, &width, &height, 0, texture.Image_Format == GL_RGBA ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
+	int width, height, nrChannels;
+	unsigned char *data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
 	// Now generate texture
-	texture.Generate(width, height, image);
+	texture.Generate(width, height, data);
 	// And finally free image data
-	SOIL_free_image_data(image);
+	stbi_image_free(data);
 	return texture;
 }

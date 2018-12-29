@@ -1,10 +1,10 @@
 #include "Console.h"
 
-#include "ResourceManager.h"
-#include "TextRenderer.h"
+#include "Resources\ResourceManager.h"
+#include "Text\TextRenderer.h"
 
-#include "Input.h"
-#include "Screen.h"
+#include "Input\Input.h"
+#include "Rendering\Screen.h"
 
 std::string Console::inputText;
 

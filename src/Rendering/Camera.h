@@ -3,7 +3,7 @@
 #include <vector>
 
 class BehaviourScript;
-#include "BehaviourScript.h"
+#include "Scripting\BehaviourScript.h"
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
 class Camera : public BehaviourScript

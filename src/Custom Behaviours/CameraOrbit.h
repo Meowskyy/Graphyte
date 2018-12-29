@@ -1,9 +1,9 @@
 #pragma once
 
-#include "BehaviourScript.h"
-#include "Input.h"
-#include "Timers.h"
-#include "Cursor.h"
+#include "Scripting\BehaviourScript.h"
+#include "Input\Input.h"
+#include "Time\Timers.h"
+#include "Cursor\Cursor.h"
 
 class CameraOrbit : public BehaviourScript {
 public:

@@ -6,7 +6,7 @@
 
 #include "glm\glm.hpp"
 
-#include "Graphyte.h"
+#include "Graphyte\Graphyte.h"
 
 // KeyStates get set as follows > NotPressed > Pressed > Down > Released > Not Pressed
 enum KeyStates {

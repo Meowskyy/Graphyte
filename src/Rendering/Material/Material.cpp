@@ -1,6 +1,6 @@
 #include "Material.h"
 
-#include "ResourceManager.h"
+#include "Resources\ResourceManager.h"
 
 Material::Material()
 {

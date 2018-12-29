@@ -6,7 +6,7 @@
 
 #include <map>
 
-#include "Shader.h"
+#include "Rendering\Material\Shader.h"
 
 /// Holds all state information relevant to a character as loaded using FreeType
 struct Character {

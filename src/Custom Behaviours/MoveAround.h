@@ -1,9 +1,9 @@
 #pragma once
 
-#include "BehaviourScript.h"
+#include "Scripting\BehaviourScript.h"
 #include <math.h>
 
-#include "Timers.h"
+#include "Time\Timers.h"
 
 class MoveAround : public BehaviourScript {
 public:

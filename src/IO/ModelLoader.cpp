@@ -9,8 +9,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "Mesh.h"
-#include "MeshRenderer.h"
+#include "Rendering\Mesh.h"
+#include "Rendering\MeshRenderer.h"
 
 #include <string>
 #include <fstream>
@@ -19,7 +19,7 @@
 #include <map>
 #include <vector>
 
-#include "Graphyte.h"
+#include "Graphyte\Graphyte.h"
 
 void processNode(aiNode *node, const aiScene *scene);
 

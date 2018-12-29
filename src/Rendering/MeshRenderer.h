@@ -2,7 +2,7 @@
 
 #include "glm\glm.hpp"
 
-#include "BehaviourScript.h"
+#include "Scripting\BehaviourScript.h"
 
 //#include "Material.h"
 

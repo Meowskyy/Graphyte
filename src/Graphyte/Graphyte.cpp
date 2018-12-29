@@ -3,30 +3,32 @@
 #include <iostream>
 
 // STANDARD
-#include "Cursor.h"
-#include "Input.h"
-#include "Screen.h"
+#include "Cursor\Cursor.h"
+#include "Input\Input.h"
+#include "Rendering\Screen.h"
 
-#include "Camera.h"
+#include "Rendering\Camera.h"
 
-#include "TextRenderer.h"
-#include "ResourceManager.h"
-#include "MeshRenderer.h"
+#include "Text\TextRenderer.h"
+#include "Resources\ResourceManager.h"
 
-#include "ModelLoader.h"
+// Rendering
+#include "Rendering\MeshRenderer.h"
+
+#include "IO\ModelLoader.h"
 
 // SFML AUDIO
-#include "AudioListener.h"
-#include "AudioEmitter.h"
+#include "Audio\AudioListener.h"
+#include "Audio\AudioEmitter.h"
 
 // CUSTOM
-#include "MoveAround.h"
-#include "CameraOrbit.h"
+#include "Custom Behaviours\MoveAround.h"
+#include "Custom Behaviours\CameraOrbit.h"
 
 #include "imgui.h"
 
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "examples\imgui_impl_glfw.h"
+#include "examples\imgui_impl_opengl3.h"
 
 Scene Graphyte::currentScene;
 

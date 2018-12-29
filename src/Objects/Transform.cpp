@@ -1,7 +1,7 @@
 #include "Transform.h"
 
 #include "imgui.h"
-#include "Graphyte.h"
+#include "Graphyte\Graphyte.h"
 
 glm::vec3 Transform::getForwardVector()
 {

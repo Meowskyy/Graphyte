@@ -1,16 +1,16 @@
 #include "Scene.h"
 
-#include "CameraOrbit.h"
-#include "AudioListener.h"
+#include "Custom Behaviours\CameraOrbit.h"
+#include "Audio\AudioListener.h"
 
-#include "ModelLoader.h"
-#include "MeshRenderer.h"
+#include "IO\ModelLoader.h"
+#include "Rendering\MeshRenderer.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "Camera.h"
+#include "Rendering\Camera.h"
 
 // Camera
 Camera *Scene::mainCamera;

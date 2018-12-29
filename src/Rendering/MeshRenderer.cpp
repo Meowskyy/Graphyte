@@ -2,9 +2,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "ResourceManager.h"
-#include "Camera.h"
-#include "Graphyte.h"
+#include "Resources\ResourceManager.h"
+#include "Rendering\Camera.h"
+#include "Graphyte\Graphyte.h"
 
 #include <iostream>
 

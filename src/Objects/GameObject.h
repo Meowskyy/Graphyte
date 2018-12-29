@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "BehaviourScript.h"
+#include "Scripting\BehaviourScript.h"
 
 class GameObject {
 public:

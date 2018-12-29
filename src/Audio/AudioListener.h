@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BehaviourScript.h"
+#include "Scripting\BehaviourScript.h"
 
 //#include "SFML\Audio\Sound.hpp"
 #include "SFML\Audio\Listener.hpp"

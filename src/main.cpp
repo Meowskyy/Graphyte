@@ -1,4 +1,4 @@
-#include "Graphyte.h"
+#include "Graphyte\Graphyte.h"
 
 int main()
 {

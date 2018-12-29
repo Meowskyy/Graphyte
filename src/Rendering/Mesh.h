@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Shader.h"
+#include "Rendering\Material\Shader.h"
 
 #include <string>
 #include <vector>
