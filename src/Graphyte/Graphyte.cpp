@@ -122,10 +122,9 @@ void Graphyte::initWindow()
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 void Graphyte::mainLoop() 
 {
-	float previousdt;
-	float currentdt;
+	float previousdt = 0;
+	float currentdt = 0;
 
-	float t = 0.0f;
 	float dt = 0.01f; // 1/100 of a second
 	float currentTime = glfwGetTime();
 	float accumulator = 0.0f;
@@ -157,28 +156,35 @@ void Graphyte::mainLoop()
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		double newTime = glfwGetTime();
-		double frameTime = newTime - currentTime;
-		if (frameTime > 0.25)
-			frameTime = 0.25;
+		float newTime = glfwGetTime();
+		float frameTime = newTime - currentTime;
+		if (frameTime > 0.25f)
+			frameTime = 0.25f;
 		currentTime = newTime;
 
 		accumulator += frameTime;
 
-		while (accumulator >= dt)
+		int i = 0;
+		while (accumulator >= Time::fixedTimestep)
 		{
 			previousdt = currentdt;
-			currentdt = dt;
+			currentdt = Time::fixedTimestep;
 			// FIXEDUPDATE
-			t += dt;
-			accumulator -= dt;
+			std::cout << "FixedUpdate: " << i << std::endl;
+			accumulator -= Time::fixedTimestep;
+			
+			i++;
 		}
 
 		const float alpha = accumulator / dt;
 
 		// Blending current and passed time
-		Time::fixedDeltaTime = currentdt * alpha + previousdt * (1.0f - alpha);
+		Time::timeRemainder = currentdt * alpha + previousdt * (1.0f - alpha);
 
+		Time::deltaTime = frameTime;
+
+		std::cout << "Time Remainder: " << Time::timeRemainder << std::endl;
+		std::cout << "DT: " << Time::deltaTime << std::endl;
 		// Update with fixedDelta
 		// Update GameObjects
 		//currentScene.FixedUpdate();
