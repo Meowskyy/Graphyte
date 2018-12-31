@@ -2,6 +2,7 @@
 
 #include "BoundingBox.h"
 #include "Objects\GameObject.h"
+#include "ExtraRenderer.h"
 
 #include <vector>
 #include <queue>
@@ -24,7 +25,7 @@ public:
 	char activeChildren = 0; // Bitmask for checking which children are in use
 
 	std::vector<GameObject*> gameObjects;				// GameObjects that this tree contains
-	static std::queue<GameObject*> pendingGameObjects;	// GameObjects that will be added later
+	//static std::queue<GameObject*> pendingGameObjects;	// GameObjects that will be added later
 
 	UniformGrid() {}
 
@@ -36,6 +37,41 @@ public:
 
 	bool InsertGameObject(GameObject* gameObject)
 	{
+		// If its the root
+		// Double the gridsize and check again
+		if (isRoot()) {
+
+		}
+
+		// If the gameObject fits in this part
+		if (CanFitIntoBoundaries(gameObject)) {
+
+			/*
+			// Check if it fits in any childGrid
+			bool found = false;
+			//we will try to place the object into a child node. If we can't fit it in a child node, then we insert it into the current node object list.
+			for (int a = 0; a < 8; a++)
+			{
+				//is the object fully contained within a quadrant?
+				if (childOctantHalf[a]->Contains(gameObject->transform.boundingBox))
+				{
+					if (childGrid[a] != nullptr)
+					{
+						return childGrid[a]->InsertGameObject(gameObject);   //Add the item into that tree and let the child tree figure out what to do with it
+					}
+					else
+					{
+						childGrid[a] = CreateNode(childOctantHalf[a], gameObject);   //create a new tree node with the item
+						activeChildren |= (char)(1 << a);
+					}
+					found = true;
+				}
+			}
+			*/
+
+			return true;
+		}
+
 		if (gameObjects.size() == 0 && activeChildren == 0)
 		{
 			gameObjects.push_back(gameObject);
@@ -146,9 +182,11 @@ public:
 		glm::vec3 objMax = gameObject->transform.boundingBox.max + gameObject->transform.position;
 
 		if (boundaries->min.x < objMin.x &&
+			boundaries->min.y < objMin.y &&
 			boundaries->min.z < objMin.z &&
-
+			
 			boundaries->max.x > objMax.x &&
+			boundaries->max.y > objMax.y &&
 			boundaries->max.z > objMax.z
 		) 
 		{
@@ -158,10 +196,36 @@ public:
 
 		std::cout << gameObject->transform.name << " can not completely fit inside Grid" << std::endl;
 		return false;
+
+		/*
+		//we will try to place the object into a child node. If we can't fit it in a child node, then we insert it into the current node object list.
+		for (int a = 0; a < 8; a++)
+		{
+			//is the object fully contained within a quadrant?
+			if (childOctantHalf[a]->Contains(gameObject->transform.boundingBox))
+			{
+				if (childGrid[a] != nullptr)
+				{
+					return childGrid[a]->InsertGameObject(gameObject);   //Add the item into that tree and let the child tree figure out what to do with it
+				}
+				else
+				{
+					childGrid[a] = CreateNode(childOctantHalf[a], gameObject);   //create a new tree node with the item
+					activeChildren |= (char)(1 << a);
+				}
+				found = true;
+			}
+		}
+		*/ // Bitmasking guide
 	}
 
-	void SetupGrip(float size) {
-		float half = size / 2;
+	// TODO: What should the default size be?
+	void SetupGrip(int size = 256) {
+		int half = size / 2;
 		boundaries = new BoundingBox(glm::vec3(-half, -half, -half), glm::vec3(half, half, half));
+	}
+
+	void DrawGrid() {
+		ExtraRenderer::DrawAABB(*boundaries);
 	}
 };

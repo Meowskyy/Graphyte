@@ -15,7 +15,7 @@ public:
 
 	Scene(){
 		grid = UniformGrid();
-		grid.SetupGrip(256);
+		grid.SetupGrip(1);
 	}
 
 	// UPDATING BEHAVIOURSCRIPTS

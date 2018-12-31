@@ -23,15 +23,17 @@ void Scene::Update()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	grid.DrawGrid();
+
 	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
 	// Or is this actually doable?
-	Shader objShader = ResourceManager::GetShader("Standard").Use();
-	objShader.SetMatrix4("view", Camera::mainCamera->GetViewMatrix());
+	ResourceManager::GetShader("Standard").SetMatrix4("view", Camera::mainCamera->GetViewMatrix(), true);
 
 	// Looping through all the GameObjects
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
-		grid.CanFitIntoBoundaries(gameObjects[i]);
+		if (gameObjects[i]->hasCollision)
+			grid.CanFitIntoBoundaries(gameObjects[i]);
 
 		// Looping through all the behaviours
 		for (int behaviourCount = 0; behaviourCount < gameObjects[i]->behaviour.size(); behaviourCount++)
@@ -111,6 +113,7 @@ void Scene::AddCameraObject()
 	gameObjects[gameObjects.size() - 1]->AddBehaviour(new CameraOrbit(gameObjects[gameObjects.size() - 1]->transform));
 	gameObjects[gameObjects.size() - 1]->AddBehaviour(new Camera(gameObjects[gameObjects.size() - 1]->transform));
 	gameObjects[gameObjects.size() - 1]->AddBehaviour(new AudioListener(gameObjects[gameObjects.size() - 1]->transform));
+	gameObjects[gameObjects.size() - 1]->hasCollision = false;
 
 	Camera::mainCamera = (Camera*)(gameObjects[gameObjects.size() - 1]->behaviour.at(0));
 }

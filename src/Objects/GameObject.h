@@ -7,6 +7,7 @@
 class GameObject {
 public:
 	bool enabled = true;
+	bool hasCollision = true;
 
 	Transform transform = Transform();
 	std::vector<BehaviourScript*> behaviour;
