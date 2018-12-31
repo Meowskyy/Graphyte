@@ -36,9 +36,9 @@ void MeshRenderer::Update()
 	glm::mat4 model;
 
 	glm::mat4 scale = glm::scale(glm::mat4(1.0f), transform.scale); // SCALE
+	glm::mat4 trans = glm::translate(glm::mat4(1.0f), transform.position * 0.001f); // POSITION
 	glm::mat4 rot = glm::toMat4(transform.rotation); // ROTATION 
-	glm::mat4 trans = glm::translate(glm::mat4(1.0f), transform.position); // POSITION
-	model =  trans * rot * scale;
+	model =  scale * trans * rot;
 
 	// TODO: Use materials
 	/*
@@ -49,12 +49,11 @@ void MeshRenderer::Update()
 	materials[0].use();
 	*/
 
-	this->shader.SetMatrix4("model", model);
+	this->shader.SetMatrix4("model", model, true);
 
 	this->mesh.Render(this->shader);
 
-	//glBindVertexArray(VAO);
-	//glDrawArrays(GL_TRIANGLES, 0, 36);
+	transform.boundingBox = boundaries;
 }
 
 void MeshRenderer::processMesh(aiMesh *mesh, const aiScene *scene, std::string directory)
@@ -63,6 +62,10 @@ void MeshRenderer::processMesh(aiMesh *mesh, const aiScene *scene, std::string d
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
+
+	boundaries.min.x = boundaries.max.x = mesh->mVertices[0].x;
+	boundaries.min.y = boundaries.max.y = mesh->mVertices[0].y;
+	boundaries.min.z = boundaries.max.z = mesh->mVertices[0].z;
 
 	// Walk through each of the mesh's vertices
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -74,6 +77,14 @@ void MeshRenderer::processMesh(aiMesh *mesh, const aiScene *scene, std::string d
 		vector.y = mesh->mVertices[i].y;
 		vector.z = mesh->mVertices[i].z;
 		vertex.Position = vector;
+
+		if (mesh->mVertices[i].x < boundaries.min.x) boundaries.min.x = mesh->mVertices[i].x;
+		if (mesh->mVertices[i].x > boundaries.max.x) boundaries.max.x = mesh->mVertices[i].x;
+		if (mesh->mVertices[i].y < boundaries.min.y) boundaries.min.y = mesh->mVertices[i].y;
+		if (mesh->mVertices[i].y > boundaries.max.y) boundaries.max.y = mesh->mVertices[i].y;
+		if (mesh->mVertices[i].z < boundaries.min.z) boundaries.min.z = mesh->mVertices[i].z;
+		if (mesh->mVertices[i].z > boundaries.max.z) boundaries.max.z = mesh->mVertices[i].z;
+		
 		// normals
 		vector.x = mesh->mNormals[i].x;
 		vector.y = mesh->mNormals[i].y;

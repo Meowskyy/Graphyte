@@ -31,6 +31,8 @@ void Scene::Update()
 	// Looping through all the GameObjects
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
+		grid.CanFitIntoBoundaries(gameObjects[i]);
+
 		// Looping through all the behaviours
 		for (int behaviourCount = 0; behaviourCount < gameObjects[i]->behaviour.size(); behaviourCount++)
 		{

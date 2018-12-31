@@ -1,11 +1,12 @@
 #pragma once
 
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
 
-#include <string>
+#include "BoundingBox.h"
 
+#include <string>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -69,6 +70,8 @@ public:
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::quat rotation;
 	glm::vec3 scale = glm::vec3(1, 1, 1);
+
+	BoundingBox boundingBox;
 
 	Transform() {};
 

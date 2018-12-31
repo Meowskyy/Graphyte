@@ -12,17 +12,11 @@ public:
 	float speed = 0.01;
 
 	float x = 0;
-	float rotSpeed = 0.001;
+	float rotSpeed = 0.05f;
 	
 	void Update() {
-		transform.position.y = sin(i * speed) * amount;
-		//std::cout << transform.position.y << std::endl;
-
-#ifdef USE_GLM_QUATERNION
-		transform.rotation = glm::quat(glm::vec3(0, i * rotSpeed, 0));
-#else
-		//transform.rotation = Quaternion(glm::vec3(0, i * rotSpeed, 0));
-#endif
+		transform.position.y = sin(i * speed * Time::deltaTime) * amount;
+		transform.rotation = glm::quat(glm::vec3(0, i * rotSpeed * Time::deltaTime, 0));
 
 		i++;
 	}

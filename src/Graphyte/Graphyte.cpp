@@ -119,6 +119,7 @@ void Graphyte::initWindow()
 	setupCallbacks();
 }
 
+#include "UniformGrid.h"
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 void Graphyte::mainLoop() 
 {
@@ -185,6 +186,8 @@ void Graphyte::mainLoop()
 
 		std::cout << "Time Remainder: " << Time::timeRemainder << std::endl;
 		std::cout << "DT: " << Time::deltaTime << std::endl;
+
+		std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedTimestep << std::endl;
 		// Update with fixedDelta
 		// Update GameObjects
 		//currentScene.FixedUpdate();

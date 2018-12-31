@@ -4,12 +4,18 @@
 #include "Resources\ResourceManager.h"
 #include "Rendering\Camera.h"
 
+#include "UniformGrid.h"
+
 class Scene {
 public:
 	static std::vector<GameObject*> gameObjects;
 	static Camera* mainCamera;
 
+	UniformGrid grid = UniformGrid();
+
 	Scene(){
+		grid = UniformGrid();
+		grid.SetupGrip(256);
 	}
 
 	// UPDATING BEHAVIOURSCRIPTS

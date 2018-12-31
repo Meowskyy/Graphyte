@@ -19,6 +19,8 @@ private:
 public:
 	Mesh mesh;
 
+	BoundingBox boundaries;
+
 	//std::vector<Material> materials;
 
 	// Constructor

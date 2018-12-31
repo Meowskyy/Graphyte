@@ -6,64 +6,19 @@ project(Graphyte)
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps")
 
-set(SOURCES 
-	"${SRC_DIR}/main.cpp"
-	"${SRC_DIR}/Graphyte/Graphyte.cpp"
-	"${SRC_DIR}/Input/Input.cpp"
-	"${SRC_DIR}/IO/ModelLoader.cpp"
-	"${SRC_DIR}/Logging/Console.cpp"
-
-	"${SRC_DIR}/Objects/GameObject.cpp"
-	"${SRC_DIR}/Objects/Transform.cpp"
-	"${SRC_DIR}/Objects/Scene.cpp"
-
-	"${SRC_DIR}/Rendering/Camera.cpp"
-	"${SRC_DIR}/Rendering/MeshRenderer.cpp"
-	"${SRC_DIR}/Rendering/Mesh.cpp"
-	"${SRC_DIR}/Rendering/Screen.cpp"
-
-	"${SRC_DIR}/Rendering/Material/Material.cpp"
-	"${SRC_DIR}/Rendering/Material/Shader.cpp"
-	"${SRC_DIR}/Rendering/Material/Texture.cpp"
-
-	"${SRC_DIR}/Resources/ResourceManager.cpp"
-	
-	"${SRC_DIR}/Text/TextRenderer.cpp"
-
-	"${SRC_DIR}/Time/Timers.cpp"
+file(GLOB_RECURSE SOURCES
+	"${SRC_DIR}/*.c*"
 )
 
-set(HEADERS
-	"${SRC_DIR}/Graphyte/Graphyte.h"
-	"${SRC_DIR}/Audio/AudioEmitter.h"
-	"${SRC_DIR}/Audio/AudioListener.h"
-	"${SRC_DIR}/Cursor/Cursor.h"
-	"${SRC_DIR}/Custom Behaviours/CameraOrbit.h"
-	"${SRC_DIR}/Custom Behaviours/MoveAround.h"
-	"${SRC_DIR}/Input/Input.h"
-	"${SRC_DIR}/IO/ModelLoader.h"
-	"${SRC_DIR}/Logging/Console.h"
-	"${SRC_DIR}/Math/Math.h"
+file(GLOB_RECURSE HEADERS
+	"${SRC_DIR}/*.h"
+)
 
-	"${SRC_DIR}/Objects/GameObject.h"
-	"${SRC_DIR}/Objects/Transform.h"
-	"${SRC_DIR}/Objects/Scene.h"
-
-	"${SRC_DIR}/Rendering/Camera.h"
-	"${SRC_DIR}/Rendering/MeshRenderer.h"
-	"${SRC_DIR}/Rendering/Mesh.h"
-	"${SRC_DIR}/Rendering/Screen.h"
-
-	"${SRC_DIR}/Rendering/Material/Material.h"
-	"${SRC_DIR}/Rendering/Material/Shader.h"
-	"${SRC_DIR}/Rendering/Material/Texture.h"
-
-	"${SRC_DIR}/Scripting/BehaviourScript.h"
-
-	"${SRC_DIR}/Text/Font.h"
-	"${SRC_DIR}/Text/TextRenderer.h"
-
-	"${SRC_DIR}/Time/Timers.h"
+file(
+    GLOB_RECURSE _source_list 
+    LIST_DIRECTORIES false
+    "${SRC_DIR}/*.c*"
+    "${SRC_DIR}/*.h*"
 )
 
 # Executable definition and properties
@@ -72,6 +27,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_DIR})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL")
+
+foreach(_source IN ITEMS ${_source_list})
+    get_filename_component(_source_path "${_source}" PATH)
+    file(RELATIVE_PATH _source_path_rel "${SRC_DIR}" "${_source_path}")
+    string(REPLACE "/" "\\" _group_path "${_source_path_rel}")
+    source_group("${_group_path}" FILES "${_source}")
+endforeach()
 
 # OpenGL
 find_package(OpenGL REQUIRED)
