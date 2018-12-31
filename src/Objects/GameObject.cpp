@@ -18,7 +18,7 @@ GameObject::~GameObject()
 void GameObject::AddBehaviour(BehaviourScript *script)
 {
 	behaviour.push_back(script);
-	behaviour[behaviour.size() - 1]->OnScriptAdd();
+	behaviour[behaviour.size() - 1]->OnBehaviourAdded();
 }
 
 template <class T>

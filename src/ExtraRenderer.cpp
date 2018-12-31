@@ -8,20 +8,22 @@
 
 #include <vector>
 
+#include "Rendering\MeshRenderer.h"
+
 
 void ExtraRenderer::DrawAABB(BoundingBox& box) {
 	Shader shader = ResourceManager::GetShader("Standard");
 
 	// Cube 1x1x1, centered on origin
 	GLfloat vertices[] = {
-	  -0.5, -0.5, -0.5,
-	   0.5, -0.5, -0.5,
-	   0.5,  0.5, -0.5,
-	  -0.5,  0.5, -0.5,
-	  -0.5, -0.5,  0.5,
-	   0.5, -0.5,  0.5,
-	   0.5,  0.5,  0.5,
-	  -0.5,  0.5,  0.5,
+	  -0.5, -0.5, -0.5, 1.0,
+	   0.5, -0.5, -0.5, 1.0,
+	   0.5,  0.5, -0.5, 1.0,
+	  -0.5,  0.5, -0.5, 1.0,
+	  -0.5, -0.5,  0.5, 1.0,
+	   0.5, -0.5,  0.5, 1.0,
+	   0.5,  0.5,  0.5, 1.0,
+	  -0.5,  0.5,  0.5, 1.0
 	};
 
 	GLuint vbo_vertices;
@@ -44,7 +46,7 @@ void ExtraRenderer::DrawAABB(BoundingBox& box) {
 
 	std::vector<glm::vec4> newVertices;
 
-	for (int i = 0; i < sizeof(vertices) / sizeof(*vertices); i += 3) {
+	for (int i = 0; i < sizeof(vertices) / sizeof(*vertices); i += 4) {
 		newVertices.push_back(glm::vec4(vertices[i], vertices[i + 1], vertices[i + 2], 1.0));
 	}
 
@@ -68,6 +70,8 @@ void ExtraRenderer::DrawAABB(BoundingBox& box) {
 	glm::mat4 object2world(glm::mat4(1));
 	glm::mat4 model = object2world * transform;
 	shader.SetMatrix4("model", model, true);
+
+	std::cout << "Drawing AABB" << std::endl;
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
 	glEnableVertexAttribArray(0);

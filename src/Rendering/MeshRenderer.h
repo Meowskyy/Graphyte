@@ -28,7 +28,7 @@ public:
 	MeshRenderer::MeshRenderer(Transform &newTransform, aiMesh* mesh, const aiScene* scene, std::string directory);
 
 	void Update();
-	void OnScriptAdd() {
+	void OnBehaviourAdded() {
 		glm::vec3 dimensions = boundaries.max - boundaries.min;
 		transform.position = boundaries.min + (dimensions / 2.0f);
 	}

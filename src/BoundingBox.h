@@ -85,10 +85,10 @@ public:
 			this->max.x > otherBoundingBox.max.x &&
 			this->max.y > otherBoundingBox.max.y &&
 			this->max.z > otherBoundingBox.max.z
-		) 
-		{
-			return true;
-		}
+			) 
+			{
+				return true;
+			}
 
 		return false;
 	}
