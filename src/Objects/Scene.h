@@ -1,29 +1,31 @@
 #pragma once
 
-#include "Objects\GameObject.h"
-#include "Resources\ResourceManager.h"
-#include "Rendering\Camera.h"
-
-#include "UniformGrid.h"
+#include "GameObject.h"
+#include "ResourceManager.h"
+#include "Camera.h"
 
 class Scene {
 public:
 	static std::vector<GameObject*> gameObjects;
-	static Camera* mainCamera;
-
-	UniformGrid grid = UniformGrid();
 
 	Scene(){
-		grid = UniformGrid();
-		grid.SetupGrip(1);
 	}
 
 	// UPDATING BEHAVIOURSCRIPTS
+	void OnSceneLoad();	// Run on scene load?
 	void Update();		// Run after every frame
 	void FixedUpdate(); // Used for physics?
 
+	// TODO: All these are temporary
 	void AddGameObject();
 	void AddChild();
 	void Add1000GameObjects();
 	void AddCameraObject();
+	void AddWorld();
+	void AddGrid();
+
+	static GameObject* Instantiate(GameObject *original);
+	static GameObject* Instantiate(GameObject *original, GameObject *parent);
+
+	std::vector<GameObject*> GetAllRootObjects();
 };

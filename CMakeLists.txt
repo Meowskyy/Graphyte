@@ -15,7 +15,7 @@ file(GLOB_RECURSE HEADERS
 )
 
 file(
-    GLOB_RECURSE _source_list 
+    GLOB_RECURSE _source_list
     LIST_DIRECTORIES false
     "${SRC_DIR}/*.c*"
     "${SRC_DIR}/*.h*"
@@ -69,8 +69,8 @@ target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 
 # GLM
 set(GLM_DIR "${LIB_DIR}/glm")
-set(GLM_TEST_ENABLE OFF CACHE INTERNAL "Build unit tests")
 add_subdirectory("${GLM_DIR}")
+set(GLM_TEST_ENABLE OFF CACHE INTERNAL "Build unit tests")
 target_link_libraries(${PROJECT_NAME} "glm" "${GLM_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/glm")
 
@@ -83,7 +83,7 @@ file(GLOB IMGUI_SOURCES
     "${IMGUI_DIR}/*.h"
     "${IMGUI_DIR}/*.cpp"
 )
-	
+
 target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
 
