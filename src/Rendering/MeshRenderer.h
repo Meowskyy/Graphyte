@@ -20,6 +20,9 @@ private:
 	glm::mat4 model;
 	glm::mat4 rot;
 public:
+	// TODO: Remove this from release
+	bool drawBoundingBox = true;
+
 	Mesh mesh;
 
 	std::vector<Material> materials;
@@ -30,6 +33,8 @@ public:
 
 	void Update();
 	void OnBehaviourAdded();
+
+	void DrawLines();
 
 	void RecalculateBoundingBox();
 

@@ -26,6 +26,20 @@ void Mesh::Render()
 	glBindVertexArray(0);
 }
 
+void Mesh::RenderLines() {
+	glBindVertexArray(VAO);
+
+	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(4 * sizeof(unsigned int)));
+	glDrawElements(GL_LINES, 8, GL_UNSIGNED_INT, (GLvoid*)(8 * sizeof(unsigned int)));
+
+	//glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(3 * sizeof(int)));
+	//glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
+
+	// Unbinding VAO
+	glBindVertexArray(0);
+}
+
 void Mesh::setupMesh()
 {
 	// create buffers/arrays
@@ -57,8 +71,10 @@ void Mesh::setupMesh()
 		// Normal positions
 		if (normalArraySize > 0) // TODO: Do this somehow else
 			glBufferSubData(GL_ARRAY_BUFFER, vertexArraySize, normalArraySize, &normals[0]);
+
 		// UV positions
-		glBufferSubData(GL_ARRAY_BUFFER, vertexArraySize + normalArraySize, uvArraySize, &uvs[0]);
+		if (uvArraySize > 0) // TODO: Do this somehow else
+			glBufferSubData(GL_ARRAY_BUFFER, vertexArraySize + normalArraySize, uvArraySize, &uvs[0]);
 		// VBO END
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

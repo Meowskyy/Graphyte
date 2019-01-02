@@ -25,15 +25,13 @@ public:
 
 	void FixedUpdate();
 
-	bool TestAABBOverlap(Transform& otherTransform)
+	bool TestAABBOverlap(const Transform& otherTransform)
 	{
 		// TODO: Working out how to position the bounding boxes better
 		// Works but not perfectly since the position is not tied to the mesh
 		// The position is always 0, 0, 0 on meshes since they dont have a base position
 		Vector3 aMin = transform->position + transform->boundingBox.min;
-		aMin.y += otherTransform.boundingBox.max.y;
 		Vector3 aMax = transform->position + transform->boundingBox.max;
-		aMax.y += otherTransform.boundingBox.max.y;
 
 		Vector3 bMin = otherTransform.position + otherTransform.boundingBox.min;
 		Vector3 bMax = otherTransform.position + otherTransform.boundingBox.max;

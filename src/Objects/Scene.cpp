@@ -13,13 +13,20 @@
 
 #include "Rendering\Camera.h"
 
+#include "UniformGrid.h"
+
 // Camera
 std::vector<GameObject*> Scene::gameObjects;
+
+UniformGrid* uniformGrid;
 
 // TODO: Settings up OnSceneLoad function
 void Scene::OnSceneLoad()
 {
 	AddGrid();
+
+	uniformGrid = new UniformGrid();
+	uniformGrid->SetupGrid(64);
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
@@ -39,8 +46,14 @@ void Scene::Update()
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
+		if (gameObjects[i]->hasCollision) {
+			uniformGrid->CanFitIntoBoundaries(gameObjects[i]);
+		}
+
 		gameObjects[i]->Update();
 	}
+
+	uniformGrid->DrawGrid();
 }
 
 // FixedUpdate on BehaviourScripts
@@ -78,6 +91,8 @@ void Scene::AddCameraObject()
 	object->transform.position = Vector3(0, 10, 10);
 	object->transform.rotation = Quaternion(Vector3(0, PI, 0));
 
+	object->hasCollision = false;
+
 	object->AddBehaviour(new CameraOrbit());
 	object->AddBehaviour(new Camera());
 	object->AddBehaviour(new AudioListener());
@@ -99,11 +114,11 @@ void Scene::AddGrid()
 	//float gridScale = 1.0f;
 	//object->transform.scale = glm::vec3(1, 1, 1) * gridScale;
 	//object->transform.position = glm::vec3(-0.5f, 0, -0.5f);
+	object->transform.name = "Grid";
+	object->hasCollision = false;
 
 	// MESH RENDERER
 	object->AddBehaviour(new MeshRenderer());
-
-	object->transform.name = "Grid";
 
 	MeshRenderer* meshRenderer = (MeshRenderer*)object->GetBehaviour("MeshRenderer");
 	Mesh* mesh = &meshRenderer->mesh;

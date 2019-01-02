@@ -16,6 +16,8 @@ public:
 	// Is the GameObject active?
 	bool enabled = true;
 
+	bool hasCollision = true;
+
 	Transform transform = Transform();
 	std::vector<GameObject*> children;
 

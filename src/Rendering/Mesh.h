@@ -21,6 +21,7 @@ public:
 
 	// render the mesh
 	void Render();
+	void RenderLines();
 
 	// initializes all the buffer objects/arrays
 	void setupMesh();

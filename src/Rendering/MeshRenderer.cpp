@@ -11,6 +11,8 @@
 
 #include <stb_image.h>
 
+#include "ExtraRenderer.h"
+
 bool IsExtensionSupported(const char *name);
 
 std::vector<Texture2D> loadMaterialTextures(const aiMaterial *mat, const aiTextureType type, const std::string typeName, const std::string directory);
@@ -31,6 +33,9 @@ void MeshRenderer::OnBehaviourAdded()
 
 void MeshRenderer::RecalculateBoundingBox()
 {
+	transform->boundingBox.min.y = 10000;
+
+
 	for (int i = 0; i < mesh.vertices.size(); i++) 
 	{
 		if (mesh.vertices[i].x < transform->boundingBox.min.x) { transform->boundingBox.min.x = mesh.vertices[i].x; }
@@ -40,6 +45,13 @@ void MeshRenderer::RecalculateBoundingBox()
 		if (mesh.vertices[i].z < transform->boundingBox.min.z) { transform->boundingBox.min.z = mesh.vertices[i].z; }
 		if (mesh.vertices[i].z > transform->boundingBox.max.z) { transform->boundingBox.max.z = mesh.vertices[i].z; }
 	}
+
+	float centerX = (transform->boundingBox.min.x + transform->boundingBox.max.x) / 2;
+	float centerY = (transform->boundingBox.min.y + transform->boundingBox.max.y) / 2;
+	float centerZ = (transform->boundingBox.min.z + transform->boundingBox.max.z) / 2;
+	Vector3 center = Vector3(centerX, centerY, centerZ);
+
+	//transform->position = center;
 }
 
 void MeshRenderer::DrawUI()
@@ -98,9 +110,47 @@ void MeshRenderer::Update()
 	materials[0].Use();
 	mesh.Render();
 
+	if (drawBoundingBox) {
+		ExtraRenderer::DrawAABB(transform->boundingBox, transform->position);
+	}
+
 	// Unbind texture
 	glActiveTexture(0);
 }
+
+// TODO: Group objects with same shader
+void MeshRenderer::DrawLines()
+{
+	bool positionHasChanged = transform->positionHasChanged();
+	bool rotationHasChanged = transform->rotationHasChanged();
+	bool scaleHasChanged = transform->scaleHasChanged();
+
+	if (positionHasChanged || rotationHasChanged || scaleHasChanged)
+	{
+		// create transformations
+		model = glm::mat4();
+		model = glm::scale(model, transform->scale);					// SCALE
+		model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+
+		if (rotationHasChanged)
+		{
+			rot = glm::mat4_cast(transform->rotation);					// ROTATION
+		}
+
+		model = model * rot;
+	}
+
+	for (int i = 0; i < materials.size(); i++) {
+		materials[i].shader.SetMatrix4("model", model, true);
+	}
+
+	materials[0].Use();
+	mesh.RenderLines();
+
+	// Unbind texture
+	glActiveTexture(0);
+}
+
 
 // Reference Version
 void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory)

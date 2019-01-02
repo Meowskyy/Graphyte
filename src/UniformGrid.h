@@ -216,16 +216,17 @@ public:
 				found = true;
 			}
 		}
-		*/ // Bitmasking guide
+		*/ 
+		// Bitmasking guide
 	}
 
 	// TODO: What should the default size be?
-	void SetupGrip(int size = 256) {
+	void SetupGrid(int size = 256) {
 		int half = size / 2;
-		boundaries = new BoundingBox(glm::vec3(-half, -half, -half), glm::vec3(half, half, half));
+		boundaries = new BoundingBox(Vector3(-half, -half, -half), Vector3(half, half, half));
 	}
 
 	void DrawGrid() {
-		ExtraRenderer::DrawAABB(*boundaries);
+		ExtraRenderer::DrawAABB(*boundaries, Vector3(0, 0, 0));
 	}
 };

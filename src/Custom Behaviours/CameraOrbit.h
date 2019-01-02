@@ -43,7 +43,7 @@ public:
 			transform->position += transform->getRightVector() * Time::deltaTime * flightSpeed;
 	}
 
-	float mouseSensitivity = 0.007f;
+	float mouseSensitivity = 0.005f;
 
 	void rotation()
 	{
