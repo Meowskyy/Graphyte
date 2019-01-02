@@ -1,17 +1,17 @@
 #include "Scene.h"
 
-#include "CameraOrbit.h"
-#include "AudioListener.h"
+#include "Custom Behaviours\CameraOrbit.h"
+#include "Audio\AudioListener.h"
 
-#include "ModelLoader.h"
-#include "MeshRenderer.h"
-#include "WorldGenerator.h"
+#include "IO\ModelLoader.h"
+#include "Rendering\MeshRenderer.h"
+#include "Custom Behaviours\WorldGenerator.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "Camera.h"
+#include "Rendering\Camera.h"
 
 // Camera
 std::vector<GameObject*> Scene::gameObjects;
@@ -19,6 +19,8 @@ std::vector<GameObject*> Scene::gameObjects;
 // TODO: Settings up OnSceneLoad function
 void Scene::OnSceneLoad()
 {
+	AddGrid();
+
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
@@ -73,6 +75,9 @@ void Scene::AddCameraObject()
 	GameObject* object = Instantiate(new GameObject());
 
 	object->transform.name = "Main Camera";
+	object->transform.position = Vector3(0, 10, 10);
+	object->transform.rotation = Quaternion(Vector3(0, PI, 0));
+
 	object->AddBehaviour(new CameraOrbit());
 	object->AddBehaviour(new Camera());
 	object->AddBehaviour(new AudioListener());
@@ -102,8 +107,8 @@ void Scene::AddGrid()
 
 	MeshRenderer* meshRenderer = (MeshRenderer*)object->GetBehaviour("MeshRenderer");
 	Mesh* mesh = &meshRenderer->mesh;
-	meshRenderer->materials[0]->shader = ResourceManager::GetShader("Grid");
-	meshRenderer->materials[0]->textures.push_back(ResourceManager::GetTexture("Grid"));
+	meshRenderer->materials[0].shader = ResourceManager::GetShader("Grid");
+	meshRenderer->materials[0].textures.push_back(ResourceManager::GetTexture("Grid"));
 
 	std::vector<Vector3> vertices;
 	std::vector<unsigned int> indices;

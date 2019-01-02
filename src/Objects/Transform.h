@@ -4,8 +4,6 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
 
-#include "BoundingBox.h"
-
 #include <string>
 
 #define _USE_MATH_DEFINES
@@ -14,79 +12,95 @@
 #include <vector>
 #include <iostream>
 
-#define USE_GLM_QUATERNION
+#include "Math\Vector2.h"
+#include "Math\Vector3.h"
+#include "Math\Quaternion.h"
 
-const float PI = 3.141592653589793;
+#include "BoundingBox.h"
 
-#ifndef USE_GLM_QUATERNION
-class Quaternion {
-private:
-	glm::vec3 euler;
-
-	void updateAngles() 
-	{
-		euler = glm::eulerAngles(rotation);
-		eulerAngles = glm::eulerAngles(rotation) * 180.0f / PI;
-		//eulerAngles.x += 180;
-		//eulerAngles.y += 180;
-	}
-
-public:
-	glm::vec3 eulerAngles; // Returns angles in 360 degrees
-	glm::quat rotation;
-
-	Quaternion(float yaw = 0, float roll = 0, float pitch = 0)
-	{
-
-	}
-
-	// for Vec3 angles
-	Quaternion(glm::vec3 angles)
-	{
-		rotation = glm::quat(glm::vec3(angles.y / 180 * M_PI, angles.x / 180 * M_PI, angles.z));
-	}
-
-	Quaternion operator=(Quaternion &quat) 
-	{
-		quat.updateAngles();
-
-		this->eulerAngles = quat.eulerAngles;
-		//std::cout << quat.eulerAngles.x << std::endl;
-
-		return *this;
-	}
-};
-#endif
+class GameObject;
 
 class Transform {
 private:
-	glm::vec3 euler;
+	Vector3 euler;
+
+	Vector3 oldPosition = Vector3(0, 0, 0);
+	Quaternion oldRotation;
+	Vector3 oldScale = Vector3(1, 1, 1);
 
 public:
 	std::string name = "GameObject";
-	Transform *parent;
-	std::vector<Transform*> children;
+	Transform* parent;
 
-	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::quat rotation;
-	glm::vec3 scale = glm::vec3(1, 1, 1);
+	GameObject* gameObject; // THE GAMEOBJECT THIS BELONGS TO
+
+	Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+	Quaternion rotation;
+	Vector3 scale = Vector3(1, 1, 1);
 
 	BoundingBox boundingBox;
 
-	Transform() {};
-
-	void DrawUI();
+	Transform() {}
 
 	// Transform directions
-	glm::vec3 forward = getForwardVector();
-	glm::vec3 right = getRightVector();
-	glm::vec3 up = getUpVector();
+	Vector3 forward = getForwardVector();
+	Vector3 right = getRightVector();
+	Vector3 up = getUpVector();
 
 	// Transform direction methods
-	glm::vec3 getForwardVector();
-	glm::vec3 getRightVector();
-	glm::vec3 getUpVector();
+	Vector3 getForwardVector();
+	Vector3 getRightVector();
+	Vector3 getUpVector();
 
-	void Rotate(glm::vec3 direction, float speed);
+	// Position Parent + Local
+	Vector3 GetWorldPosition();
+	//glm::vec3 GetWorldRotation();
+	//glm::vec3 GetWorldScale();
+
+	Transform* GetChild(int index);
+
+	bool positionHasChanged() 
+	{ 
+		bool hasChanged = position != oldPosition; 
+
+#ifdef _DEBUG
+		if (hasChanged) {
+			//std::cout << "Position Changed" << std::endl;
+		}
+#endif
+
+		oldPosition = position;
+		return hasChanged;
+	}
+
+	bool rotationHasChanged() 
+	{ 
+		bool hasChanged = rotation != oldRotation; 
+
+#ifdef _DEBUG
+		if (hasChanged) {
+			//std::cout << "Rotation Changed" << std::endl;
+		}
+#endif
+
+		oldRotation = rotation;
+		return hasChanged;
+	}
+
+	bool scaleHasChanged() 
+	{ 
+		bool hasChanged = scale != oldScale;
+
+#ifdef _DEBUG
+		if (hasChanged) {
+			//std::cout << "Scale Changed" << std::endl;
+		}
+#endif
+
+		oldScale != scale;
+		return hasChanged;
+	}
+
+	void Rotate(Vector3 direction, float speed);
 	void setParent(Transform &transform);
 };

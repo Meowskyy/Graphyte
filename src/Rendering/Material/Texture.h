@@ -18,11 +18,16 @@
 class Texture2D
 {
 public:
+	// TODO: Setup names for textures
+	std::string name = "Texture";
 	// Holds the ID of the texture object, used for all texture operations to reference to this particlar texture
 	GLuint ID;
 	// Texture image dimensions
 	GLuint Width, Height; // Width and height of loaded image in pixels
 						  // Texture Format
+	std::string type = "texture_diffuse";
+	std::string path;
+
 	GLuint Internal_Format; // Format of texture object
 	GLuint Image_Format; // Format of loaded image
 						 // Texture configuration
@@ -31,11 +36,18 @@ public:
 	GLuint Filter_Min; // Filtering mode if texture pixels < screen pixels
 	GLuint Filter_Max; // Filtering mode if texture pixels > screen pixels
 					   // Constructor (sets default texture modes)
+	GLboolean hasMipmapping;
+
 	Texture2D();
 	// Generates texture from image data
 	void Generate(GLuint width, GLuint height, unsigned char* data);
 	// Binds the texture as the current active GL_TEXTURE_2D texture object
 	void Bind() const;
+
+	// Set the wrapping of the texture
+	void SetWrapping(GLuint wrapping);
+	// Set the filtering of the texture
+	void SetFiltering(bool point);
 };
 
 #endif

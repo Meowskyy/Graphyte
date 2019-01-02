@@ -60,32 +60,42 @@ target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "GLFW_INCLUDE_NONE")
 
-# GLAD
+# glad
 set(GLAD_DIR "${LIB_DIR}/glad")
 add_library("glad" "${GLAD_DIR}/src/glad.c")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
+target_include_directories(${PROJECT_NAME} PUBLIC "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 
 # GLM
 set(GLM_DIR "${LIB_DIR}/glm")
-add_subdirectory("${GLM_DIR}")
 set(GLM_TEST_ENABLE OFF CACHE INTERNAL "Build unit tests")
+add_subdirectory("${GLM_DIR}")
 target_link_libraries(${PROJECT_NAME} "glm" "${GLM_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/glm")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_FORCE_CTOR_INIT")
 
 # IMGUI
 set(IMGUI_DIR "${LIB_DIR}/imgui")
 target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
-
 # You can probably include files easier some other way that i dont know of
 file(GLOB IMGUI_SOURCES
-    "${IMGUI_DIR}/*.h"
-    "${IMGUI_DIR}/*.cpp"
+   	"${IMGUI_DIR}/*.cpp"
+	"${IMGUI_DIR}/examples/imgui_impl_opengl3.cpp"
+	"${IMGUI_DIR}/examples/imgui_impl_glfw.cpp"
 )
+
+add_library("imgui" ${IMGUI_SOURCES})
+target_include_directories("imgui" PUBLIC "${IMGUI_DIR}")
+target_link_libraries(${PROJECT_NAME} "imgui" "${CMAKE_DL_LIBS}")
+
+target_include_directories("imgui" PRIVATE "${GLAD_DIR}/include")
+target_include_directories("imgui" PRIVATE "${GLFW_DIR}/include")
 
 target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
+target_compile_definitions("imgui" PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
 
 # SFML
 set(SFML_STATIC_LIBRARIES TRUE)
@@ -103,4 +113,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${ASSIMP_DIR}/include")
 
 # STB
 set(STB_DIR "${LIB_DIR}/stb")
-target_include_directories(${PROJECT_NAME} PUBLIC "${STB_DIR}")
+target_include_directories(${PROJECT_NAME} PRIVATE "${STB_DIR}")

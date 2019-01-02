@@ -1,8 +1,8 @@
 #pragma once
 
-#include "GameObject.h"
-#include "ResourceManager.h"
-#include "Camera.h"
+#include "Objects\GameObject.h"
+#include "Resources\ResourceManager.h"
+#include "Rendering\Camera.h"
 
 class Scene {
 public:

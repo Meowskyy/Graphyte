@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BehaviourScript.h"
-#include "Physics3D.h"
-#include "GameObject.h"
+#include "Scripting\BehaviourScript.h"
+#include "Physics\Physics3D.h"
+#include "Objects\GameObject.h"
 
 class BoxShape {
 public:
@@ -11,11 +11,6 @@ public:
 	float mass = 10;
 	float momentOfInertia;
 };
-
-typedef struct {
-	Vector2 min;
-	Vector2 max;
-} AABB;
 
 class Rigidbody : public BehaviourScript {
 private:
@@ -30,18 +25,18 @@ public:
 
 	void FixedUpdate();
 
-	bool TestAABBOverlap(Transform* otherTransform)
+	bool TestAABBOverlap(Transform& otherTransform)
 	{
 		// TODO: Working out how to position the bounding boxes better
 		// Works but not perfectly since the position is not tied to the mesh
 		// The position is always 0, 0, 0 on meshes since they dont have a base position
-		Vector3 aMin = transform->position + transform->boundingBoxMin;
-		aMin.y += otherTransform->boundingBoxMax.y;
-		Vector3 aMax = transform->position + transform->boundingBoxMax;
-		aMax.y += otherTransform->boundingBoxMax.y;
+		Vector3 aMin = transform->position + transform->boundingBox.min;
+		aMin.y += otherTransform.boundingBox.max.y;
+		Vector3 aMax = transform->position + transform->boundingBox.max;
+		aMax.y += otherTransform.boundingBox.max.y;
 
-		Vector3 bMin = otherTransform->position + otherTransform->boundingBoxMin;
-		Vector3 bMax = otherTransform->position + otherTransform->boundingBoxMax;
+		Vector3 bMin = otherTransform.position + otherTransform.boundingBox.min;
+		Vector3 bMax = otherTransform.position + otherTransform.boundingBox.max;
 
 		float d1x = bMin.x - aMax.x;
 		float d1y = bMin.y - aMax.y;
@@ -58,7 +53,7 @@ public:
 			return false;
 
 		gameObject->OnRigidbodyCollisionEnter();
-		collidingObjects.push_back(otherTransform->name);
+		collidingObjects.push_back(otherTransform.name);
 		return true;
 	}
 

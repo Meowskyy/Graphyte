@@ -1,25 +1,43 @@
 #pragma once
 
-#include <vector>
-
 #include "Scripting\BehaviourScript.h"
 
+#include <vector>
+#include <map>
+
 class GameObject {
+private:
+	std::vector<BehaviourScript*> behaviour;
+	std::map<std::string, int> behaviourDict;
+
+	int behaviourCount = 0;
+	int childCount = 0;
 public:
+	// Is the GameObject active?
 	bool enabled = true;
-	bool hasCollision = true;
 
 	Transform transform = Transform();
-	std::vector<BehaviourScript*> behaviour;
+	std::vector<GameObject*> children;
 
-	GameObject();
-	~GameObject();
+	GameObject() {}
+	~GameObject() {}
 
-	void AddBehaviour(BehaviourScript* script);
+	void Update();
+	void FixedUpdate();
+	void OnSceneLoad();
 
-	template <class T>
-	T GetBehaviour();
+	void OnRigidbodyCollisionEnter();
 
-	template <class T>
-	T GetBehaviourByUUID(int UUID);
+	void DrawBehaviours();
+	void DrawChildren();
+
+	void AddChild(GameObject* object);
+	void RemoveChild(GameObject* object);
+
+	// Adds a behaviour of type T to the object
+	BehaviourScript* AddBehaviour(BehaviourScript* script);
+	// Get the first behaviour that has the same name
+	BehaviourScript* GetBehaviour(std::string name);
+	// Removes the first behaviour with the same name
+	void RemoveBehaviour(std::string name);
 };

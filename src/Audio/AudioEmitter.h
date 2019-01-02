@@ -13,9 +13,12 @@ private:
 	sf::Sound sound;
 public:
 	bool loop = false;
+	float volume = 100;
 
-	AudioEmitter(Transform &transform) : BehaviourScript(transform) {}
-	AudioEmitter(Transform &transform, const std::string path) : BehaviourScript(transform) 
+	// Empty constructor
+	AudioEmitter() {}
+
+	AudioEmitter(const std::string path)
 	{
 		if (!buffer.loadFromFile(path)) {
 			std::cout << "Error loading sound file: " << path << std::endl;
@@ -30,17 +33,17 @@ public:
 	// Temporary
 	void Update() {
 		if (Input::GetKeyPressed(GLFW_KEY_1)) {
-			play();
+			Play();
 		}
 	}
 
-	void play() 
+	void Play() 
 	{
-		sound.setPosition(transform.position.x, transform.position.y, transform.position.z);
+		sound.setPosition(transform->position.x, transform->position.y, transform->position.z);
 		sound.play();
 	}
 
-	void stop() 
+	void Stop() 
 	{
 		sound.stop();
 	}
@@ -56,6 +59,16 @@ public:
 
 		sound.setBuffer(buffer);
 	}
+
+#ifndef NDEBUG
+	virtual void DrawUI() 
+	{
+		if (ImGui::SliderFloat("Volume", &volume, 0, 100)) 
+		{
+			setVolume(volume);
+		}
+	}
+#endif
 
 	void setVolume(float val) { sound.setVolume(val); }
 	void setLooping(bool val) { loop = val; }

@@ -9,20 +9,16 @@ class MoveAround : public BehaviourScript {
 public:
 	int i = 0;
 	float amount = 2;
-	float speed = 0.01;
+	float speed = 0.01f;
 
 	float x = 0;
-	float rotSpeed = 0.05f;
+	float rotSpeed = 0.001f;
 	
 	void Update() {
-		transform.position.y = sin(i * speed * Time::deltaTime) * amount;
-		transform.rotation = glm::quat(glm::vec3(0, i * rotSpeed * Time::deltaTime, 0));
+		transform->position.y = sin(i * speed) * amount;
+
+		transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
 
 		i++;
-	}
-
-	MoveAround(Transform &newTransform) : BehaviourScript(newTransform)
-	{
-
 	}
 };

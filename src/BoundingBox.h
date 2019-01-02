@@ -1,20 +1,20 @@
 #pragma once
-#include "glm\vec3.hpp"
-
 #include <algorithm>
 #include <cmath>
+
+#include "Math\Vector3.h"
 
 struct BoundingBox
 {
 public:
-	glm::vec3 min;
-	glm::vec3 max;
+	Vector3 min;
+	Vector3 max;
 
 	BoundingBox() {
 
 	}
 
-	BoundingBox(glm::vec3& min, glm::vec3& max) {
+	BoundingBox(Vector3& min, Vector3& max) {
 		this->min = min;
 		this->max = max;
 	}
@@ -29,7 +29,7 @@ public:
 		//we can't guarantee that all bounding regions will be relative to the origin, so to keep the math
 		//simple, we're going to translate the existing region to be oriented off the origin and remember the translation.
 		//find the min offset from (0,0,0) and translate by it for a short while
-		glm::vec3 offset = glm::vec3(0, 0, 0) - region.min;
+		Vector3 offset = Vector3(0, 0, 0) - region.min;
 		region.min += offset;
 		region.max += offset;
 
@@ -42,7 +42,7 @@ public:
 		{
 			if (highX == 1 << bit)
 			{
-				region.max = glm::vec3(highX, highX, highX);
+				region.max = Vector3(highX, highX, highX);
 
 				region.min -= offset;
 				region.max -= offset;
@@ -54,7 +54,7 @@ public:
 		//example: 63 -> 64; 65 -> 128;
 		int x = pow2roundup(highX);
 
-		region.max = glm::vec3(x, x, x);
+		region.max = Vector3(x, x, x);
 
 		region.min -= offset;
 		region.max -= offset;

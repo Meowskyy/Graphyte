@@ -1,26 +1,41 @@
 #pragma once
 
 #include "Objects\Transform.h"
+#include "imgui.h"
 
 #include <iostream>
 
 class BehaviourScript {
 public:
-	int UUID = 0; // TODO: Make this unique to every BehaviourScript
-	Transform &transform;
+	// Is the BehaviourScript active
+	bool enabled = true;
+	// The transform this script belongs to
+	Transform* transform;
+	// The gameObject this script belongs to
+	GameObject* gameObject;
 
 	// Constructor
-	BehaviourScript(Transform &newTransform) : transform(newTransform) {};
-	~BehaviourScript() {};
+	BehaviourScript() {}
+	~BehaviourScript() {}
 
-	virtual std::string name() { return typeid(*this).name(); };
+	virtual std::string name() { return typeid(*this).name(); }
+	virtual operator std::string() const { return typeid(*this).name(); }
 
 	// Functions
-	virtual void OnSceneLoad() {}		// Called once the script is loaded/added
-	virtual void FixedUpdate() {}	// TODO: Implementing FixedUpdate
-	virtual void Update() {}		// Called every frame
-	virtual void OnBehaviourAdded() {}	// Called once the script gets attached to a gameobject
+	// Called after the scene loads
+	virtual void OnSceneLoad() {}
+	// Called once the script is enabled after being disabled
+	virtual void OnEnable() {}
+	// Called once the script is added
+	virtual void OnBehaviourAdded() {}
+	// Called every physics iteration
+	virtual void FixedUpdate() {}
+	// Called every frame
+	virtual void Update() {}
 
-	// TODO: Remove this and move it to AudioEmitter
-	virtual void Play() {}; // For audio temporarily
+	// Functions : Physics
+	// Called every time the collider hits something
+	virtual void OnRigidbodyCollisionEnter() {}
+
+	virtual void DrawUI() {}			// Draws info about the script, only if in _DEBUG is defined
 };

@@ -7,10 +7,9 @@ Material::Material()
 	this->shader = ResourceManager::GetShader("Standard");
 }
 
-void Material::use()
+void Material::Use()
 {
 	// TODO: Fixing materials
-	/*
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;
 	unsigned int normalNr = 1;
@@ -33,7 +32,6 @@ void Material::use()
 												 // now set the sampler to the correct texture unit
 		glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
 		// and finally bind the texture
-		glBindTexture(GL_TEXTURE_2D, textures[i].id);
+		glBindTexture(GL_TEXTURE_2D, textures[i].ID);
 	}
-	*/
 }

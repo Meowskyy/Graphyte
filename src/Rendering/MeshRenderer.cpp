@@ -1,6 +1,7 @@
 #include "MeshRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "Resources\ResourceManager.h"
 #include "Rendering\Camera.h"
@@ -8,100 +9,144 @@
 
 #include <iostream>
 
-#include "stb_image.h"
+#include <stb_image.h>
 
-std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName, std::string directory);
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = true);
+bool IsExtensionSupported(const char *name);
 
-MeshRenderer::MeshRenderer(Transform &newTransform)
-	: BehaviourScript(newTransform)
+std::vector<Texture2D> loadMaterialTextures(const aiMaterial *mat, const aiTextureType type, const std::string typeName, const std::string directory);
+unsigned int TextureFromFile(const char *path, const std::string &directory, const bool gamma = true);
+
+void MeshRenderer::OnBehaviourAdded()
 {
-	this->shader = ResourceManager::GetShader("Standard");
+	RecalculateBoundingBox();
+	// Set the transform position to center of mesh
+	//glm::vec3 dimensions = transform->boundingBox.max - transform->boundingBox.min;
+	//transform->position = transform->boundingBox.min + (dimensions / 2.0f);
+
+	model = glm::scale(model, transform->scale);					// SCALE
+	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	rot = glm::mat4_cast(transform->rotation);						// ROTATION
+	model = model * rot;
 }
 
-MeshRenderer::MeshRenderer(Transform &newTransform, aiMesh* mesh, const aiScene* scene, std::string directory)
-	: BehaviourScript(newTransform)
+void MeshRenderer::RecalculateBoundingBox()
 {
-	this->shader = ResourceManager::GetShader("Standard");
+	for (int i = 0; i < mesh.vertices.size(); i++) 
+	{
+		if (mesh.vertices[i].x < transform->boundingBox.min.x) { transform->boundingBox.min.x = mesh.vertices[i].x; }
+		if (mesh.vertices[i].x > transform->boundingBox.max.x) { transform->boundingBox.max.x = mesh.vertices[i].x; }
+		if (mesh.vertices[i].y < transform->boundingBox.min.y) { transform->boundingBox.min.y = mesh.vertices[i].y; }
+		if (mesh.vertices[i].y > transform->boundingBox.max.y) { transform->boundingBox.max.y = mesh.vertices[i].y; }
+		if (mesh.vertices[i].z < transform->boundingBox.min.z) { transform->boundingBox.min.z = mesh.vertices[i].z; }
+		if (mesh.vertices[i].z > transform->boundingBox.max.z) { transform->boundingBox.max.z = mesh.vertices[i].z; }
+	}
+}
+
+void MeshRenderer::DrawUI()
+{
+	for (int i = 0; i < materials.size(); i++) {
+		ImGui::Text("Shader: ");
+		ImGui::SameLine();
+		ImGui::Text(materials[i].shader.shaderName.c_str());
+
+		ImGui::Text("Main Texture: ");
+		ImGui::SameLine();
+		ImGui::Text(materials[i].textures[0].name.c_str());
+	}
+}
+
+MeshRenderer::MeshRenderer() {
+	materials.push_back(Material());
+}
+
+MeshRenderer::MeshRenderer(aiMesh* mesh, const aiScene* scene, const std::string directory)
+{
+	// GET MATERIAL FROM RESOURCEMANAGER
+	materials.push_back(Material());
 
 	processMesh(mesh, scene, directory);
 }
 
-
 // TODO: Render only if visible
 // TODO: Add a bounding box around the mesh
+// TODO: Group objects with same shader
 void MeshRenderer::Update()
 {
-// TODO: Use same shader for objects that use the same one
-	glm::mat4 model;
+	bool positionHasChanged = transform->positionHasChanged();
+	bool rotationHasChanged = transform->rotationHasChanged();
+	bool scaleHasChanged = transform->scaleHasChanged();
+	
+	if (positionHasChanged || rotationHasChanged || scaleHasChanged) 
+	{
+		// create transformations
+		model = glm::mat4();
+		model = glm::scale(model, transform->scale);					// SCALE
+		model = glm::translate(model, transform->GetWorldPosition());	// POSITION
 
-	glm::mat4 scale = glm::scale(glm::mat4(1.0f), transform.scale); // SCALE
-	glm::mat4 trans = glm::translate(glm::mat4(1.0f), transform.position * 0.001f); // POSITION
-	glm::mat4 rot = glm::toMat4(transform.rotation); // ROTATION 
-	model =  scale * trans * rot;
+		if (rotationHasChanged) 
+		{
+			rot = glm::mat4_cast(transform->rotation);					// ROTATION
+		}
 
-	// TODO: Use materials
-	/*
-	for (int i = 0; i < materials.size(); i++) {
-		materials[i].shader.SetMatrix4("model", model);
+		model = model * rot;
 	}
 
-	materials[0].use();
-	*/
+	for (int i = 0; i < materials.size(); i++) {
+		materials[i].shader.SetMatrix4("model", model, true);
+	}
 
-	this->shader.SetMatrix4("model", model, true);
+	materials[0].Use();
+	mesh.Render();
 
-	this->mesh.Render(this->shader);
-
-	transform.boundingBox = boundaries;
+	// Unbind texture
+	glActiveTexture(0);
 }
 
-void MeshRenderer::processMesh(aiMesh *mesh, const aiScene *scene, std::string directory)
+// Reference Version
+void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory)
 {
 	// data to fill
-	std::vector<Vertex> vertices;
+	std::vector<Vector3> vertices;
+	std::vector<Vector3> normals;
+	std::vector<Vector2> uv;
+	//std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
-	std::vector<Texture> textures;
-
-	boundaries.min.x = boundaries.max.x = mesh->mVertices[0].x;
-	boundaries.min.y = boundaries.max.y = mesh->mVertices[0].y;
-	boundaries.min.z = boundaries.max.z = mesh->mVertices[0].z;
+	std::vector<Texture2D> textures;
 
 	// Walk through each of the mesh's vertices
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
-		Vertex vertex;
-		glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-						  // positions
-		vector.x = mesh->mVertices[i].x;
-		vector.y = mesh->mVertices[i].y;
-		vector.z = mesh->mVertices[i].z;
-		vertex.Position = vector;
+		//Vertex vertex;
+		Vector3 vertex; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
 
-		if (mesh->mVertices[i].x < boundaries.min.x) boundaries.min.x = mesh->mVertices[i].x;
-		if (mesh->mVertices[i].x > boundaries.max.x) boundaries.max.x = mesh->mVertices[i].x;
-		if (mesh->mVertices[i].y < boundaries.min.y) boundaries.min.y = mesh->mVertices[i].y;
-		if (mesh->mVertices[i].y > boundaries.max.y) boundaries.max.y = mesh->mVertices[i].y;
-		if (mesh->mVertices[i].z < boundaries.min.z) boundaries.min.z = mesh->mVertices[i].z;
-		if (mesh->mVertices[i].z > boundaries.max.z) boundaries.max.z = mesh->mVertices[i].z;
-		
-		// normals
-		vector.x = mesh->mNormals[i].x;
-		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;
-		vertex.Normal = vector;
+		// positions
+		vertex.x = mesh->mVertices[i].x;
+		vertex.y = mesh->mVertices[i].y;
+		vertex.z = mesh->mVertices[i].z;
+		vertices.push_back(vertex);
+
+		//Vertex vertex;
+		Vector3 normal; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
+		normal.x = mesh->mNormals[i].x;
+		normal.y = mesh->mNormals[i].y;
+		normal.z = mesh->mNormals[i].z;
+		normals.push_back(normal);
+
 		// texture coordinates
 		if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 		{
-			glm::vec2 vec;
+			Vector2 vec;
 			// a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't 
 			// use models where a vertex can have multiple texture coordinates so we always take the first set (0).
 			vec.x = mesh->mTextureCoords[0][i].x;
 			vec.y = mesh->mTextureCoords[0][i].y;
-			vertex.TexCoords = vec;
+			uv.push_back(vec);
 		}
-		else
-			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+		else {
+			uv.push_back(Vector2(0.0f, 0.0f));
+		}
+
+		/*
 		// tangent
 		vector.x = mesh->mTangents[i].x;
 		vector.y = mesh->mTangents[i].y;
@@ -112,7 +157,7 @@ void MeshRenderer::processMesh(aiMesh *mesh, const aiScene *scene, std::string d
 		vector.y = mesh->mBitangents[i].y;
 		vector.z = mesh->mBitangents[i].z;
 		vertex.Bitangent = vector;
-		vertices.push_back(vertex);
+		*/
 	}
 	// now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
@@ -131,29 +176,36 @@ void MeshRenderer::processMesh(aiMesh *mesh, const aiScene *scene, std::string d
 	// specular: texture_specularN
 	// normal: texture_normalN
 
+	std::string name = mesh->mName.C_Str();
+	name += "_material";
+
 	// 1. diffuse maps
-	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", directory);
+	std::vector<Texture2D> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", directory);
 	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 	// 2. specular maps
-	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", directory);
+	std::vector<Texture2D> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", directory);
 	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 	// 3. normal maps
-	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", directory);
+	std::vector<Texture2D> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", directory);
 	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 	// 4. height maps
-	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", directory);
+	std::vector<Texture2D> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", directory);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
+	// TODO: Being able to Assign multiple different materials
+	materials[0].textures = textures;
+
 	// return a mesh object created from the extracted mesh data
-	this->mesh = Mesh(vertices, indices, textures);
+	this->mesh = Mesh(vertices, uv, indices);
 }
+
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName, std::string directory)
+std::vector<Texture2D> loadMaterialTextures(const aiMaterial *mat, const aiTextureType type, const std::string typeName, const std::string directory)
 {
-	std::vector<Texture> textures;
-	std::vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+	std::vector<Texture2D> textures;
+	std::vector<Texture2D> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
 
 	for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
 	{
@@ -172,8 +224,8 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, s
 		}
 		if (!skip)
 		{   // if texture hasn't been loaded already, load it
-			Texture texture;
-			texture.id = TextureFromFile(str.C_Str(), directory);
+			Texture2D texture;
+			texture.ID = TextureFromFile(str.C_Str(), directory);
 			texture.type = typeName;
 			texture.path = str.C_Str();
 			textures.push_back(texture);
@@ -183,16 +235,17 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, s
 	return textures;
 }
 
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma)
+unsigned int TextureFromFile(const char* path, const std::string &directory, const bool gamma)
 {
 	std::string filename = std::string(path);
 	filename = directory + '/' + filename;
+
+	std::cout << filename << std::endl;
 
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
-	
 	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 	if (data)
 	{
@@ -213,14 +266,53 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+		if (IsExtensionSupported("GL_EXT_texture_filter_anisotropic")) {
+			//std::cout << "Anisotropic Filtering: SUPPORTED" << std::endl;
+
+			//float aniso = 0.0f;
+			//glGetFloatv(GL_MAX_TEXTURE_A, &aniso);
+			//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
+		}
+		else {
+			std::cout << "Anisotropic Filtering: NOT SUPPORTED" << std::endl;
+		}
+
 		stbi_image_free(data);
 	}
 	else
 	{
 		std::cout << "Texture failed to load at path: " << path << std::endl;
-		//stbi_image_free(data);
+		stbi_image_free(data);
 	}
-	
 
 	return textureID;
+}
+
+bool IsExtensionSupported(const char* name)
+{
+	GLint n = 0;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &n);
+
+	PFNGLGETSTRINGIPROC glGetStringi = 0;
+	glGetStringi = (PFNGLGETSTRINGIPROC)glfwGetProcAddress("glGetStringi");
+
+	/*
+	for (GLint i = 0; i<n; i++)
+	{
+		const char* extension =
+			(const char*)glGetStringi(GL_EXTENSIONS, i);
+		printf("Ext %d: %s\n", i, extension);
+	}
+	*/
+
+	for (GLint i = 0; i<n; i++)
+	{
+		const char* extension =
+			(const char*)glGetStringi(GL_EXTENSIONS, i);
+		if (!strcmp(name, extension))
+		{
+			return true;
+		}
+	}
+	return false;
 }

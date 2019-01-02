@@ -1,44 +1,31 @@
 #pragma once
 
-#include "Rendering\Material\Shader.h"
-
 #include <string>
 #include <vector>
 
-struct Vertex {
-	glm::vec3 Position;		// Vertex postion
-	glm::vec3 Normal;		// Normal direction
-	glm::vec2 TexCoords;	// Texture coordinates
-	glm::vec3 Tangent;		// Tangent
-	glm::vec3 Bitangent;	// Bitangent
-};
-
-struct Texture {
-	unsigned int id;
-	std::string type;
-	std::string path;
-};
+#include "Math\Vector3.h"
+#include "Math\Vector2.h"
 
 class Mesh {
 public:
 	/*  Mesh Data  */
-	std::vector<Vertex> vertices;
+	std::vector<Vector3> vertices = std::vector<Vector3>();
+	std::vector<Vector3> normals = std::vector<Vector3>();
+	std::vector<Vector2> uvs = std::vector<Vector2>();
 	std::vector<unsigned int> indices;
-	std::vector<Texture> textures;
 
 	/*  Functions  */
 	// constructor
 	Mesh() {};
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+	Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, const std::vector<unsigned int> indices);
 
 	// render the mesh
-	void Render(Shader shader);
+	void Render();
+
+	// initializes all the buffer objects/arrays
+	void setupMesh();
 
 private:
 	/*  Render data  */
 	unsigned int VAO, VBO, EBO;
-
-	/*  Functions    */
-	// initializes all the buffer objects/arrays
-	void setupMesh();
 };

@@ -21,13 +21,15 @@
 // Instantiate static variables
 std::map<std::string, Texture2D>    ResourceManager::Textures;
 std::map<std::string, Shader>       ResourceManager::Shaders;
+std::map<std::string, Material>     ResourceManager::Materials;
 
 Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name)
 {
 	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+	Shaders[name].shaderName = name;
 
 	// TODO: Move these somewhere more appropriate
-	glm::mat4 projection = glm::perspective(glm::radians(70.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(70.0f), (float)1920 / (float)1080, 0.1f, 1000.0f);
 	Shaders[name].SetMatrix4("projection", projection, GL_TRUE);
 
 	return Shaders[name];
@@ -38,15 +40,28 @@ Shader ResourceManager::GetShader(std::string name)
 	return Shaders[name];
 }
 
-Texture2D ResourceManager::LoadTexture(const GLchar *file, GLboolean alpha, std::string name)
+Texture2D ResourceManager::LoadTexture(const GLchar *file, bool gamma, bool alpha, std::string name)
 {
-	Textures[name] = loadTextureFromFile(file, alpha);
+	Textures[name] = loadTextureFromFile(file, alpha, gamma);
+	Textures[name].name = name;
+
 	return Textures[name];
 }
 
 Texture2D ResourceManager::GetTexture(std::string name)
 {
 	return Textures[name];
+}
+
+Material ResourceManager::LoadMaterial(std::string name)
+{
+	Materials[name] = Material();
+	return Materials[name];
+}
+
+Material ResourceManager::GetMaterial(std::string name)
+{
+	return Materials[name];
 }
 
 void ResourceManager::Clear()
@@ -61,8 +76,6 @@ void ResourceManager::Clear()
 
 Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
 {
-	//std::cout << vShaderFile << std::endl;
-
 	// 1. Retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
 	std::string fragmentCode;
@@ -105,21 +118,28 @@ Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLch
 	return shader;
 }
 
-Texture2D ResourceManager::loadTextureFromFile(const GLchar *file, GLboolean alpha)
+Texture2D ResourceManager::loadTextureFromFile(const char *path, bool gamma, bool alpha)
 {
-	// Create Texture object
 	Texture2D texture;
 	if (alpha)
 	{
 		texture.Internal_Format = GL_RGBA;
 		texture.Image_Format = GL_RGBA;
 	}
-	// Load image
-	int width, height, nrChannels;
-	unsigned char *data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
-	// Now generate texture
-	texture.Generate(width, height, data);
-	// And finally free image data
-	stbi_image_free(data);
+
+	int width, height, nrComponents;
+	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		texture.Generate(width, height, data);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
 	return texture;
 }

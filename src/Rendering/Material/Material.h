@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Shader.h"
+#include "Rendering\Material\Shader.h"
+#include "Rendering\Material\Texture.h"
 #include <map>
+#include <vector>
 
 struct Texture {
 	unsigned int id;
@@ -12,11 +14,11 @@ struct Texture {
 class Material {
 public:
 	Shader shader;
-	std::map<std::string, Texture> textures;
+	std::vector<Texture2D> textures;
 
 	// Constructor
 	Material();
 
 	// Func
-	void use();
+	void Use();
 };

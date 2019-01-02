@@ -5,12 +5,21 @@
 #include "Time\Timers.h"
 #include "Cursor\Cursor.h"
 
+const float PI = 3.141592653589793;
+
 class CameraOrbit : public BehaviourScript {
 public:
+	float x = 0.0;
+	float y = 0.0;
+
+	void OnBehaviourAdded() 
+	{
+		x = 0;
+		y = PI;
+	}
+
 	// Update is called every frame
 	void Update() {
-		//std::cout << "Camera Rotation" << std::endl;
-
 		movement();
 
 		MouseCursor::SetVisible(!Input::GetMouseButtonDown(1));
@@ -20,31 +29,26 @@ public:
 		}
 	}
 
-	float flightSpeed = 0.1;
+	float flightSpeed = 250;
 
 	void movement()
 	{
 		if (Input::GetKeyDown(GLFW_KEY_W))
-			transform.position += transform.getForwardVector() * Time::deltaTime;
+			transform->position += transform->getForwardVector() * Time::deltaTime * flightSpeed;
 		if (Input::GetKeyDown(GLFW_KEY_S))
-			transform.position -= transform.getForwardVector() * Time::deltaTime;
+			transform->position -= transform->getForwardVector() * Time::deltaTime * flightSpeed;
 		if (Input::GetKeyDown(GLFW_KEY_A))
-			transform.position -= transform.getRightVector() * Time::deltaTime;
+			transform->position -= transform->getRightVector() * Time::deltaTime * flightSpeed;
 		if (Input::GetKeyDown(GLFW_KEY_D))
-			transform.position += transform.getRightVector() * Time::deltaTime;
+			transform->position += transform->getRightVector() * Time::deltaTime * flightSpeed;
 	}
 
-	float x = 0.0;
-	float y = 0.0;
-
-	float mouseSensitivity = 0.2;
+	float mouseSensitivity = 0.007f;
 
 	void rotation()
 	{
 		x -= Input::GetAxis("Mouse X") * mouseSensitivity;
-		y -= Input::GetAxis("Mouse Y") * mouseSensitivity;
-
-		//std::cout << x << std::endl;
+		y += Input::GetAxis("Mouse Y") * mouseSensitivity;
 
 		bool constrainPitch = true;
 
@@ -54,19 +58,11 @@ public:
 		if (y < -89.0f)
 			y = -89.0f;
 
-		//std::cout << y << std::endl;
-
-#ifdef USE_GLM_QUATERNION
-		transform.rotation = glm::quat(glm::vec3(y / 180 * M_PI, x / 180 * M_PI, 0));
-#else
-		transform.rotation = Quaternion(glm::vec3(y, x, 0));
-#endif
-
-		//std::cout << transform.rotation.axisAngles.x << ", " << transform.rotation.y << ", " << transform.rotation.z << std::endl;
+		transform->rotation = Quaternion(Vector3(y, x, 0));
 	}
 
-	CameraOrbit(Transform &newTransform) : BehaviourScript(newTransform)
-	{
-
+	void DrawUI() {
+		ImGui::DragFloat("Rotation X", &x);
+		ImGui::DragFloat("Rotation Y", &y);
 	}
 };

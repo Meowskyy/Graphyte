@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Objects\GameObject.h"
+#include <string>
 
 class ModelLoader {
 public:
-	static void loadGameObject(std::string const &path);
+	static void loadGameObject(std::string const path);
 };

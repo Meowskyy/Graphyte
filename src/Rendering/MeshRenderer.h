@@ -4,32 +4,34 @@
 
 #include "Scripting\BehaviourScript.h"
 
-//#include "Material.h"
+#include "Rendering\Material\Material.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
-#include "Mesh.h"
+#include "Rendering\Mesh.h"
+
+#include "BoundingBox.h"
 
 class MeshRenderer : public BehaviourScript {
 private:
-	void processMesh(aiMesh *mesh, const aiScene *scene, std::string directory);
+	void processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory);
 
-	Shader shader;
+	glm::mat4 model;
+	glm::mat4 rot;
 public:
 	Mesh mesh;
 
-	BoundingBox boundaries;
-
-	//std::vector<Material> materials;
+	std::vector<Material> materials;
 
 	// Constructor
-	MeshRenderer(Transform &newTransform);
-	MeshRenderer::MeshRenderer(Transform &newTransform, aiMesh* mesh, const aiScene* scene, std::string directory);
+	MeshRenderer();
+	MeshRenderer(aiMesh* mesh, const aiScene* scene, const std::string directory);
 
 	void Update();
-	void OnBehaviourAdded() {
-		glm::vec3 dimensions = boundaries.max - boundaries.min;
-		transform.position = boundaries.min + (dimensions / 2.0f);
-	}
+	void OnBehaviourAdded();
+
+	void RecalculateBoundingBox();
+
+	void DrawUI();
 };

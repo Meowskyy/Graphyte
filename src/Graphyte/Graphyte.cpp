@@ -1,19 +1,15 @@
 #include "Graphyte.h"
 
 #include <iostream>
-#include <filesystem>
 
 // STANDARD
 #include "Cursor\Cursor.h"
 #include "Input\Input.h"
 #include "Rendering\Screen.h"
-
 #include "Rendering\Camera.h"
 
 #include "Text\TextRenderer.h"
 #include "Resources\ResourceManager.h"
-
-// Rendering
 #include "Rendering\MeshRenderer.h"
 
 #include "IO\ModelLoader.h"
@@ -26,8 +22,10 @@
 #include "Custom Behaviours\MoveAround.h"
 #include "Custom Behaviours\CameraOrbit.h"
 
-#include "imgui.h"
+// PHYSICS
+#include "Physics\Rigidbody.h"
 
+#include "imgui.h"
 #include "examples\imgui_impl_glfw.h"
 #include "examples\imgui_impl_opengl3.h"
 
@@ -40,13 +38,14 @@ GameObject* Graphyte::selectedGameObject;
 // timing
 float lastFrame = 0.0f;
 
+static float frameTimes[500];
+static int frameTimeOffset = 0;
+
 enum test_enum {
 	Item1 = 0,
 	Item2,
 	Item3
 };
-
-std::string getexepath();
 
 void Graphyte::run() 
 {
@@ -119,10 +118,23 @@ void Graphyte::initWindow()
 	setupCallbacks();
 }
 
-#include "UniformGrid.h"
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+int currentFrame = 0;
+
+
+// TODO: Move somewhere more appropriate
+double lastTime = glfwGetTime();
+float lastFPSCount = 0;
+float frameTime = 0;
+int nbFrames = 0;
+float inputTime = 0;
+
 void Graphyte::mainLoop() 
 {
+	currentScene.OnSceneLoad();
+
+	glCullFace(GL_FRONT);
+
 	float previousdt = 0;
 	float currentdt = 0;
 
@@ -131,6 +143,14 @@ void Graphyte::mainLoop()
 	float accumulator = 0.0f;
 
 	while (!glfwWindowShouldClose(mainWindow)) {
+		// Deltatime		
+		float currentTime = 0; // This accumulates the time that has passed.
+		float previousTime = 0;
+
+		currentTime = glfwGetTime();
+		Time::deltaTime = currentTime - previousTime; 	// UPDATE DELTATIME
+		previousTime = currentTime;
+
 		Input::UpdateKeyStates();
 		Input::UpdateMousePosition();
 
@@ -141,11 +161,6 @@ void Graphyte::mainLoop()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
-		//ImGui_ImplGlfwGL3_NewFrame();
-
-		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
 
 		DrawUI();
 
@@ -165,16 +180,28 @@ void Graphyte::mainLoop()
 
 		accumulator += frameTime;
 
-		int i = 0;
 		while (accumulator >= Time::fixedTimestep)
 		{
 			previousdt = currentdt;
 			currentdt = Time::fixedTimestep;
-			// FIXEDUPDATE
-			std::cout << "FixedUpdate: " << i << std::endl;
 			accumulator -= Time::fixedTimestep;
-			
-			i++;
+
+			currentScene.FixedUpdate();
+
+			for (int i = 0; i < Scene::gameObjects.size(); i++) {
+				for (int j = i; j < Scene::gameObjects.size(); j++) {
+					if (j == i || !Scene::gameObjects[i]->enabled || !Scene::gameObjects[j]->enabled)
+					{
+						continue;
+					}
+
+					Rigidbody* obj = static_cast<Rigidbody*>(Scene::gameObjects[i]->GetBehaviour("Rigidbody"));
+
+					if (obj != nullptr) {
+						obj->TestAABBOverlap(Scene::gameObjects[j]->transform);
+					}
+				}
+			}
 		}
 
 		const float alpha = accumulator / dt;
@@ -184,16 +211,27 @@ void Graphyte::mainLoop()
 
 		Time::deltaTime = frameTime;
 
-		std::cout << "Time Remainder: " << Time::timeRemainder << std::endl;
-		std::cout << "DT: " << Time::deltaTime << std::endl;
+		// std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedDeltaTime << std::endl;
 
-		std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedTimestep << std::endl;
-		// Update with fixedDelta
-		// Update GameObjects
-		//currentScene.FixedUpdate();
+		// configure global opengl state
+		// -----------------------------
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Scene Update()
 		currentScene.Update();
 
+		currentTime += Time::deltaTime;
+
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		frameTimes[currentFrame] = 1000.0f / ImGui::GetIO().Framerate;
+		currentFrame++;
+
+		if (currentFrame > 500) {
+			currentFrame = 0;
+		}
 
 		glfwMakeContextCurrent(mainWindow);
 		glfwSwapBuffers(mainWindow);
@@ -204,6 +242,9 @@ bool show_demo_window = true;
 bool show_transform_window = true;
 bool show_camera_window = true;
 bool show_scene_window = true;
+bool backFaceCulling = false;
+bool wireframe = false;
+bool alpha = false;
 void Graphyte::DrawUI()
 {
 	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
@@ -219,17 +260,51 @@ void Graphyte::DrawUI()
 
 		ImGui::Begin("Debug Window");
 
-		//ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
+		if (ImGui::Checkbox("Backface Culling", &backFaceCulling)) {
+			if (backFaceCulling) 
+			{
+				glCullFace(GL_FRONT);
+				glDisable(GL_CULL_FACE);
+			}
+			else 
+			{
+				glCullFace(GL_FRONT);
+				glEnable(GL_CULL_FACE);
+			}
+		}
+
 		/*
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+		if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
 		counter++;
 		ImGui::SameLine();
 		ImGui::Text("counter = %d", counter);
 		*/
 
+		if (ImGui::Checkbox("Wireframe", &wireframe)) {
+			if (wireframe) {
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			else {
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+		}
+
+		if (ImGui::Checkbox("Alpha", &alpha)) {
+			if (alpha) {
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+			else {
+				glDisable(GL_BLEND);
+			}
+		}
+
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		frameTimeOffset = (frameTimeOffset + 1) % IM_ARRAYSIZE(frameTimes);
+		ImGui::PlotLines("Frame Times", frameTimes, IM_ARRAYSIZE(frameTimes), frameTimeOffset,"", 0.0f, 16.0F, ImVec2(0, 80));
 
 		ImGui::End();
 	}
@@ -241,62 +316,45 @@ void Graphyte::DrawUI()
 
 		if (selectedGameObject) {
 			//ImGui::Text("Name: %s", selectedGameObject->transform.name.c_str());
-			char *arr = &selectedGameObject->transform.name[0u];
+			char *name = &selectedGameObject->transform.name[0u];
 
-			//std::cout << IM_ARRAYSIZE(arr) << std::endl;
+			//std::cout << IM_ARRAYSIZE(name) << std::endl;
 			//std::cout << sizeof(selectedGameObject->transform.name) << std::endl;
 
-			// TODO: Fixing a nasty bug that causes the program to crash whenever the length is 24 or more characters?
-			ImGui::InputText("Name", arr, IM_ARRAYSIZE(arr) * 2);
+			// TODO: Fixing a nasty bug that causes the program to crash whenever the length is more than 24 characters?
+			ImGui::InputText("Name", name, 24);
+			ImGui::Checkbox("Enabled", &selectedGameObject->enabled);
 
 			ImGui::DragFloat3("Position", (float*)&selectedGameObject->transform.position);
 			ImGui::DragFloat3("Rotation", (float*)&selectedGameObject->transform.rotation);
 			ImGui::DragFloat3("Scale", (float*)&selectedGameObject->transform.scale);
 
+			ImGui::Text("Parent: ", (float*)&selectedGameObject->transform.parent->name);
+
+			ImGui::DragFloat3("Bounding Box Min", (float*)&selectedGameObject->transform.boundingBox.min);
+			ImGui::DragFloat3("Bounding Box Max", (float*)&selectedGameObject->transform.boundingBox.max);
+
 			static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 			int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 			ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.
-			for (int i = 0; i < selectedGameObject->behaviour.size(); i++)
-			{
-				// Disable the default open on single-click behavior and pass in Selected flag according to our selection state.
-				ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ((selection_mask & (1 << i)) ? ImGuiTreeNodeFlags_Selected : 0);
-				// Node
-				bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, selectedGameObject->behaviour[i]->name().c_str(), i);
-				if (ImGui::IsItemClicked()) {
-					//selectedGameObject = gameObjects[i];
-					node_clicked = i;
-				}
-				if (node_open)
-				{
-					ImGui::Text("Add behaviour information here, like variables");
-					ImGui::TreePop();
-				}
-			}
-			if (node_clicked != -1)
-			{
-				// Update selection state. Process outside of tree loop to avoid visual inconsistencies during the clicking-frame.
-				if (ImGui::GetIO().KeyCtrl)
-					selection_mask ^= (1 << node_clicked);          // CTRL+click to toggle
-				else //if (!(selection_mask & (1 << node_clicked))) // Depending on selection behavior you want, this commented bit preserve selection when clicking on item that is part of the selection
-					selection_mask = (1 << node_clicked);           // Click to single-select
-			}
+			
+			selectedGameObject->DrawBehaviours();
 			ImGui::PopStyleVar();
-
-
-			if (ImGui::Button("Add Behaviour"))
-			{
-
-			}
 
 			// TODO: Making this dynamic instead
 			if (ImGui::Button("Add AudioEmitter"))
 			{
-				selectedGameObject->AddBehaviour(new AudioEmitter(selectedGameObject->transform, "Assets/resources/Audio/testAudio.wav"));
+				selectedGameObject->AddBehaviour(new AudioEmitter("Assets/resources/Audio/testAudio.wav"));
 			}
 
 			if (ImGui::Button("Add MoveAround"))
 			{
-				selectedGameObject->AddBehaviour(new MoveAround(selectedGameObject->transform));
+				selectedGameObject->AddBehaviour(new MoveAround());
+			}
+
+			if (ImGui::Button("Add Rigidbody"))
+			{
+				selectedGameObject->AddBehaviour(new Rigidbody());
 			}
 		}
 
@@ -306,17 +364,24 @@ void Graphyte::DrawUI()
 	if (show_scene_window) 
 	{
 		ImGui::Begin("Scene");
-		if (ImGui::Button("Create GameObject"))
+		if (ImGui::Button("Create Crysis Model"))
 			currentScene.AddGameObject();
 
 		if (ImGui::Button("Create Child GameObject"))
 			currentScene.AddChild();
 
-		if (ImGui::Button("Create 1000 GameObjects"))
+		if (ImGui::Button("Create 1000 Crysis Models"))
 			currentScene.Add1000GameObjects();
+
+		if (ImGui::Button("Create World"))
+			currentScene.AddWorld();
+
+		if (ImGui::Button("Create Grid"))
+			currentScene.AddGrid();
 
 		static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 		int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
+		
 		ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.
 		for (int i = 0; i < currentScene.gameObjects.size(); i++)
 		{
@@ -330,7 +395,7 @@ void Graphyte::DrawUI()
 			}
 			if (node_open)
 			{
-				currentScene.gameObjects[i]->transform.DrawUI();
+				currentScene.gameObjects[i]->DrawChildren();
 				ImGui::TreePop();
 			}
 		}
@@ -346,7 +411,6 @@ void Graphyte::DrawUI()
 
 		ImGui::End();
 	}
-
 }
 
 void Graphyte::SetupIMGUI() 
@@ -386,9 +450,6 @@ void Graphyte::SetupIMGUI()
 void Graphyte::cleanup() 
 {
 	// Cleanup
-	//ImGui_ImplGlfwGL3_Shutdown();
-
-	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
@@ -399,27 +460,20 @@ void Graphyte::cleanup()
 // TODO: Moving these somewhere more appropriate
 void Graphyte::loadShaders() 
 {
-	std::string vert = getexepath() + "/Shaders/Standard.vert";
-	std::string frag = getexepath() + "/Shaders/Standard.frag";
-	ResourceManager::LoadShader(vert.c_str(), frag.c_str(), nullptr, "Standard");
+	ResourceManager::LoadShader("Assets/shaders/Standard.vert", "Assets/shaders/Standard.frag", nullptr, "Standard");
+
+	ResourceManager::LoadShader("Assets/shaders/Grid.vert", "Assets/shaders/Grid.frag", nullptr, "Grid");
+	ResourceManager::GetShader("Grid").shaderName = "Grid";
+
+	//ResourceManager::LoadTexture("Textures/Grid/texture_diffuse.psd", true, true, "Grid");
+	ResourceManager::LoadTexture("Assets/textures/Grid/texture_diffuse.psd", false, true, "Grid");
+	//ResourceManager::GetTexture("Grid").SetFiltering(false);
+	// TODO: Move these somewhere more appropriate
+	//glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(1920), 0.0f, static_cast<GLfloat>(1080));
+	//ResourceManager::LoadShader("Shaders/GUIText.vert", "Shaders/GUIText.frag", nullptr, "GUIText").SetMatrix4("projection", projection, GL_TRUE);
+	//ResourceManager::LoadShader("Shaders/GUI.vert", "Shaders/GUI.frag", nullptr, "GUI").SetMatrix4("projection", projection, GL_TRUE);
+	//projection = glm::perspective(glm::radians(65.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 }
-
-#define WINDOWS  /* uncomment this line to use it for windows.*/ 
-#ifdef WINDOWS
-#include <direct.h>
-#define GetCurrentDir _getcwd
-#else
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#endif
-
-std::string getexepath() {
-	char buff[FILENAME_MAX];
-	GetCurrentDir(buff, FILENAME_MAX);
-	std::string current_working_dir(buff);
-	return current_working_dir;
-}
-
 
 // TODO: Moving these somewhere more appropriate
 void Graphyte::loadModels()
