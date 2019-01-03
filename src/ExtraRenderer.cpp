@@ -47,14 +47,13 @@ void ExtraRenderer::DrawAABB(BoundingBox& box, Vector3& position) {
 	meshRenderer.mesh.vertices = newVertices;
 	meshRenderer.mesh.indices = newIndices;
 
-	meshRenderer.mesh.setupMesh();
-
 	// TODO: Calculate bounding box based on rotation
+	float width = box.max.x - box.min.x;
 	float height = box.max.y - box.min.y;
 	float depth = box.max.z - box.min.z;
 
-	meshRenderer.transform->position = position + Vector3(0, box.min.y + height / 2, box.min.z + depth / 2);
-	meshRenderer.transform->scale = Vector3(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
+	meshRenderer.transform->position = position + Vector3(box.min.x + width / 2, box.min.y + height / 2, box.min.z + depth / 2);
+	meshRenderer.transform->scale = Vector3(width, height, depth);
 
 	meshRenderer.OnBehaviourAdded();
 

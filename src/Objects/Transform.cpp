@@ -47,7 +47,7 @@ Vector3 Transform::GetWorldPosition()
 
 Transform* Transform::GetChild(int index)
 {
-	return &gameObject->children[index].transform;
+	return &gameObject->children[index]->transform;
 }
 
 void Transform::Rotate(Vector3 direction, float speed)

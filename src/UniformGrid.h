@@ -30,7 +30,7 @@ public:
 	//std::vector<UniformGrid*> childGrid;
 	char activeChildren = 0; // Bitmask for checking which children are in use
 
-	std::vector<GameObject*> gameObjects;				// GameObjects that this tree contains
+	std::vector<GameObject*> gameObjects;					// GameObjects that this grid contains
 	//static std::queue<GameObject*> pendingGameObjects;	// GameObjects that will be added later
 
 	UniformGrid() {}
@@ -195,11 +195,11 @@ public:
 			boundaries.max.z > objMax.z
 		) 
 		{
-			std::cout << gameObject->transform.name << " can completely fit inside Grid" << std::endl;
+			//std::cout << gameObject->transform.name << " can completely fit inside Grid" << std::endl;
 			return true;
 		}
 
-		std::cout << gameObject->transform.name << " can not completely fit inside Grid" << std::endl;
+		//std::cout << gameObject->transform.name << " can not completely fit inside Grid" << std::endl;
 		return false;
 
 		/*
@@ -259,8 +259,46 @@ public:
 			objList.push_back(gameObject);
 
 			childGrid[a] = CreateNode(octant[a], gameObject);
-			childGrid[a]->SetupGrid(size / 2);
+			childGrid[a]->SetupChild();
 			
+			activeChildren |= (char)(1 << a);
+
+			hasChildren = true;
+		}
+	}
+
+	void SetupChild() {
+		Vector3 dimensions = boundaries.max - boundaries.min;
+
+		//Check to see if the dimensions of the box are greater than the minimum dimensions
+		if (dimensions.x <= minSize && dimensions.y <= minSize && dimensions.z <= minSize)
+		{
+			return;
+		}
+
+		//Create subdivided regions for each octant
+		Vector3 half = dimensions / 2.0f;
+		Vector3 center = boundaries.min + half;
+
+		BoundingBox octant[8];
+		octant[0] = BoundingBox(boundaries.min, center);
+		octant[1] = BoundingBox(Vector3(center.x, boundaries.min.y, boundaries.min.z), Vector3(boundaries.max.x, center.y, center.z));
+		octant[2] = BoundingBox(Vector3(center.x, boundaries.min.x, center.z), Vector3(boundaries.max.x, center.y, boundaries.max.z));
+		octant[3] = BoundingBox(Vector3(boundaries.min.x, boundaries.min.y, center.z), Vector3(center.x, center.y, boundaries.max.z));
+		octant[4] = BoundingBox(Vector3(boundaries.min.x, center.y, boundaries.min.z), Vector3(center.x, boundaries.max.y, center.z));
+		octant[5] = BoundingBox(Vector3(center.x, center.y, boundaries.min.z), Vector3(boundaries.max.x, boundaries.max.y, center.z));
+		octant[6] = BoundingBox(center, boundaries.max);
+		octant[7] = BoundingBox(Vector3(boundaries.min.x, center.y, center.z), Vector3(center.x, boundaries.max.y, boundaries.max.z));
+
+		for (int a = 0; a < 8; a++)
+		{
+			GameObject* gameObject;
+			std::vector<GameObject*> objList(1); // sacrifice potential CPU time for a smaller memory footprint
+			objList.push_back(gameObject);
+
+			childGrid[a] = CreateNode(octant[a], gameObject);
+			childGrid[a]->SetupChild();
+
 			//std::cout << "Created Node " << std::endl;
 
 			activeChildren |= (char)(1 << a);
@@ -270,7 +308,7 @@ public:
 	}
 
 	void DrawGrid() {
-		ExtraRenderer::DrawAABB(boundaries, Vector3(0, 0, 0));
+		//ExtraRenderer::DrawAABB(boundaries, Vector3(0, 0, 0));
 
 		// Drawing the bounding boxes of the child grids
 		if (hasChildren) {

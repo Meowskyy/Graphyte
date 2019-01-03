@@ -26,7 +26,7 @@ void Scene::OnSceneLoad()
 	AddGrid();
 
 	uniformGrid = new UniformGrid();
-	uniformGrid->SetupGrid(64);
+	uniformGrid->SetupGrid(32);
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
@@ -179,7 +179,7 @@ GameObject* Scene::Instantiate(GameObject *original) {
 }
 
 GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
-	parent->AddChild(*original);
+	parent->AddChild(original);
 
-	return &parent->children[parent->children.size() - 1];
+	return parent->children[parent->children.size() - 1];
 }

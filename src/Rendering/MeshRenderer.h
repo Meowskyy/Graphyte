@@ -19,7 +19,7 @@ private:
 
 public:
 	// TODO: Remove this from release
-	bool drawBoundingBox = true;
+	bool drawBoundingBox = false;
 
 	Mesh mesh;
 

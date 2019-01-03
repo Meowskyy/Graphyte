@@ -28,7 +28,7 @@ void MeshRenderer::OnBehaviourAdded()
 	glm::mat4 model = glm::mat4();
 	model = glm::scale(model, transform->scale);					// SCALE
 	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	glm::mat4 rot = glm::mat4_cast(transform->rotation);						// ROTATION
+	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
 	model = model * rot;
 }
 
@@ -60,6 +60,8 @@ void MeshRenderer::RecalculateBoundingBox()
 
 void MeshRenderer::DrawUI()
 {
+	ImGui::Checkbox("Draw bounding box", &drawBoundingBox);
+
 	for (int i = 0; i < materials.size(); i++) {
 		ImGui::Text("Shader: ");
 		ImGui::SameLine();
@@ -72,6 +74,7 @@ void MeshRenderer::DrawUI()
 }
 
 MeshRenderer::MeshRenderer() {
+	mesh = Mesh();
 	materials.push_back(Material());
 }
 
@@ -88,7 +91,7 @@ MeshRenderer::MeshRenderer(aiMesh* mesh, const aiScene* scene, const std::string
 // TODO: Group objects with same shader
 void MeshRenderer::Update()
 {
-	glm::mat4 model = glm::mat4();
+	glm::mat4 model = glm::mat4(1.0f);
 
 	// create transformations
 	model = glm::scale(model, transform->scale);					// SCALE
@@ -111,7 +114,6 @@ void MeshRenderer::Update()
 	glActiveTexture(0);
 }
 
-// TODO: Group objects with same shader
 void MeshRenderer::DrawLines()
 {
 	// create transformations
@@ -123,15 +125,10 @@ void MeshRenderer::DrawLines()
 	model = model * rot;
 
 	materials[0].shader.SetMatrix4("model", model, true);
-	//materials[0].Use();
-	mesh.RenderLines();
 
-	// Unbind texture
-	//glActiveTexture(0);
+	mesh.RenderLines();
 }
 
-
-// Reference Version
 void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory)
 {
 	// data to fill
@@ -227,7 +224,6 @@ void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const s
 	// return a mesh object created from the extracted mesh data
 	this->mesh = Mesh(vertices, uv, indices);
 }
-
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.

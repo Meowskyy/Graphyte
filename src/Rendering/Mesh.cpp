@@ -17,10 +17,10 @@ Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, 
 }
 
 Mesh::~Mesh() {
-	glDeleteVertexArrays(1, &VAO);
+	//glDeleteVertexArrays(1, &VAO);
 
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
+	//glDeleteBuffers(1, &VBO);
+	//glDeleteBuffers(1, &EBO);
 }
 
 void Mesh::Render()
@@ -34,17 +34,28 @@ void Mesh::Render()
 }
 
 void Mesh::RenderLines() {
+	setupMesh();
+
+	//glEnable(GL_LINE_SMOOTH);
+	//glEnable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(1, 0);
+	//glLineWidth(10);
+
 	glBindVertexArray(VAO);
 
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(4 * sizeof(unsigned int)));
 	glDrawElements(GL_LINES, 8, GL_UNSIGNED_INT, (GLvoid*)(8 * sizeof(unsigned int)));
 
-	//glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(3 * sizeof(int)));
-	//glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
+	//glDisable(GL_LINE_SMOOTH);
 
 	// Unbinding VAO
 	glBindVertexArray(0);
+
+	// Delete all buffers at the end
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 }
 
 void Mesh::setupMesh()
