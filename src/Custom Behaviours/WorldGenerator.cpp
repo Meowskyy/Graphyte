@@ -40,7 +40,6 @@ void WorldGenerator::OnBehaviourAdded() {
 				object->transform.position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
 				MeshRenderer* renderer = dynamic_cast<MeshRenderer*>(object->AddBehaviour(new MeshRenderer()));
 				
-				
 				object->AddBehaviour(new Chunk());
 
 				// TODO: Getting behaviours could probably be made easier

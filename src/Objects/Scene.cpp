@@ -179,7 +179,7 @@ GameObject* Scene::Instantiate(GameObject *original) {
 }
 
 GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
-	parent->AddChild(original);
+	parent->AddChild(*original);
 
-	return parent->children[parent->children.size() - 1];
+	return &parent->children[parent->children.size() - 1];
 }

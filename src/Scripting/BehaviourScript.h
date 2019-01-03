@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Objects\Transform.h"
+
 #include "imgui.h"
 
 #include <iostream>
@@ -11,12 +12,13 @@ public:
 	bool enabled = true;
 	// The transform this script belongs to
 	Transform* transform;
+
 	// The gameObject this script belongs to
 	GameObject* gameObject;
 
 	// Constructor
-	BehaviourScript() {}
-	~BehaviourScript() {}
+	BehaviourScript();
+	~BehaviourScript();
 
 	virtual std::string name() { return typeid(*this).name(); }
 	virtual operator std::string() const { return typeid(*this).name(); }

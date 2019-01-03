@@ -16,6 +16,13 @@ Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, 
 	setupMesh();
 }
 
+Mesh::~Mesh() {
+	glDeleteVertexArrays(1, &VAO);
+
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+}
+
 void Mesh::Render()
 {
 	// draw mesh
@@ -67,7 +74,8 @@ void Mesh::setupMesh()
 
 		// TODO: Checking if everything works properly and adding normals
 		// Vertex positions
-		glBufferSubData(GL_ARRAY_BUFFER, 0, vertexArraySize, &vertices[0]);
+		if (vertexArraySize > 0) // TODO: Do this somehow else
+			glBufferSubData(GL_ARRAY_BUFFER, 0, vertexArraySize, &vertices[0]);
 		// Normal positions
 		if (normalArraySize > 0) // TODO: Do this somehow else
 			glBufferSubData(GL_ARRAY_BUFFER, vertexArraySize, normalArraySize, &normals[0]);

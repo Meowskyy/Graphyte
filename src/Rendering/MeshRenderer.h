@@ -17,8 +17,6 @@ class MeshRenderer : public BehaviourScript {
 private:
 	void processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory);
 
-	glm::mat4 model;
-	glm::mat4 rot;
 public:
 	// TODO: Remove this from release
 	bool drawBoundingBox = true;

@@ -6,6 +6,8 @@
 #include "Math\Vector3.h"
 #include "Math\Vector2.h"
 
+#include <iostream>
+
 class Mesh {
 public:
 	/*  Mesh Data  */
@@ -17,6 +19,7 @@ public:
 	/*  Functions  */
 	// constructor
 	Mesh() {};
+	~Mesh();
 	Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, const std::vector<unsigned int> indices);
 
 	// render the mesh

@@ -29,7 +29,7 @@ public:
 
 	void OnBehaviourAdded() 
 	{
-		meshRenderer = dynamic_cast<MeshRenderer*>(gameObject->GetBehaviour("MeshRenderer"));
+		meshRenderer = static_cast<MeshRenderer*>(gameObject->GetBehaviour("MeshRenderer"));
 		mesh = &meshRenderer->mesh;
 	}
 

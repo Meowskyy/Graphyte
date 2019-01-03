@@ -25,16 +25,20 @@ void MeshRenderer::OnBehaviourAdded()
 	//glm::vec3 dimensions = transform->boundingBox.max - transform->boundingBox.min;
 	//transform->position = transform->boundingBox.min + (dimensions / 2.0f);
 
+	glm::mat4 model = glm::mat4();
 	model = glm::scale(model, transform->scale);					// SCALE
 	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	rot = glm::mat4_cast(transform->rotation);						// ROTATION
+	glm::mat4 rot = glm::mat4_cast(transform->rotation);						// ROTATION
 	model = model * rot;
 }
 
 void MeshRenderer::RecalculateBoundingBox()
 {
-	transform->boundingBox.min.y = 10000;
-
+	if (mesh.vertices.size() > 0) {
+		transform->boundingBox.min.x = transform->boundingBox.max.x = mesh.vertices[0].x;
+		transform->boundingBox.min.y = transform->boundingBox.max.y = mesh.vertices[0].y;
+		transform->boundingBox.min.z = transform->boundingBox.max.z = mesh.vertices[0].z;
+	}
 
 	for (int i = 0; i < mesh.vertices.size(); i++) 
 	{
@@ -84,24 +88,13 @@ MeshRenderer::MeshRenderer(aiMesh* mesh, const aiScene* scene, const std::string
 // TODO: Group objects with same shader
 void MeshRenderer::Update()
 {
-	bool positionHasChanged = transform->positionHasChanged();
-	bool rotationHasChanged = transform->rotationHasChanged();
-	bool scaleHasChanged = transform->scaleHasChanged();
-	
-	if (positionHasChanged || rotationHasChanged || scaleHasChanged) 
-	{
-		// create transformations
-		model = glm::mat4();
-		model = glm::scale(model, transform->scale);					// SCALE
-		model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	glm::mat4 model = glm::mat4();
 
-		if (rotationHasChanged) 
-		{
-			rot = glm::mat4_cast(transform->rotation);					// ROTATION
-		}
-
-		model = model * rot;
-	}
+	// create transformations
+	model = glm::scale(model, transform->scale);					// SCALE
+	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
+	model = model * rot;
 
 	for (int i = 0; i < materials.size(); i++) {
 		materials[i].shader.SetMatrix4("model", model, true);
@@ -121,34 +114,20 @@ void MeshRenderer::Update()
 // TODO: Group objects with same shader
 void MeshRenderer::DrawLines()
 {
-	bool positionHasChanged = transform->positionHasChanged();
-	bool rotationHasChanged = transform->rotationHasChanged();
-	bool scaleHasChanged = transform->scaleHasChanged();
+	// create transformations
+	glm::mat4 model = glm::mat4();
+	model = glm::scale(model, transform->scale);					// SCALE
+	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
 
-	if (positionHasChanged || rotationHasChanged || scaleHasChanged)
-	{
-		// create transformations
-		model = glm::mat4();
-		model = glm::scale(model, transform->scale);					// SCALE
-		model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	model = model * rot;
 
-		if (rotationHasChanged)
-		{
-			rot = glm::mat4_cast(transform->rotation);					// ROTATION
-		}
-
-		model = model * rot;
-	}
-
-	for (int i = 0; i < materials.size(); i++) {
-		materials[i].shader.SetMatrix4("model", model, true);
-	}
-
-	materials[0].Use();
+	materials[0].shader.SetMatrix4("model", model, true);
+	//materials[0].Use();
 	mesh.RenderLines();
 
 	// Unbind texture
-	glActiveTexture(0);
+	//glActiveTexture(0);
 }
 
 

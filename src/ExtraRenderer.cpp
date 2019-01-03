@@ -49,16 +49,14 @@ void ExtraRenderer::DrawAABB(BoundingBox& box, Vector3& position) {
 
 	meshRenderer.mesh.setupMesh();
 
-	meshRenderer.transform = new Transform();
-	meshRenderer.transform->position = position + Vector3(0, box.max.y, 0);
+	// TODO: Calculate bounding box based on rotation
+	float height = box.max.y - box.min.y;
+	float depth = box.max.z - box.min.z;
+
+	meshRenderer.transform->position = position + Vector3(0, box.min.y + height / 2, box.min.z + depth / 2);
 	meshRenderer.transform->scale = Vector3(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
 
 	meshRenderer.OnBehaviourAdded();
 
-	//glm::vec3 center = glm::vec3((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.min.z + box.max.z) / 2);
-	//glm::mat4 transform = glm::translate(glm::mat4(1), center) * glm::scale(glm::mat4(1), size);
-
 	meshRenderer.DrawLines();
-
-	std::cout << "Drawing AABB" << std::endl;
 }
