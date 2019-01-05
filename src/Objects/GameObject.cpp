@@ -50,7 +50,7 @@ void GameObject::OnRigidbodyCollisionEnter()
 {
 	for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
 	{
-		//behaviour.at(behaviourIndex)->OnRigidbodyCollisionEnter();
+		behaviour.at(behaviourIndex)->OnRigidbodyCollisionEnter();
 	}
 }
 

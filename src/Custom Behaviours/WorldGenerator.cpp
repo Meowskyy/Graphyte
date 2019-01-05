@@ -13,14 +13,11 @@ void WorldGenerator::OnBehaviourAdded() {
 			for (int y = 0; y < CHUNK_SIZE * WORLD_SIZE_Y; y++) {
 				int index = x + y * (CHUNK_SIZE * WORLD_SIZE_Y) + z * (CHUNK_SIZE * WORLD_SIZE_X) * (CHUNK_SIZE * WORLD_SIZE_Y);
 
-
 				if (perlinNoise.noise0_1(x / noiseScale, y / noiseScale, z / noiseScale) > 0.4) {
 					blocks[index] = 1;
-					//std::cout << "WorldGen: 1" << std::endl;
 				}
 				else {
 					blocks[index] = 0;
-					//std::cout << "WorldGen: 0" << std::endl;
 				}
 			}
 		}
@@ -38,12 +35,8 @@ void WorldGenerator::OnBehaviourAdded() {
 				Vector3 position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
 				
 				object->transform.position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
-				
-				object->AddBehaviour(new MeshRenderer());
-				object->AddBehaviour(new Chunk());
-
-				// TODO: Getting behaviours could probably be made easier
-				Chunk* voxelGen = dynamic_cast<Chunk*>(object->GetBehaviour("Chunk"));
+			
+				Chunk* voxelGen = static_cast<Chunk*>(object->GetBehaviour("Chunk"));
 				voxelGen->chunkX = x * CHUNK_SIZE;
 				voxelGen->chunkY = y * CHUNK_SIZE;
 				voxelGen->chunkZ = z * CHUNK_SIZE;

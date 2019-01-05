@@ -113,8 +113,6 @@ void Graphyte::initWindow()
 	loadShaders();
 	loadModels();
 
-	currentScene.AddCameraObject();
-
 	setupCallbacks();
 }
 
@@ -301,6 +299,9 @@ void Graphyte::DrawUI()
 			}
 		}
 
+		ImGui::Checkbox("Grid Ready", &UniformGrid::gridReady);
+		ImGui::Checkbox("Grid Built", &UniformGrid::gridBuilt);
+
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 		frameTimeOffset = (frameTimeOffset + 1) % IM_ARRAYSIZE(frameTimes);
@@ -379,6 +380,9 @@ void Graphyte::DrawUI()
 		if (ImGui::Button("Create Grid"))
 			currentScene.AddGrid();
 
+		if (ImGui::Button("Create Grid Test Object"))
+			currentScene.AddGridTestGameObject();
+
 		static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 		int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 		
@@ -408,6 +412,8 @@ void Graphyte::DrawUI()
 				selection_mask = (1 << node_clicked);           // Click to single-select
 		}
 		ImGui::PopStyleVar();
+
+		currentScene.uniformGrid.DrawExtra();
 
 		ImGui::End();
 	}

@@ -13,26 +13,24 @@
 
 #include "Rendering\Camera.h"
 
-#include "UniformGrid.h"
-
 // Camera
 std::vector<GameObject*> Scene::gameObjects;
-
-UniformGrid* uniformGrid;
+UniformGrid Scene::uniformGrid;
 
 // TODO: Settings up OnSceneLoad function
 void Scene::OnSceneLoad()
 {
+	AddCameraObject();
 	AddGrid();
-
-	uniformGrid = new UniformGrid();
-	uniformGrid->SetupGrid(32);
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
 		gameObjects[i]->OnSceneLoad();
 	}
+
+	uniformGrid = UniformGrid(64);
+	uniformGrid.UpdateGrid();
 }
 
 void Scene::Update()
@@ -46,14 +44,12 @@ void Scene::Update()
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
-		if (gameObjects[i]->hasCollision) {
-			uniformGrid->CanFitIntoBoundaries(gameObjects[i]);
-		}
-
 		gameObjects[i]->Update();
 	}
 
-	uniformGrid->DrawGrid();
+	uniformGrid.Update();
+
+	uniformGrid.DrawGrid();
 }
 
 // FixedUpdate on BehaviourScripts
@@ -68,6 +64,12 @@ void Scene::FixedUpdate()
 void Scene::AddGameObject()
 {
 	ModelLoader::loadGameObject("Assets/resources/nanosuit/nanosuit.obj");
+}
+
+// TODO: Move this somewhere more appropriate
+void Scene::AddGridTestGameObject()
+{
+	GameObject* object = Instantiate(new GameObject(), Vector3(-6, 6, 6));
 }
 
 void Scene::AddChild() {
@@ -175,6 +177,11 @@ void Scene::AddWorld()
 GameObject* Scene::Instantiate(GameObject *original) {
 	gameObjects.push_back(original);
 
+	if (uniformGrid.gridReady) 
+	{
+		uniformGrid.InsertGameObject(gameObjects[gameObjects.size() - 1]);
+	}
+
 	return gameObjects[gameObjects.size() - 1];
 }
 
@@ -182,4 +189,16 @@ GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
 	parent->AddChild(original);
 
 	return parent->children[parent->children.size() - 1];
+}
+
+GameObject* Scene::Instantiate(GameObject *original, Vector3 position) {
+	gameObjects.push_back(original);
+	gameObjects[gameObjects.size() - 1]->transform.position = position;
+
+	if (uniformGrid.gridReady)
+	{
+		uniformGrid.InsertGameObject(gameObjects[gameObjects.size() - 1]);
+	}
+
+	return gameObjects[gameObjects.size() - 1];
 }

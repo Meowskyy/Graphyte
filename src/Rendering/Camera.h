@@ -9,7 +9,7 @@
 class Camera : public BehaviourScript
 {
 public:
-	static Camera *mainCamera;
+	static Camera* mainCamera;
 
 	// Camera options
 	float fov = 60;

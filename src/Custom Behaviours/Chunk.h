@@ -29,6 +29,9 @@ public:
 
 	void OnBehaviourAdded() 
 	{
+		gameObject->AddBehaviour(new MeshRenderer());
+		gameObject->AddBehaviour(new Chunk());
+
 		meshRenderer = static_cast<MeshRenderer*>(gameObject->GetBehaviour("MeshRenderer"));
 		mesh = &meshRenderer->mesh;
 	}

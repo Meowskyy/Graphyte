@@ -21,6 +21,8 @@
 
 #include "Graphyte\Graphyte.h"
 
+#include "Objects\Scene.h"
+
 void processNode(aiNode* node, const aiScene* scene);
 
 std::string directory;
@@ -48,7 +50,7 @@ void processNode(aiNode* node, const aiScene* scene)
 	// process each mesh located at the current node
 	for (unsigned int i = 0; i < node->mNumMeshes; i++)
 	{
-		GameObject* loadedObject = new GameObject();
+		GameObject* loadedObject = Scene::Instantiate(new GameObject());
 
 		// the node object only contains indices to index the actual objects in the scene. 
 		// the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
@@ -58,8 +60,6 @@ void processNode(aiNode* node, const aiScene* scene)
 
 		loadedObject->transform.name = name;
 		loadedObject->AddBehaviour(new MeshRenderer(mesh, scene, directory));
-
-		Graphyte::currentScene.gameObjects.push_back(loadedObject);
 	}
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
