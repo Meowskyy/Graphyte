@@ -25,7 +25,7 @@ bool BoundingBox::Contains(Transform& transform)
 	if (this->min.x < transform.position.x + transform.boundingBox.min.x &&
 		this->min.y < transform.position.y + transform.boundingBox.min.y &&
 		this->min.z < transform.position.z + transform.boundingBox.min.z &&
-		this->max.x > transform.position.x + transform.boundingBox.max.y &&
+		this->max.x > transform.position.x + transform.boundingBox.max.x &&
 		this->max.y > transform.position.y + transform.boundingBox.max.y &&
 		this->max.z > transform.position.z + transform.boundingBox.max.z
 		)
