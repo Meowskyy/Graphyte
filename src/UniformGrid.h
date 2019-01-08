@@ -5,16 +5,20 @@
 #include "ExtraRenderer.h"
 
 #include <vector>
-#include <queue>
-
-#include <memory>
 
 const int minSize = 8;
 
 class UniformGrid {
 private:
+	static int size;
+	
 	// Working like intended
 	UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList);
+	
+	UniformGrid(BoundingBox size) 
+	{
+		this->boundaries = size;
+	}
 
 	UniformGrid* CreateNode(BoundingBox* boundary, std::vector<GameObject*> objList) //complete & tested
 	{
@@ -34,6 +38,14 @@ private:
 		ret->parent = this;
 		return ret;
 	}
+
+	// Create with only boundaries
+	UniformGrid* CreateNode(BoundingBox boundary)
+	{
+		UniformGrid* ret = new UniformGrid(boundary);
+		ret->parent = this;
+		return ret;
+	}
 public:
 	BoundingBox boundaries;
 	UniformGrid* parent;
@@ -43,14 +55,13 @@ public:
 
 	// Child grids
 	std::vector<UniformGrid*> childGrid = std::vector<UniformGrid*>(8);
-	int activeChildren[8];
+	bool activeChildren[8];
 	int activeChildCount = 0;
 
 	std::vector<GameObject*> gameObjects;					// GameObjects that this grid contains
-	static std::queue<GameObject*> pendingGameObjects;		// GameObjects that will be added later
+	static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
 
 	static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
-	static bool gridBuilt; // FALSE by default. there is no pre-existing tree yet. 
 
 	// Default constructor
 	UniformGrid();
@@ -66,18 +77,18 @@ public:
 		return false;
 	}
 
-	bool InsertGameObject(GameObject* gameObject);
+	bool InsertGameObject(GameObject* gameObject); // Bugged
 
-	void BuildGrid();		// Works
-	void UpdateGrid();		// Not sure
-	void Update();			// Not sure
+	void RebuildGrid();					// Works
+	void Update();						// Works
+	void SetSize(int size);				// Do not call this more than once
 
 	void DrawGrid() {
-		ExtraRenderer::DrawAABB(boundaries, Vector3(0, 0, 0));
+		ExtraRenderer::DrawUniformBox(boundaries);
 
 		for (int index = 0; index < 8; index++)
 		{
-			if (activeChildren[index] == 1)
+			if (activeChildren[index] == true)
 			{
 				childGrid[index]->DrawGrid();
 			}
@@ -88,7 +99,7 @@ public:
 	{
 		for (int index = 0; index < 8; index++)
 		{
-			if (activeChildren[index] == 1)
+			if (activeChildren[index] == true)
 			{
 				childGrid[index]->DrawExtra();
 			}

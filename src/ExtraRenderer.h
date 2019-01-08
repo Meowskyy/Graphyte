@@ -5,4 +5,5 @@
 class ExtraRenderer {
 public:
 	static void DrawAABB(BoundingBox& box, Vector3& position);
+	static void DrawUniformBox(BoundingBox& box);
 };

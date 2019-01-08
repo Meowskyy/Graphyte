@@ -21,7 +21,7 @@ UniformGrid Scene::uniformGrid;
 void Scene::OnSceneLoad()
 {
 	AddCameraObject();
-	AddGrid();
+	// AddGrid();
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
@@ -30,7 +30,8 @@ void Scene::OnSceneLoad()
 	}
 
 	uniformGrid = UniformGrid(64);
-	uniformGrid.UpdateGrid();
+	uniformGrid.SetSize(32);
+	uniformGrid.RebuildGrid();
 }
 
 void Scene::Update()
@@ -69,7 +70,7 @@ void Scene::AddGameObject()
 // TODO: Move this somewhere more appropriate
 void Scene::AddGridTestGameObject()
 {
-	GameObject* object = Instantiate(new GameObject(), Vector3(-6, 6, 6));
+	GameObject* object = Instantiate(new GameObject(), Vector3(-6, 6, -6));
 }
 
 void Scene::AddChild() {
@@ -180,6 +181,7 @@ GameObject* Scene::Instantiate(GameObject *original) {
 	if (uniformGrid.gridReady) 
 	{
 		uniformGrid.InsertGameObject(gameObjects[gameObjects.size() - 1]);
+		uniformGrid.pendingGameObjects.push_back(gameObjects[gameObjects.size() - 1]);
 	}
 
 	return gameObjects[gameObjects.size() - 1];
@@ -187,6 +189,11 @@ GameObject* Scene::Instantiate(GameObject *original) {
 
 GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
 	parent->AddChild(original);
+
+	if (uniformGrid.gridReady)
+	{
+		uniformGrid.pendingGameObjects.push_back(parent->children[parent->children.size() - 1]);
+	}
 
 	return parent->children[parent->children.size() - 1];
 }
@@ -198,6 +205,7 @@ GameObject* Scene::Instantiate(GameObject *original, Vector3 position) {
 	if (uniformGrid.gridReady)
 	{
 		uniformGrid.InsertGameObject(gameObjects[gameObjects.size() - 1]);
+		uniformGrid.pendingGameObjects.push_back(gameObjects[gameObjects.size() - 1]);
 	}
 
 	return gameObjects[gameObjects.size() - 1];

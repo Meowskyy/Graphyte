@@ -1,12 +1,13 @@
 #include "UniformGrid.h"
 
-std::queue<GameObject*> UniformGrid::pendingGameObjects;		// GameObjects that will be added later
+std::vector<GameObject*> UniformGrid::pendingGameObjects;		// GameObjects that will be added later
 
 bool UniformGrid::gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
-bool UniformGrid::gridBuilt; // FALSE by default. there is no pre-existing tree yet. 
+int UniformGrid::size;
 
 // Private
-UniformGrid::UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList) {
+UniformGrid::UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList) 
+{
 	this->boundaries = size;
 	gameObjects = gameObjectList;
 
@@ -18,79 +19,91 @@ UniformGrid::UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectLi
 }
 
 // Public
-UniformGrid::UniformGrid() {
+UniformGrid::UniformGrid() 
+{
 	boundaries = BoundingBox(Vector3(0, 0, 0), Vector3(0, 0, 0));
 	curLife = -1;
-
-	for (int i = 0; i < 8; i++) {
-		activeChildren[i] = 0;
-	}
 }
 
 // Public
 UniformGrid::UniformGrid(int size)
 {
 	int halfSize = size / 2;
-	boundaries = BoundingBox(Vector3(-halfSize, -halfSize, -halfSize), Vector3(halfSize, halfSize, halfSize));
+	this->boundaries = BoundingBox(Vector3(-halfSize, -halfSize, -halfSize), Vector3(halfSize, halfSize, halfSize));
+	this->parent = nullptr;
 
 	curLife = -1;
-
-	for (int i = 0; i < 8; i++) {
-		activeChildren[i] = 0;
-	}
-}
-
-void UniformGrid::UpdateGrid()
-{
-	if (!gridBuilt)
-	{
-		while (pendingGameObjects.size() != 0) {
-			gameObjects.push_back(pendingGameObjects.front());
-			pendingGameObjects.pop();
-		}
-
-		BuildGrid();
-	}
-	else
-	{
-		while (pendingGameObjects.size() != 0)
-		{
-			InsertGameObject(pendingGameObjects.front());
-			pendingGameObjects.pop();
-		}
-	}
-
-	gridReady = true;
 }
 
 bool UniformGrid::InsertGameObject(GameObject* gameObject)
 {
-	std::cout << "Trying to insert into " << (boundaries.max.x - boundaries.min.x) << std::endl;
-
-	// If its the root
-	// and the gameobject does not fit in
-	// double the gridsize and try again
-	if (isRoot()) {
-
+	//The object won't fit into the current region, so it won't fit into any child regions.
+	//therefore, try to push it up the tree. If we're at the root node, we need to resize the whole tree.
+	if (!boundaries.Contains(gameObject->transform))
+	{
+		if (this->parent != nullptr)
+		{
+			std::cout << "Trying to insert into parent" << std::endl;
+			return this->parent->InsertGameObject(gameObject);
+		}
+		else
+		{
+			RebuildGrid();
+			return true;
+		}
 	}
 
-	if (gameObjects.empty() && activeChildCount == 0) {
-		std::cout << "Insert 1 " << (boundaries.max.x - boundaries.min.x) << std::endl;
-		gameObjects.push_back(gameObject);
-		return true;
-	}
 
-	// Check if min size
-	// If it is put the object in this grid
-	// and stop
-	glm::vec3 dimensions = boundaries.max - boundaries.min;
+	Vector3 dimensions = boundaries.max - boundaries.min;
 	if (dimensions.x <= minSize && dimensions.y <= minSize && dimensions.z <= minSize)
 	{
-		std::cout << "Insert 2" << (boundaries.max.x - boundaries.min.x) << std::endl;
+		//std::cout << "Inserted because dimensions: " << (boundaries.max.x - boundaries.min.x) << std::endl;
 		gameObjects.push_back(gameObject);
 		return true;
 	}
 
+	Vector3 half = (boundaries.max - boundaries.min) / 2.0f;
+	Vector3 center = boundaries.min + half;
+
+	BoundingBox childGrids[8];
+
+	// Bottom 4
+	childGrids[0] = BoundingBox(boundaries.min, center);																				// WORKS / TESTED
+	childGrids[1] = BoundingBox(Vector3(center.x, boundaries.min.y, boundaries.min.z), Vector3(boundaries.max.x, center.y, center.z));	// WORKS / TESTED
+	childGrids[2] = BoundingBox(Vector3(boundaries.min.x, boundaries.min.y, center.z), Vector3(center.x, center.y, boundaries.max.z));	// WORKS / TESTED
+	childGrids[3] = BoundingBox(Vector3(center.x, boundaries.min.y, center.z), Vector3(boundaries.max.x, center.y, boundaries.max.z));	// WORKS / TESTED
+
+	// Top 4
+	childGrids[4] = BoundingBox(Vector3(boundaries.min.x, center.y, boundaries.min.z), Vector3(center.x, boundaries.max.y, center.z));	// WORKS / TESTED
+	childGrids[5] = BoundingBox(Vector3(center.x, center.y, boundaries.min.z), Vector3(boundaries.max.x, boundaries.max.y, center.z));	// WORKS / TESTED
+	childGrids[6] = BoundingBox(Vector3(boundaries.min.x, center.y, center.z), Vector3(center.x, boundaries.max.y, boundaries.max.z));	// WORKS / TESTED
+	childGrids[7] = BoundingBox(center, boundaries.max);																				// WORKS / TESTED
+
+	for (int childIndex = 0; childIndex < 8; childIndex++)
+	{
+		if (childGrids[childIndex].Contains(gameObject->transform))
+		{
+			activeChildren[childIndex] = true;
+
+			//std::cout << "Inserted Into child: " << childIndex << " & Size: " << childGrids[childIndex].min.x << ", " << childGrids[childIndex].max.x << std::endl;
+			childGrid[childIndex] = CreateNode(childGrids[childIndex]);
+			childGrid[childIndex]->parent = this;
+
+			activeChildCount++;
+
+			return childGrid[childIndex]->InsertGameObject(gameObject);
+		}
+	}
+
+	std::cout << "Does not fit in any child" << std::endl;
+
+	//std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << std::endl;
+	gameObjects.push_back(gameObject);
+
+	//RebuildGrid();
+	return false;
+
+	/*
 	//The object won't fit into the current region, so it won't fit into any child regions.
 	//therefore, try to push it up the tree. If we're at the root node, we need to resize the whole tree.
 	if (!boundaries.Contains(gameObject->transform))
@@ -108,21 +121,21 @@ bool UniformGrid::InsertGameObject(GameObject* gameObject)
 
 	// At this point, we at least know this region can contain the object but there are child nodes. Let's try to see if the object will fit
 	// within a subregion of this region.
-	glm::vec3 doub = dimensions * 2.0f; // Double the dimensions for making a parent tree
-	glm::vec3 half = dimensions / 2.0f; // Half the dimension for making a child tree
-	glm::vec3 centerHalf = boundaries.min + half;
-	glm::vec3 centerDouble = boundaries.min + doub;
+	Vector3 doub = dimensions * 2.0f; // Double the dimensions for making a parent tree
+	Vector3 half = dimensions / 2.0f; // Half the dimension for making a child tree
+	Vector3 centerHalf = boundaries.min + half;
+	Vector3 centerDouble = boundaries.min + doub;
 
 	// Find or create subdivided regions for each octant in the current region
 	BoundingBox childOctantHalf[8];
 	childOctantHalf[0] = (childGrid[0] != nullptr) ? childGrid[0]->boundaries : BoundingBox(boundaries.min, centerHalf);
-	childOctantHalf[1] = (childGrid[1] != nullptr) ? childGrid[1]->boundaries : BoundingBox(glm::vec3(centerHalf.x, boundaries.min.y, boundaries.min.z), glm::vec3(boundaries.max.x, centerHalf.y, centerHalf.z));
-	childOctantHalf[2] = (childGrid[2] != nullptr) ? childGrid[2]->boundaries : BoundingBox(glm::vec3(centerHalf.x, boundaries.min.y, centerHalf.z), glm::vec3(boundaries.max.x, centerHalf.y, boundaries.max.z));
-	childOctantHalf[3] = (childGrid[3] != nullptr) ? childGrid[3]->boundaries : BoundingBox(glm::vec3(boundaries.min.x, boundaries.min.y, centerHalf.z), glm::vec3(centerHalf.x, centerHalf.y, boundaries.max.z));
-	childOctantHalf[4] = (childGrid[4] != nullptr) ? childGrid[4]->boundaries : BoundingBox(glm::vec3(boundaries.min.x, centerHalf.y, boundaries.min.z), glm::vec3(centerHalf.x, boundaries.max.y, centerHalf.z));
-	childOctantHalf[5] = (childGrid[5] != nullptr) ? childGrid[5]->boundaries : BoundingBox(glm::vec3(centerHalf.x, centerHalf.y, boundaries.min.z), glm::vec3(boundaries.max.x, boundaries.max.y, centerHalf.z));
+	childOctantHalf[1] = (childGrid[1] != nullptr) ? childGrid[1]->boundaries : BoundingBox(Vector3(centerHalf.x, boundaries.min.y, boundaries.min.z), glm::vec3(boundaries.max.x, centerHalf.y, centerHalf.z));
+	childOctantHalf[2] = (childGrid[2] != nullptr) ? childGrid[2]->boundaries : BoundingBox(Vector3(centerHalf.x, boundaries.min.y, centerHalf.z), glm::vec3(boundaries.max.x, centerHalf.y, boundaries.max.z));
+	childOctantHalf[3] = (childGrid[3] != nullptr) ? childGrid[3]->boundaries : BoundingBox(Vector3(boundaries.min.x, boundaries.min.y, centerHalf.z), glm::vec3(centerHalf.x, centerHalf.y, boundaries.max.z));
+	childOctantHalf[4] = (childGrid[4] != nullptr) ? childGrid[4]->boundaries : BoundingBox(Vector3(boundaries.min.x, centerHalf.y, boundaries.min.z), glm::vec3(centerHalf.x, boundaries.max.y, centerHalf.z));
+	childOctantHalf[5] = (childGrid[5] != nullptr) ? childGrid[5]->boundaries : BoundingBox(Vector3(centerHalf.x, centerHalf.y, boundaries.min.z), Vector3(boundaries.max.x, boundaries.max.y, centerHalf.z));
 	childOctantHalf[6] = (childGrid[6] != nullptr) ? childGrid[6]->boundaries : BoundingBox(centerHalf, boundaries.max);
-	childOctantHalf[7] = (childGrid[7] != nullptr) ? childGrid[7]->boundaries : BoundingBox(glm::vec3(boundaries.min.x, centerHalf.y, centerHalf.z), glm::vec3(centerHalf.x, boundaries.max.y, boundaries.max.z));
+	childOctantHalf[7] = (childGrid[7] != nullptr) ? childGrid[7]->boundaries : BoundingBox(Vector3(boundaries.min.x, centerHalf.y, centerHalf.z), glm::vec3(centerHalf.x, boundaries.max.y, boundaries.max.z));
 
 	if (boundaries.Contains(gameObject->transform)) {
 		// Looks like it fits in this grid
@@ -171,9 +184,31 @@ bool UniformGrid::InsertGameObject(GameObject* gameObject)
 	// the entire tree by enlarging the containing bounding box
 	// Or you assign a new parent to this and rebuild that
 	return false;
+	*/
 }
 
-void UniformGrid::BuildGrid() {
+void UniformGrid::RebuildGrid()
+{
+	for (int i = 0; i < 8; i++)
+	{
+		activeChildren[i] = false;
+		childGrid[i] = nullptr;
+	}
+
+	size *= 2;
+	std::cout << "Resizing grid to: " << size << std::endl;
+
+	int halfSize = size / 2;
+	activeChildCount = 0;
+
+	this->boundaries = BoundingBox(Vector3(-halfSize, -halfSize, -halfSize), Vector3(halfSize, halfSize, halfSize));
+
+	for (int i = 0; i < pendingGameObjects.size(); i++) 
+	{
+		InsertGameObject(pendingGameObjects[i]);
+	}
+
+	/*
 	//terminate the recursion if we're a leaf node
 	//if (gameObjects.size() <= 1)
 		//return;
@@ -243,13 +278,60 @@ void UniformGrid::BuildGrid() {
 		}
 	}
 
-	gridBuilt = true;
+	*/
+
 	gridReady = true;
 }
 
 void UniformGrid::Update() {
-	if (gridReady && gridBuilt)
+	if (gridReady)
 	{
+		// std::cout << "Checking" << std::endl;
+
+		// recursively update any child nodes.
+		for (int childIndex = 0; childIndex < 8; childIndex++)
+		{
+			if (activeChildren[childIndex] == true)
+			{
+				childGrid[childIndex]->Update();
+			}
+		}
+
+		// go through and update every object in the current tree node
+		for (int i = 0; i < gameObjects.size(); i++)
+		{
+			//we should figure out if an object actually moved so that we know whether we need to update this node in the tree.
+			if (gameObjects[i]->transform.positionHasChanged())
+			{	
+				//std::cout << "Moved" << std::endl;
+
+				InsertGameObject(gameObjects[i]);
+
+				// Delete object from this tree since it should be in the parent now
+				// And reduce i by 1 because of deletion
+				gameObjects.erase(gameObjects.begin() + i);
+				i--;
+
+				//movedObjects.push_back(gameObjects[i]);
+			}
+		}
+		
+
+		//prune out any dead branches in the tree
+		for (int childIndex = 0; childIndex < 8; childIndex++)
+		{
+			if (activeChildren[childIndex] == true)
+			{
+				if (childGrid[childIndex]->gameObjects.size() == 0 && childGrid[childIndex]->activeChildCount == 0)
+				{
+					childGrid[childIndex] = nullptr;
+					activeChildren[childIndex] = false;
+					activeChildCount--;
+				}
+			}
+		}
+
+		/*
 		//Start a count down death timer for any leaf nodes which don't have objects or children.
 		//when the timer reaches zero, we delete the leaf. If the node is reused before death, we double its lifespan.
 		//this gives us a "frequency" usage score and lets us avoid allocating and deallocating memory unnecessarily
@@ -303,7 +385,6 @@ void UniformGrid::Update() {
 				listSize--;
 			}
 		}
-
 
 		//prune out any dead branches in the tree
 		for (int index = 0; index < 8; index++)
@@ -365,7 +446,6 @@ void UniformGrid::Update() {
 			current->InsertGameObject(movedObjects[i]);   //this will try to insert the object as deep into the tree as we can go.
 		}
 
-		/*
 		//now that all objects have moved and they've been placed into their correct nodes in the octree, we can look for collisions.
 		if (isRoot())
 		{
@@ -393,4 +473,9 @@ void UniformGrid::Update() {
 			//Update(time);   //try this again...
 		}
 	}
+}
+
+void UniformGrid::SetSize(int size)
+{
+	this->size = size;
 }

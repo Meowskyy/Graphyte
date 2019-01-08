@@ -5,11 +5,13 @@
 #include "imgui.h"
 
 #include <iostream>
+#include <map>
 
 class BehaviourScript {
 public:
 	// Is the BehaviourScript active
 	bool enabled = true;
+
 	// The transform this script belongs to
 	Transform* transform;
 
@@ -18,7 +20,7 @@ public:
 
 	// Constructor
 	BehaviourScript();
-	~BehaviourScript();
+	virtual ~BehaviourScript();
 
 	virtual std::string name() { return typeid(*this).name(); }
 	virtual operator std::string() const { return typeid(*this).name(); }
