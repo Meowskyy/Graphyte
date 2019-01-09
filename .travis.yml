@@ -11,15 +11,9 @@ addons:
     packages:
       - g++-7
 
-before_script:
-  # create a build folder for the out-of-source build
-  - mkdir build
-  # switch to build directory
-  - cd build
-
 script:
   - export CC=gcc-7
   - export CXX=g++-7
   - cmake --version
   - cmake CMakeLists.txt
-  - cmake .. && make
+  - cmake --build
