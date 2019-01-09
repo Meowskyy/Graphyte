@@ -14,18 +14,19 @@ file(GLOB_RECURSE HEADERS
 	"${SRC_DIR}/*.h"
 )
 
+# Executable definition and properties
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_DIR})
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+
+# Used for filters in Visual studio
 file(
     GLOB_RECURSE _source_list
     LIST_DIRECTORIES false
     "${SRC_DIR}/*.c*"
     "${SRC_DIR}/*.h*"
 )
-
-# Executable definition and properties
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_DIR})
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
@@ -101,6 +102,7 @@ target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 
 # Define GLAD
 target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
+target_compile_definitions("imgui" PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
 
 # SFML
 set(SFML_DIR "${LIB_DIR}/SFML")
