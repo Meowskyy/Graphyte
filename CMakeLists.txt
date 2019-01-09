@@ -26,7 +26,6 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_DIR})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
-target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL")
 
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
@@ -46,7 +45,7 @@ else (OPENGL_FOUND)
     message("opengl not found")
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} "glfw" ${OPENGL_gl_LIBRARY})
 
 # GLFW
@@ -58,13 +57,15 @@ set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 add_subdirectory("${GLFW_DIR}")
 target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
+
+# Define GLFW empty
 target_compile_definitions(${PROJECT_NAME} PRIVATE "GLFW_INCLUDE_NONE")
 
 # glad
 set(GLAD_DIR "${LIB_DIR}/glad")
 add_library("glad" "${GLAD_DIR}/src/glad.c")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
-target_include_directories(${PROJECT_NAME} PUBLIC "${GLAD_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 
 # GLM
@@ -74,11 +75,13 @@ add_subdirectory("${GLM_DIR}")
 target_link_libraries(${PROJECT_NAME} "glm" "${GLM_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/glm")
 
+# Define force Initialization of values in GLM
+# Define experimental for Quaternions
 target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_FORCE_CTOR_INIT")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL")
 
 # IMGUI
 set(IMGUI_DIR "${LIB_DIR}/imgui")
-target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 # You can probably include files easier some other way that i dont know of
 file(GLOB IMGUI_SOURCES
    	"${IMGUI_DIR}/*.cpp"
@@ -87,26 +90,36 @@ file(GLOB IMGUI_SOURCES
 )
 
 add_library("imgui" ${IMGUI_SOURCES})
-target_include_directories("imgui" PUBLIC "${IMGUI_DIR}")
+target_include_directories("imgui" PRIVATE "${IMGUI_DIR}")
 target_link_libraries(${PROJECT_NAME} "imgui" "${CMAKE_DL_LIBS}")
 
 target_include_directories("imgui" PRIVATE "${GLAD_DIR}/include")
 target_include_directories("imgui" PRIVATE "${GLFW_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
 target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+
+# Define GLAD
 target_compile_definitions(${PROJECT_NAME} PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
-target_compile_definitions("imgui" PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLAD")
 
 # SFML
-set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_DIR "${LIB_DIR}/SFML")
+set(SFML_STATIC_LIBRARIES CACHE BOOL ON)
+set(SFML_USE_STATIC_STD_LIBS CACHE BOOL OFF)
+set(SFML_BUILD_GRAPHICS CACHE BOOL OFF)
+set(SFML_BUILD_NETWORK CACHE BOOL OFF)
+set(SFML_BUILD_WINDOW CACHE BOOL OFF)
+
 add_subdirectory("${SFML_DIR}")
 target_link_libraries(${PROJECT_NAME} "sfml-audio" "${SFML_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${SFML_DIR}/include")
-set(SFML_USE_STATIC_STD_LIBS FALSE CACHE INTERNAL "TRUE to statically link to the standard libraries, FALSE to use them as DLLs")
 
 # ASSIMP
 set(ASSIMP_DIR "${LIB_DIR}/assimp")
+set(ASSIMP_BUILD_TESTS CACHE BOOL OFF)
+set(ASSIMP_BUILD_ASSIMP_VIEW CACHE BOOL OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS CACHE BOOL OFF)
+
 add_subdirectory("${ASSIMP_DIR}")
 target_link_libraries(${PROJECT_NAME} "assimp" "${ASSIMP_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${ASSIMP_DIR}/include")

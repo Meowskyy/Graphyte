@@ -106,7 +106,8 @@ void Scene::AddCameraObject()
 
 std::vector<GameObject*> Scene::GetAllRootObjects()
 {
-	return gameObjects;
+	std::vector<GameObject*> objects;
+	return objects;
 }
 
 // TODO: Reworking the grid to fade out at distance

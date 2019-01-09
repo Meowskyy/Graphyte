@@ -113,8 +113,10 @@ void UniformGrid::RebuildGrid()
 	}
 
 	// Double grid size every time a object leaves bounds
+	std::cout << "Maximum value for float: " << std::numeric_limits<float>::max() << '\n';
+	std::cout << "Current Value: " << size << "\n";
 	size *= 2;
-	std::cout << "Resizing grid to: " << size << std::endl;
+	std::cout << "Resizing grid to: " << size << "\n";
 
 	gameObjects.clear();
 
