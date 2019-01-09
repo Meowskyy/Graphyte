@@ -1,9 +1,10 @@
 #include "UniformGrid.h"
 
 std::vector<GameObject*> UniformGrid::pendingGameObjects;		// GameObjects that will be added later
+std::vector<GameObject*> UniformGrid::collidingGameObjects;
 
 bool UniformGrid::gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
-int UniformGrid::size;
+float UniformGrid::size;
 
 // Private
 UniformGrid::UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList) 
@@ -142,20 +143,32 @@ void UniformGrid::Update() {
 			}
 		}
 
+		std::vector<int> movedGameObjects;
 		for (int i = 0; i < gameObjects.size(); i++)
 		{
 			if (gameObjects[i]->transform.positionHasChanged())
 			{	
-				//std::cout << "Moved" << std::endl;
-
 				InsertGameObject(gameObjects[i]);
 
 				// Delete object from this tree since it should be in the parent now
 				// And reduce i by 1 because of deletion
+
 				gameObjects.erase(gameObjects.begin() + i);
 				i--;
 			}
 		}
+
+		//prune any dead objects from the tree.
+		int listSize = gameObjects.size();
+		for (int a = 0; a < listSize; a++)
+		{
+			if (gameObjects[a] == nullptr)
+			{
+				gameObjects.erase(gameObjects.begin() + a--);
+				listSize--;
+			}
+		}
+
 		
 		// Delete empty child grids
 		for (int childIndex = 0; childIndex < 8; childIndex++)
@@ -170,6 +183,27 @@ void UniformGrid::Update() {
 				}
 			}
 		}
+
+
+		/*
+		collidingGameObjects.clear();
+		for (int i = 0; i < movedGameObjects.size(); i++) 
+		{
+			for (int gameObjectIndex = 0; gameObjectIndex < gameObjects.size(); gameObjectIndex++) 
+			{		
+				// Skip over self
+				if (movedGameObjects[i] == gameObjectIndex) 
+				{
+					continue;
+				}
+
+				if (gameObjects[movedGameObjects[i]]->transform.boundingBox.Contains(gameObjects[gameObjectIndex]->transform)) 
+				{
+					collidingGameObjects.push_back(gameObjects[movedGameObjects[i]]);
+				}
+			}
+		}
+		*/
 
 	}
 	else

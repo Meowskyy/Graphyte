@@ -6,11 +6,11 @@
 
 #include <vector>
 
-const int minSize = 8;
+const int minSize = 16;
 
 class UniformGrid {
 private:
-	static int size;
+	static float size;
 	
 	// Working like intended
 	UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList);
@@ -60,6 +60,7 @@ public:
 
 	std::vector<GameObject*> gameObjects;					// GameObjects that this grid contains
 	static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
+	static std::vector<GameObject*> collidingGameObjects;	// GameObjects that are touching currently
 
 	static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 
@@ -118,6 +119,14 @@ public:
 
 				if (gameObjects[i] != nullptr)
 					ImGui::Text(gameObjects[i]->transform.name.c_str());
+			}
+		}
+
+		if (collidingGameObjects.size() > 0) {
+			ImGui::Text("Colliding: ");
+			for (int i = 0; i < collidingGameObjects.size(); i++) {
+				if (gameObjects[i] != nullptr)
+					ImGui::Text(collidingGameObjects[i]->transform.name.c_str());
 			}
 		}
 	}

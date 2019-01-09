@@ -2,7 +2,9 @@
 
 #include <string>
 
+class GameObject;
+
 class ModelLoader {
 public:
-	static void loadGameObject(std::string const path);
+	static GameObject loadGameObject(std::string const path);
 };

@@ -64,7 +64,7 @@ void Scene::FixedUpdate()
 // TODO: Move this somewhere more appropriate
 void Scene::AddGameObject()
 {
-	ModelLoader::loadGameObject("Assets/resources/nanosuit/nanosuit.obj");
+	Instantiate(ModelLoader::loadGameObject("Assets/resources/nanosuit/nanosuit.obj"));
 }
 
 // TODO: Move this somewhere more appropriate
@@ -74,7 +74,7 @@ void Scene::AddGridTestGameObject()
 }
 
 void Scene::AddChild() {
-	Instantiate(new GameObject(), Graphyte::selectedGameObject);
+	Instantiate(GameObject(), Graphyte::selectedGameObject);
 }
 
 void Scene::Add1000GameObjects()
@@ -88,7 +88,7 @@ void Scene::AddCameraObject()
 {
 	std::cout << "Added camera" << std::endl;
 
-	GameObject* object = Instantiate(new GameObject());
+	GameObject* object = Instantiate(GameObject());
 
 	object->transform.name = "Main Camera";
 	object->transform.position = Vector3(0, 10, 10);
@@ -112,7 +112,7 @@ std::vector<GameObject*> Scene::GetAllRootObjects()
 // TODO: Reworking the grid to fade out at distance
 void Scene::AddGrid() 
 {
-	GameObject* object = Instantiate(new GameObject());
+	GameObject* object = Instantiate(GameObject());
 
 	//float gridScale = 1.0f;
 	//object->transform.scale = glm::vec3(1, 1, 1) * gridScale;
@@ -169,14 +169,14 @@ void Scene::AddWorld()
 {
 	std::cout << "Added WorldGenerator" << std::endl;
 
-	GameObject* object = Instantiate(new GameObject());
+	GameObject* object = Instantiate(GameObject());
 
 	object->transform.name = "World Test";
 	object->AddBehaviour(new WorldGenerator());
 }
 
-GameObject* Scene::Instantiate(GameObject *original) {
-	gameObjects.push_back(original);
+GameObject* Scene::Instantiate(GameObject original) {
+	gameObjects.push_back(&original);
 
 	if (uniformGrid.gridReady) 
 	{
@@ -187,15 +187,15 @@ GameObject* Scene::Instantiate(GameObject *original) {
 	return gameObjects[gameObjects.size() - 1];
 }
 
-GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
+GameObject* Scene::Instantiate(GameObject original, GameObject *parent) {
 	parent->AddChild(original);
 
 	if (uniformGrid.gridReady)
 	{
-		uniformGrid.pendingGameObjects.push_back(parent->children[parent->children.size() - 1]);
+		uniformGrid.pendingGameObjects.push_back(&parent->children[parent->children.size() - 1]);
 	}
 
-	return parent->children[parent->children.size() - 1];
+	return &parent->children[parent->children.size() - 1];
 }
 
 GameObject* Scene::Instantiate(GameObject *original, Vector3 position) {

@@ -8,7 +8,7 @@ void GameObject::Update()
 {
 	if (enabled) {
 		for (int i = 0; i < childCount; i++) {
-			children[i]->Update();
+			children[i].Update();
 		}
 
 		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
@@ -22,7 +22,7 @@ void GameObject::FixedUpdate()
 {
 	if (enabled) {
 		for (int i = 0; i < childCount; i++) {
-			children[i]->FixedUpdate();
+			children[i].FixedUpdate();
 		}
 
 		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
@@ -36,7 +36,7 @@ void GameObject::OnSceneLoad()
 {
 	if (enabled) {
 		for (int i = 0; i < childCount; i++) {
-			children[i]->OnSceneLoad();
+			children[i].OnSceneLoad();
 		}
 
 		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
@@ -106,14 +106,14 @@ void GameObject::DrawChildren()
 		// Disable the default open on single-click behavior and pass in Selected flag according to our selection state.
 		ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ((selection_mask & (1 << i)) ? ImGuiTreeNodeFlags_Selected : 0);
 		// Node
-		bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, children[i]->transform.name.data(), i);
+		bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, children[i].transform.name.data(), i);
 		if (ImGui::IsItemClicked()) {
-			Graphyte::selectedGameObject = children[i];
+			Graphyte::selectedGameObject = &children[i];
 			node_clicked = i;
 		}
 		if (node_open)
 		{
-			children[i]->DrawChildren();
+			children[i].DrawChildren();
 			ImGui::TreePop();
 		}
 	}
@@ -128,12 +128,22 @@ void GameObject::DrawChildren()
 	ImGui::PopStyleVar();
 }
 
-void GameObject::AddChild(GameObject* object)
+void GameObject::AddChild(GameObject object)
 {
-	object->transform.parent = &transform;
+	object.transform.parent = &transform;
 	children.push_back(object);
 
 	++childCount;
+}
+
+GameObject* GameObject::GetChild(int index)
+{
+	if (children.size() > 0) 
+	{
+		return &children[index];
+	}
+
+	return nullptr;
 }
 
 void GameObject::RemoveChild(int childIndex)
@@ -150,19 +160,23 @@ BehaviourScript* GameObject::AddBehaviour(BehaviourScript* script)
 
 	behaviour.push_back(script);
 
+	/*
 	if (behaviourDict.count(script->name()) == 0) {
 		behaviourDict[script->name()] = behaviourCount;
 	}
+	*/
 
 	return behaviour[++behaviourCount - 1];
 }
 
 BehaviourScript* GameObject::GetBehaviour(std::string name)
 {
+	/*
 	if (behaviourDict.count("class " + name) != 0)
 	{
 		return behaviour[behaviourDict["class " + name]];
 	}
+	*/
 
 	for (int i = 0; i < behaviourCount; i++) {
 		if (behaviour[i]->name() == "class " + name) {
