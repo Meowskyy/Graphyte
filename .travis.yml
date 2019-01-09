@@ -25,9 +25,9 @@ addons:
 
 #before_script:
 script:
-  - mkdir build
-  - cd build
-  - cmake --build
+- mkdir build
+- cd build
+- cmake --build .
 
 # script:
   # - export CC=gcc-7
