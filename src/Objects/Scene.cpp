@@ -198,7 +198,7 @@ GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
 	return parent->children[parent->children.size() - 1];
 }
 
-GameObject* Scene::Instantiate(GameObject *original, Vector3 position) {
+GameObject* Scene::Instantiate(GameObject *original, Vector3 &position) {
 	gameObjects.push_back(original);
 	gameObjects[gameObjects.size() - 1]->transform.position = position;
 

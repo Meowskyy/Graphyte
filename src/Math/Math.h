@@ -2,7 +2,7 @@
 #include <algorithm>
 
 template <typename t>
-static class Math {
+class Math {
 	static t Clamp(t value, t min, t max)
 	{
 		if (value < min) value = min;
