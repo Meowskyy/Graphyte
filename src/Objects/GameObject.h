@@ -22,6 +22,10 @@ public:
 	std::vector<GameObject*> children;
 	std::vector<GameObject*> collisionList;
 
+
+	// Physics stuff
+	//Collider collider;
+
 	GameObject() {}
 	~GameObject() {}
 
@@ -29,7 +33,10 @@ public:
 	void FixedUpdate();
 	void OnSceneLoad();
 
-	void OnRigidbodyCollisionEnter();
+	
+	void OnCollisionEnter(GameObject* gameObject);
+	void CheckCollisions();
+	void OnCollisionExit(GameObject* gameObject);
 
 	void DrawBehaviours();
 	void DrawChildren();

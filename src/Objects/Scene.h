@@ -18,6 +18,7 @@ public:
 	void OnSceneLoad();	// Run on scene load?
 	void Update();		// Run after every frame
 	void FixedUpdate(); // Used for physics?
+	void CheckCollisions(); // Check collisions for each gameObject once each frame
 
 	// TODO: All these are temporary
 	void AddGameObject();

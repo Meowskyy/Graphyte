@@ -39,7 +39,9 @@ public:
 
 	// Functions : Physics
 	// Called every time the collider hits something
-	virtual void OnRigidbodyCollisionEnter() {}
+	virtual void OnCollisionEnter(GameObject* gameObject) {}
+	virtual void OnCollisionStay(GameObject* gameObject) {}
+	virtual void OnCollisionExit(GameObject* gameObject) {}
 
 	virtual void DrawUI() {}			// Draws info about the script, only if in _DEBUG is defined
 };

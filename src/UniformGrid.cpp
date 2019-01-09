@@ -97,7 +97,7 @@ bool UniformGrid::InsertGameObject(GameObject* gameObject)
 		}
 	}
 
-	std::cout << "Does not fit in any child" << std::endl;
+	//std::cout << "Does not fit in any child" << std::endl;
 
 	//std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << std::endl;
 	gameObjects.push_back(gameObject);
@@ -152,7 +152,7 @@ void UniformGrid::Update() {
 			if (gameObjects[i]->transform.positionHasChanged())
 			{	
 				if (boundaries.Contains(gameObjects[i]->transform)) {
-					std::cout << "Still fits inside" << std::endl;
+					//std::cout << "Still fits inside" << std::endl;
 
 					movedGameObjects.push_back(gameObjects[i]);
 
@@ -213,11 +213,8 @@ void UniformGrid::Update() {
 
 
 		collidingGameObjects.clear();
-		//for (int i = 0; i < movedGameObjects.size(); i++) 
-		//{
 		for (int i = 0; i < gameObjects.size(); i++)
 		{
-			//for (int gameObjectIndex = 0; gameObjectIndex < gameObjects.size(); gameObjectIndex++)
 			for (int gameObjectIndex = i; gameObjectIndex < gameObjects.size(); gameObjectIndex++)
 			{		
 				if (i == gameObjectIndex) 
@@ -226,13 +223,11 @@ void UniformGrid::Update() {
 				}
 
 				if (BoundingBox::TestAABBOverlap(&gameObjects[i]->transform, &gameObjects[gameObjectIndex]->transform))
-				//if (BoundingBox::TestAABBOverlap(&movedGameObjects[i]->transform, &gameObjects[gameObjectIndex]->transform))
 				{
-					//collidingGameObjects.push_back(movedGameObjects[i]);
 					collidingGameObjects.push_back(gameObjects[i]->transform.name + " with " + gameObjects[gameObjectIndex]->transform.name);
 
-					//gameObjects[i]->collisionList.push_back(gameObjects[gameObjectIndex]);
-					//gameObjects[gameObjectIndex]->collisionList.push_back(gameObjects[i]);
+					gameObjects[i]->OnCollisionEnter(gameObjects[gameObjectIndex]);
+					gameObjects[gameObjectIndex]->OnCollisionEnter(gameObjects[i]);
 				}
 			}
 		}

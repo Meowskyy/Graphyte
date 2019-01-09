@@ -46,11 +46,58 @@ void GameObject::OnSceneLoad()
 	}
 }
 
-void GameObject::OnRigidbodyCollisionEnter() 
+void GameObject::OnCollisionEnter(GameObject* gameObject) 
 {
+	bool hasCollision = false;
+
+	// If the gameObject is not in the list
+	if (std::find(collisionList.begin(), collisionList.end(), gameObject) == collisionList.end())
+	{
+		std::cout << "Collision Enter\n";
+		hasCollision = true;
+	}
+
+	if (hasCollision) 
+	{
+		collisionList.push_back(gameObject);
+
+		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+		{
+			behaviour.at(behaviourIndex)->OnCollisionEnter(gameObject);
+		}
+	}
+}
+
+// Check if still colliding with other objects
+void GameObject::CheckCollisions()
+{
+	for (int i = 0; i < collisionList.size(); i++) {
+
+		// Check if still touching
+		if (BoundingBox::TestAABBOverlap(&transform, &collisionList[i]->transform)) {
+			for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+			{
+				behaviour.at(behaviourIndex)->OnCollisionStay(collisionList[i]);
+			}
+		}
+		else 
+		{
+			OnCollisionExit(collisionList[i]);
+
+			// Clear out the NULL pointers.
+			collisionList.erase(collisionList.begin() + i);
+			i--;
+		}
+	}
+}
+
+void GameObject::OnCollisionExit(GameObject* gameObject)
+{
+	std::cout << "Collision Exit\n";
+
 	for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
 	{
-		behaviour.at(behaviourIndex)->OnRigidbodyCollisionEnter();
+		behaviour.at(behaviourIndex)->OnCollisionExit(gameObject);
 	}
 }
 

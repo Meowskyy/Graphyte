@@ -15,7 +15,7 @@ void Rigidbody::FixedUpdate()
 	velocity.y += acceleration.y * Time::fixedDeltaTime;
 	velocity.z += acceleration.z * Time::fixedDeltaTime;
 
-	if (collidingObjects.size() > 0) 
+	if (gameObject->collisionList.size() > 0) 
 	{
 		velocity.y = 0;
 	}
@@ -23,6 +23,4 @@ void Rigidbody::FixedUpdate()
 	transform->position.x += velocity.x * Time::fixedDeltaTime;
 	transform->position.y += velocity.y * Time::fixedDeltaTime;
 	transform->position.z += velocity.z * Time::fixedDeltaTime;
-
-	collidingObjects.clear();
 }

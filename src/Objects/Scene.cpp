@@ -48,7 +48,7 @@ void Scene::Update()
 		gameObjects[i]->Update();
 	}
 
-	uniformGrid.Update();
+	//uniformGrid.Update();
 
 	uniformGrid.DrawGrid();
 }
@@ -56,8 +56,17 @@ void Scene::Update()
 // FixedUpdate on BehaviourScripts
 void Scene::FixedUpdate()
 {
+	uniformGrid.Update();
+
 	for (int i = 0; i < gameObjects.size(); i++) {
 		gameObjects[i]->FixedUpdate();
+	}
+}
+
+void Scene::CheckCollisions()
+{
+	for (int i = 0; i < gameObjects.size(); i++) {
+		gameObjects[i]->CheckCollisions();
 	}
 }
 

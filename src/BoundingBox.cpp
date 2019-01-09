@@ -36,6 +36,31 @@ bool BoundingBox::Contains(Transform& transform)
 	return false;
 }
 
+bool BoundingBox::Touching(Transform& transform)
+{
+	Vector3 aMin = min;
+	Vector3 aMax = max;
+
+	Vector3 bMin = transform.boundingBox.min + transform.position;
+	Vector3 bMax = transform.boundingBox.max + transform.position;
+
+	float d1x = bMin.x - aMax.x;
+	float d1y = bMin.y - aMax.y;
+	float d1z = bMin.z - aMax.z;
+
+	float d2x = aMin.x - bMax.x;
+	float d2y = aMin.y - bMax.y;
+	float d2z = aMin.z - bMax.z;
+
+	if (d1x > 0.0f || d1y > 0.0f || d1z > 0.0f)
+		return false;
+
+	if (d2x > 0.0f || d2y > 0.0f || d2z > 0.0f)
+		return false;
+
+	return true;
+}
+
 bool BoundingBox::TestAABBOverlap(Transform* a, Transform* b)
 {
 	Vector3 aMin = a->boundingBox.min + a->position;

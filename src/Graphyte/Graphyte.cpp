@@ -185,21 +185,6 @@ void Graphyte::mainLoop()
 			accumulator -= Time::fixedTimestep;
 
 			currentScene.FixedUpdate();
-
-			for (int i = 0; i < Scene::gameObjects.size(); i++) {
-				for (int j = i; j < Scene::gameObjects.size(); j++) {
-					if (j == i || !Scene::gameObjects[i]->enabled || !Scene::gameObjects[j]->enabled)
-					{
-						continue;
-					}
-
-					Rigidbody* obj = static_cast<Rigidbody*>(Scene::gameObjects[i]->GetBehaviour("Rigidbody"));
-
-					if (obj != nullptr) {
-						obj->TestAABBOverlap(Scene::gameObjects[j]->transform);
-					}
-				}
-			}
 		}
 
 		const float alpha = accumulator / dt;
@@ -216,6 +201,9 @@ void Graphyte::mainLoop()
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// TODO: Is it better if this is after or before Update()
+		currentScene.CheckCollisions();
 
 		// Scene Update()
 		currentScene.Update();

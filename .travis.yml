@@ -27,6 +27,7 @@ addons:
 script:
 - mkdir build
 - cd build
+- cmake ..
 - cmake --build . --target
 
 # script:

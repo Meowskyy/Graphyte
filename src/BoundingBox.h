@@ -19,22 +19,9 @@ public:
 		this->max = max;
 	}
 
-	static int pow2roundup(int x)
-	{
-		if (x < 0)
-			return 0;
-		--x;
-		x |= x >> 1;
-		x |= x >> 2;
-		x |= x >> 4;
-		x |= x >> 8;
-		x |= x >> 16;
-		return x++;
-
-	}
-
 	bool Contains(BoundingBox& otherBoundingBox);
 	bool Contains(Transform& transform);
+	bool Touching(Transform& transform);
 
 	// Tests for bounding box overlap
 	static bool TestAABBOverlap(BoundingBox* a, BoundingBox* b)
