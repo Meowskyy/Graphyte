@@ -10,7 +10,12 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
-      
+      - xorg-dev
+      - libxrandr-dev
+      - libxinerama-dev
+      - libxcursor-dev
+      - libxi-dev
+
 before_script:
 - mkdir build && cd build
 - cmake ..
