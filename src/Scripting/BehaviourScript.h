@@ -20,7 +20,7 @@ public:
 
 	// Constructor
 	BehaviourScript();
-	virtual ~BehaviourScript();
+	~BehaviourScript();
 
 	virtual std::string name() { return typeid(*this).name(); }
 	virtual operator std::string() const { return typeid(*this).name(); }

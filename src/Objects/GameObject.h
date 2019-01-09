@@ -19,7 +19,7 @@ public:
 	bool hasCollision = true;
 
 	Transform transform = Transform();
-	std::vector<GameObject> children;
+	std::vector<GameObject*> children;
 
 	GameObject() {}
 	~GameObject() {}
@@ -33,8 +33,7 @@ public:
 	void DrawBehaviours();
 	void DrawChildren();
 
-	void AddChild(GameObject object);
-	GameObject* GetChild(int index);
+	void AddChild(GameObject* object);
 	void RemoveChild(int childIndex);
 
 	// Adds a behaviour of type T to the object

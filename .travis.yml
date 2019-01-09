@@ -11,9 +11,14 @@ addons:
     packages:
       - g++-7
       - xorg-dev
+
+      # SFML Requires
       - libudev-dev
       - libopenal-dev
+      - libflac-dev
+      - libvorbis-dev
       - libxrandr-dev
+
       - libxinerama-dev
       - libxcursor-dev
       - libxi-dev
