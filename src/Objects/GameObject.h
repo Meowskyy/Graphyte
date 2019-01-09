@@ -20,6 +20,7 @@ public:
 
 	Transform transform = Transform();
 	std::vector<GameObject*> children;
+	std::vector<GameObject*> collisionList;
 
 	GameObject() {}
 	~GameObject() {}

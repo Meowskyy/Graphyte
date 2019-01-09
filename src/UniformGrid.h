@@ -60,7 +60,8 @@ public:
 
 	std::vector<GameObject*> gameObjects;					// GameObjects that this grid contains
 	static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
-	static std::vector<GameObject*> collidingGameObjects;	// GameObjects that are touching currently
+	//static std::vector<GameObject*> collidingGameObjects;	// GameObjects that are touching currently
+	static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
 
 	static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 
@@ -73,9 +74,9 @@ public:
 	bool isRoot() {
 		// Just check if it doesnt have a parent
 		// Might be a bad idea, as you could manually assign it to be the root node somehow
-		//return (parent == nullptr);
+		return (parent == nullptr);
 
-		return false;
+		//return false;
 	}
 
 	bool InsertGameObject(GameObject* gameObject); // Bugged
@@ -122,11 +123,14 @@ public:
 			}
 		}
 
-		if (collidingGameObjects.size() > 0) {
-			ImGui::Text("Colliding: ");
-			for (int i = 0; i < collidingGameObjects.size(); i++) {
-				if (gameObjects[i] != nullptr)
-					ImGui::Text(collidingGameObjects[i]->transform.name.c_str());
+		if (isRoot()) {
+			if (collidingGameObjects.size() > 0) {
+				ImGui::Text("Colliding: ");
+				for (int i = 0; i < collidingGameObjects.size(); i++) {
+					//if (collidingGameObjects[i] != nullptr)
+					ImGui::Text(collidingGameObjects[i].c_str());
+					//ImGui::Text(collidingGameObjects[i]->transform.name.c_str());
+				}
 			}
 		}
 	}

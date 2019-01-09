@@ -55,4 +55,8 @@ public:
 
 		return true;
 	}
+
+	// Tests for bounding box overlap with Transforms
+	static bool TestAABBOverlap(Transform* a, Transform* b);
+
 };

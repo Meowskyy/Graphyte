@@ -1,7 +1,8 @@
 #include "UniformGrid.h"
 
 std::vector<GameObject*> UniformGrid::pendingGameObjects;		// GameObjects that will be added later
-std::vector<GameObject*> UniformGrid::collidingGameObjects;
+//std::vector<GameObject*> UniformGrid::collidingGameObjects;
+std::vector<std::string> UniformGrid::collidingGameObjects;
 
 bool UniformGrid::gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 float UniformGrid::size;
@@ -145,18 +146,43 @@ void UniformGrid::Update() {
 			}
 		}
 
-		std::vector<int> movedGameObjects;
+		std::vector<GameObject*> movedGameObjects;
 		for (int i = 0; i < gameObjects.size(); i++)
 		{
 			if (gameObjects[i]->transform.positionHasChanged())
 			{	
-				InsertGameObject(gameObjects[i]);
+				if (boundaries.Contains(gameObjects[i]->transform)) {
+					std::cout << "Still fits inside" << std::endl;
 
-				// Delete object from this tree since it should be in the parent now
-				// And reduce i by 1 because of deletion
+					movedGameObjects.push_back(gameObjects[i]);
 
-				gameObjects.erase(gameObjects.begin() + i);
-				i--;
+					InsertGameObject(gameObjects[i]);
+					gameObjects.erase(gameObjects.begin() + i);
+					i--;
+				}
+				else 
+				{
+					std::cout << "Left grid" << std::endl;
+					movedGameObjects.push_back(gameObjects[i]);
+
+					if (parent != nullptr) 
+					{
+						parent->InsertGameObject(gameObjects[i]);
+					}
+					else 
+					{
+						InsertGameObject(gameObjects[i]);
+					}
+
+					if (gameObjects.empty()) {
+						break;
+					}
+
+					// Delete object from this tree since it should be in the parent now
+					// And reduce i by 1 because of deletion
+					gameObjects.erase(gameObjects.begin() + i);
+					i--;
+				}
 			}
 		}
 
@@ -166,18 +192,17 @@ void UniformGrid::Update() {
 		{
 			if (gameObjects[a] == nullptr)
 			{
-				gameObjects.erase(gameObjects.begin() + a--);
+				// gameObjects.erase(gameObjects.begin() + a--);
 				listSize--;
 			}
 		}
 
-		
 		// Delete empty child grids
 		for (int childIndex = 0; childIndex < 8; childIndex++)
 		{
 			if (activeChildren[childIndex] == true)
 			{
-				if (childGrid[childIndex]->gameObjects.size() == 0 && childGrid[childIndex]->activeChildCount == 0)
+				if (childGrid[childIndex]->gameObjects.empty() && childGrid[childIndex]->activeChildCount == 0)
 				{
 					childGrid[childIndex] = nullptr;
 					activeChildren[childIndex] = false;
@@ -187,25 +212,30 @@ void UniformGrid::Update() {
 		}
 
 
-		/*
 		collidingGameObjects.clear();
-		for (int i = 0; i < movedGameObjects.size(); i++) 
+		//for (int i = 0; i < movedGameObjects.size(); i++) 
+		//{
+		for (int i = 0; i < gameObjects.size(); i++)
 		{
-			for (int gameObjectIndex = 0; gameObjectIndex < gameObjects.size(); gameObjectIndex++) 
+			//for (int gameObjectIndex = 0; gameObjectIndex < gameObjects.size(); gameObjectIndex++)
+			for (int gameObjectIndex = i; gameObjectIndex < gameObjects.size(); gameObjectIndex++)
 			{		
-				// Skip over self
-				if (movedGameObjects[i] == gameObjectIndex) 
+				if (i == gameObjectIndex) 
 				{
 					continue;
 				}
 
-				if (gameObjects[movedGameObjects[i]]->transform.boundingBox.Contains(gameObjects[gameObjectIndex]->transform)) 
+				if (BoundingBox::TestAABBOverlap(&gameObjects[i]->transform, &gameObjects[gameObjectIndex]->transform))
+				//if (BoundingBox::TestAABBOverlap(&movedGameObjects[i]->transform, &gameObjects[gameObjectIndex]->transform))
 				{
-					collidingGameObjects.push_back(gameObjects[movedGameObjects[i]]);
+					//collidingGameObjects.push_back(movedGameObjects[i]);
+					collidingGameObjects.push_back(gameObjects[i]->transform.name + " with " + gameObjects[gameObjectIndex]->transform.name);
+
+					//gameObjects[i]->collisionList.push_back(gameObjects[gameObjectIndex]);
+					//gameObjects[gameObjectIndex]->collisionList.push_back(gameObjects[i]);
 				}
 			}
 		}
-		*/
 
 	}
 	else
