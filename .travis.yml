@@ -12,6 +12,7 @@ addons:
       - g++-7
       - xorg-dev
       - libudev-dev
+      - libopenal-dev
       - libxrandr-dev
       - libxinerama-dev
       - libxcursor-dev
