@@ -53,7 +53,7 @@ void GameObject::OnCollisionEnter(GameObject* gameObject)
 	// If the gameObject is not in the list
 	if (std::find(collisionList.begin(), collisionList.end(), gameObject) == collisionList.end())
 	{
-		std::cout << "Collision Enter\n";
+		std::cout << transform.name << " collision enter: " << gameObject->transform.name << "\n";
 		hasCollision = true;
 	}
 
@@ -75,6 +75,8 @@ void GameObject::CheckCollisions()
 
 		// Check if still touching
 		if (BoundingBox::TestAABBOverlap(&transform, &collisionList[i]->transform)) {
+			//std::cout << transform.name << " is still touching: " << collisionList[i]->transform.name << "\n";
+
 			for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
 			{
 				behaviour.at(behaviourIndex)->OnCollisionStay(collisionList[i]);
@@ -93,7 +95,7 @@ void GameObject::CheckCollisions()
 
 void GameObject::OnCollisionExit(GameObject* gameObject)
 {
-	std::cout << "Collision Exit\n";
+	std::cout << transform.name << " collision exit: " << gameObject->transform.name << "\n";
 
 	for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
 	{

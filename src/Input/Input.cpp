@@ -62,10 +62,6 @@ void Input::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	}
 
 	glfwGetCursorPos(window, &MouseX, &MouseY);
-
-#ifdef NANOGUI
-	Graphyte::screen->cursorPosCallbackEvent(xpos, ypos);
-#endif
 }
 
 void Input::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -87,18 +83,12 @@ void Input::mouse_button_callback(GLFWwindow* window, int button, int action, in
 			break;
 		}
 	}
-#ifdef NANOGUI
-	Graphyte::screen->mouseButtonCallbackEvent(button, action, mods);
-#endif
 }
 
 void Input::character_callback(GLFWwindow * window, unsigned int codepoint)
 {
 	std::cout << "KeyCode: " << codepoint << std::endl;
 	std::cout << "AsciiChar: " << char(codepoint) << std::endl;
-#ifdef NANOGUI
-	Graphyte::screen->charCallbackEvent(codepoint);
-#endif
 }
 #pragma endregion callbacks
 

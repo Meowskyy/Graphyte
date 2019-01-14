@@ -172,8 +172,11 @@ void Graphyte::mainLoop()
 
 		float newTime = glfwGetTime();
 		float frameTime = newTime - currentTime;
-		if (frameTime > 0.25f)
+
+		if (frameTime > 0.25f) 
+		{
 			frameTime = 0.25f;
+		}
 		currentTime = newTime;
 
 		accumulator += frameTime;
@@ -187,7 +190,7 @@ void Graphyte::mainLoop()
 			currentScene.FixedUpdate();
 		}
 
-		const float alpha = accumulator / dt;
+		float alpha = accumulator / dt;
 
 		// Blending current and passed time
 		Time::timeRemainder = currentdt * alpha + previousdt * (1.0f - alpha);

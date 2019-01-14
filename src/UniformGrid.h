@@ -81,6 +81,8 @@ public:
 
 	bool InsertGameObject(GameObject* gameObject); // Bugged
 
+	void CollidingObjects(GameObject* gameObject);
+
 	void RebuildGrid();					// Works
 	void Update();						// Works
 	void SetSize(int size);				// Do not call this more than once
