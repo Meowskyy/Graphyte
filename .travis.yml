@@ -27,7 +27,7 @@ before_script:
 - export CC=gcc-7
 - export CXX=g++-7
 - cmake CMakeLists.txt
-- cmake  --build . --target neat
+- cmake  --build . --target
 
 # - cmake --build . --target
 
