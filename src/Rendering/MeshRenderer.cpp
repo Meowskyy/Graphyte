@@ -41,15 +41,18 @@ void MeshRenderer::RecalculateBoundingBox()
 		min.z = max.z = mesh.vertices[0].z;
 	}
 
-	for (int i = 0; i < mesh.vertices.size(); i++) 
+	for (auto& vertex : mesh.vertices) 
 	{
-		if (mesh.vertices[i].x < min.x) { min.x = mesh.vertices[i].x; }
-		if (mesh.vertices[i].x > max.x) { max.x = mesh.vertices[i].x; }
-		if (mesh.vertices[i].y < min.y) { min.y = mesh.vertices[i].y; }
-		if (mesh.vertices[i].y > max.y) { max.y = mesh.vertices[i].y; }
-		if (mesh.vertices[i].z < min.z) { min.z = mesh.vertices[i].z; }
-		if (mesh.vertices[i].z > max.z) { max.z = mesh.vertices[i].z; }
+		if (vertex.x < min.x) { min.x = vertex.x; }
+		if (vertex.x > max.x) { max.x = vertex.x; }
+		if (vertex.y < min.y) { min.y = vertex.y; }
+		if (vertex.y > max.y) { max.y = vertex.y; }
+		if (vertex.z < min.z) { min.z = vertex.z; }
+		if (vertex.z > max.z) { max.z = vertex.z; }
 	}
+
+	//std::cout << "Min: " << min.x << std::endl;
+	//std::cout << "Max: " << max.x << std::endl;
 
 	transform->boundingBox = BoundingBox(min, max);
 	//transform->position = center;
@@ -65,8 +68,11 @@ void MeshRenderer::DrawUI()
 		ImGui::Text(materials[i].shader.shaderName.c_str());
 
 		ImGui::Text("Main Texture: ");
-		ImGui::SameLine();
-		ImGui::Text(materials[i].textures[0].name.c_str());
+
+		for (auto& texture : materials[i].textures) {
+			ImGui::SameLine();
+			ImGui::Text(texture.name.c_str());
+		}
 	}
 }
 

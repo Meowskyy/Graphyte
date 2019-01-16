@@ -326,6 +326,8 @@ void Graphyte::DrawUI()
 			ImGui::DragFloat3("Bounding Box Min", (float*)&selectedGameObject->transform.boundingBox.min);
 			ImGui::DragFloat3("Bounding Box Max", (float*)&selectedGameObject->transform.boundingBox.max);
 
+			ImGui::DragFloat3("Bounding Box Size", (float*)&selectedGameObject->transform.boundingBox.size);
+
 			static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 			int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 			ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.

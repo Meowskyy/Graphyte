@@ -77,7 +77,7 @@ void Mesh::setupMesh()
 	int bufferSize = vertexArraySize + normalArraySize + uvArraySize;
 
 	if (indices.size() == 0) {
-		std::cerr << "index count 0" << std::endl;
+		//std::cerr << "index count 0" << std::endl;
 	}
 
 	if (vertexArraySize > 0) {

@@ -60,7 +60,6 @@ public:
 		sound.setBuffer(buffer);
 	}
 
-#ifdef _DEBUG
 	/*
 	void DrawUI() 
 	{
@@ -70,7 +69,6 @@ public:
 		}
 	}
 	*/
-#endif
 
 	void setVolume(float val) { sound.setVolume(val); }
 	void setLooping(bool val) { loop = val; }

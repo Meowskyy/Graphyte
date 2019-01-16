@@ -23,14 +23,13 @@ addons:
       - libxcursor-dev
       - libxi-dev
 
-#before_script:
-script:
-- mkdir build
-- cd build
-- cmake ..
-- cmake --build . --target
+before_script:
+- export CC=gcc-7
+- export CXX=g++-7
+- cmake CMakeLists.txt
+- cmake  --build . --target neat
+
+# - cmake --build . --target
 
 # script:
-  # - export CC=gcc-7
-  # - export CXX=g++-7
   # - cmake --build

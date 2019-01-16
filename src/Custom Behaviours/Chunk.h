@@ -30,12 +30,6 @@ public:
 
 	void OnComponentAdded() 
 	{
-		//std::cout << "Added Chunk" << std::endl;
-
-		gameObject->AddComponent<Chunk>();
-
-		//std::cout << gameObject->componentCount << std::endl;
-
 		meshRenderer = &gameObject->AddComponent<MeshRenderer>();
 		mesh = &meshRenderer->mesh;
 	}
@@ -95,6 +89,8 @@ public:
 		mesh->indices = indices;
 		mesh->uvs = uvs;
 		mesh->setupMesh();
+
+		meshRenderer->RecalculateBoundingBox();
 	}
 
 	void CubeTop(Vector3 position) {

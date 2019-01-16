@@ -13,31 +13,9 @@ class UniformGrid {
 private:
 	static float size;
 	
-	// Working like intended
-	UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList);
-	
 	UniformGrid(BoundingBox size) 
 	{
 		this->boundaries = size;
-	}
-
-	UniformGrid* CreateNode(BoundingBox* boundary, std::vector<GameObject*> objList) //complete & tested
-	{
-		if (objList.size() == 0)
-			return nullptr;
-
-		UniformGrid* ret = new UniformGrid(*boundary, objList);
-		ret->parent = this;
-		return ret;
-	}
-
-	UniformGrid* CreateNode(BoundingBox boundary, GameObject* gameObject)
-	{
-		std::vector<GameObject*> objList(1); // sacrifice potential CPU time for a smaller memory footprint
-		objList.push_back(gameObject);
-		UniformGrid* ret = new UniformGrid(boundary, objList);
-		ret->parent = this;
-		return ret;
 	}
 
 	// Create with only boundaries

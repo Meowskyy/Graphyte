@@ -123,7 +123,6 @@ std::vector<GameObject*> Scene::GetAllRootObjects()
 // TODO: Reworking the grid to fade out at distance
 void Scene::AddGrid() 
 {
-	/*
 	GameObject* object = Instantiate(new GameObject());
 
 	//float gridScale = 1.0f;
@@ -133,9 +132,7 @@ void Scene::AddGrid()
 	object->hasCollision = false;
 
 	// MESH RENDERER
-	object->AddBehaviour(new MeshRenderer());
-
-	MeshRenderer* meshRenderer = (MeshRenderer*)object->GetBehaviour("MeshRenderer");
+	MeshRenderer* meshRenderer = &object->AddComponent<MeshRenderer>();
 	Mesh* mesh = &meshRenderer->mesh;
 	meshRenderer->materials[0].shader = ResourceManager::GetShader("Grid");
 	meshRenderer->materials[0].textures.push_back(ResourceManager::GetTexture("Grid"));
@@ -175,7 +172,6 @@ void Scene::AddGrid()
 	mesh->indices = indices;
 
 	mesh->setupMesh();
-	*/
 }
 
 void Scene::AddWorld() 
@@ -209,13 +205,11 @@ GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
 	}
 
 	return parent->children[parent->children.size() - 1];
-
-	return nullptr;
 }
 
 GameObject* Scene::Instantiate(GameObject *original, Vector3 &position) {
+	original->transform.position = position;
 	gameObjects.push_back(original);
-	//gameObjects[gameObjects.size() - 1]->transform.position = position;
 
 	if (uniformGrid.gridReady)
 	{

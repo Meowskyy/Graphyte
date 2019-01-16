@@ -11,19 +11,6 @@ std::vector<std::string> UniformGrid::collidingGameObjects;
 bool UniformGrid::gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 float UniformGrid::size;
 
-// Private
-UniformGrid::UniformGrid(BoundingBox size, std::vector<GameObject*> gameObjectList) 
-{
-	this->boundaries = size;
-	gameObjects = gameObjectList;
-
-	curLife = -1;
-
-	for (int i = 0; i < 8; i++) {
-		activeChildren[i] = 0;
-	}
-}
-
 // Public
 UniformGrid::UniformGrid() 
 {

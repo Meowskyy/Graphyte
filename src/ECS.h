@@ -73,12 +73,6 @@ public:
 	{
 		bool hasChanged = position != oldPosition;
 
-#ifdef _DEBUG
-		if (hasChanged) {
-			//std::cout << "Position Changed" << std::endl;
-		}
-#endif
-
 		oldPosition = position;
 		return hasChanged;
 	}
@@ -87,12 +81,6 @@ public:
 	{
 		bool hasChanged = rotation != oldRotation;
 
-#ifdef _DEBUG
-		if (hasChanged) {
-			//std::cout << "Rotation Changed" << std::endl;
-		}
-#endif
-
 		oldRotation = rotation;
 		return hasChanged;
 	}
@@ -100,12 +88,6 @@ public:
 	bool scaleHasChanged()
 	{
 		bool hasChanged = scale != oldScale;
-
-#ifdef _DEBUG
-		if (hasChanged) {
-			//std::cout << "Scale Changed" << std::endl;
-		}
-#endif
 
 		oldScale != scale;
 		return hasChanged;
@@ -155,7 +137,7 @@ public:
 	virtual void OnCollisionStay(GameObject* gameObject) {}
 	virtual void OnCollisionExit(GameObject* gameObject) {}
 
-	virtual void DrawUI() {}			// Draws info about the script, only if in _DEBUG is defined
+	virtual void DrawUI() {}	// Draws info about the script, only if in _DEBUG is defined
 };
 
 class GameObject {
@@ -208,8 +190,6 @@ public:
 		component->OnComponentAdded();
 
 		++componentCount;
-
-		std::cout << componentCount << std::endl;
 
 		return *component;
 	}
