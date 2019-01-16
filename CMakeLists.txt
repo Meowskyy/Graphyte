@@ -16,11 +16,14 @@ file(GLOB_RECURSE HEADERS
 
 # Executable definition and properties
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_DIR})
+include_directories(${PROJECT_NAME} ${SRC_DIR})
+
+# Set standard to C++ 17
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+# Set it as default startup project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
-# Used for filters in Visual studio
+# Used for filters in Visual Studio
 file(
     GLOB_RECURSE _source_list
     LIST_DIRECTORIES false
@@ -28,6 +31,7 @@ file(
     "${SRC_DIR}/*.h*"
 )
 
+# apply folder filters in Visual Studio
 foreach(_source IN ITEMS ${_source_list})
     get_filename_component(_source_path "${_source}" PATH)
     file(RELATIVE_PATH _source_path_rel "${SRC_DIR}" "${_source_path}")

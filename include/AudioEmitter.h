@@ -6,8 +6,6 @@
 
 #include "Input\Input.h"
 
-#include <iostream>
-
 // IMPORTANT: SFML Supports a maximum of 256 sounds playing simultaneously
 class AudioEmitter : public Component {
 private:

@@ -23,7 +23,7 @@ public:
 	void Update() {
 		movement();
 
-		MouseCursor::SetVisible(!Input::GetMouseButtonDown(1));
+		//MouseCursor::SetVisible(!Input::GetMouseButtonDown(1));
 		if (Input::GetMouseButtonDown(1))
 		{
 			rotation();
