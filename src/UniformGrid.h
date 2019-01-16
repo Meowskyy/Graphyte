@@ -1,7 +1,8 @@
 #pragma once
 
+#include "ECS.h"
+
 #include "BoundingBox.h"
-#include "Objects\GameObject.h"
 #include "ExtraRenderer.h"
 
 #include <vector>
@@ -75,11 +76,9 @@ public:
 		// Just check if it doesnt have a parent
 		// Might be a bad idea, as you could manually assign it to be the root node somehow
 		return (parent == nullptr);
-
-		//return false;
 	}
 
-	bool InsertGameObject(GameObject* gameObject); // Bugged
+	bool InsertGameObject(GameObject* gameObject);
 
 	void CollidingObjects(GameObject* gameObject);
 
@@ -87,53 +86,6 @@ public:
 	void Update();						// Works
 	void SetSize(int size);				// Do not call this more than once
 
-	void DrawGrid() {
-		ExtraRenderer::DrawUniformBox(boundaries);
-
-		for (int index = 0; index < 8; index++)
-		{
-			if (activeChildren[index] == true)
-			{
-				childGrid[index]->DrawGrid();
-			}
-		}
-	}
-
-	void DrawExtra() 
-	{
-		for (int index = 0; index < 8; index++)
-		{
-			if (activeChildren[index] == true)
-			{
-				childGrid[index]->DrawExtra();
-			}
-		}
-
-		if (gameObjects.size() > 0) {
-			ImGui::Text("Grid");
-			ImGui::SameLine();
-			int size = boundaries.max.x - boundaries.min.x;
-			ImGui::Text(std::to_string(size).c_str());
-			ImGui::SameLine();
-			ImGui::Text("Contains");
-			for (int i = 0; i < gameObjects.size(); i++) {
-				ImGui::Text("GameObject: ");
-				ImGui::SameLine();
-
-				if (gameObjects[i] != nullptr)
-					ImGui::Text(gameObjects[i]->transform.name.c_str());
-			}
-		}
-
-		if (isRoot()) {
-			if (collidingGameObjects.size() > 0) {
-				ImGui::Text("Colliding: ");
-				for (int i = 0; i < collidingGameObjects.size(); i++) {
-					//if (collidingGameObjects[i] != nullptr)
-					ImGui::Text(collidingGameObjects[i].c_str());
-					//ImGui::Text(collidingGameObjects[i]->transform.name.c_str());
-				}
-			}
-		}
-	}
+	void DrawGrid();
+	void DrawExtra();
 };

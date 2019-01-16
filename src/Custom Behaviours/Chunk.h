@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
+
 #include "Time\Timers.h"
 #include "Graphyte\Graphyte.h"
 #include "Rendering\MeshRenderer.h"
@@ -8,7 +9,7 @@
 
 #include <math.h>
 
-class Chunk : public BehaviourScript {
+class Chunk : public Component {
 private:
 	std::vector<Vector3> vertices;
 	std::vector<Vector2> uvs;
@@ -27,12 +28,15 @@ public:
 
 	bool update = false;
 
-	void OnBehaviourAdded() 
+	void OnComponentAdded() 
 	{
-		gameObject->AddBehaviour(new MeshRenderer());
-		gameObject->AddBehaviour(new Chunk());
+		//std::cout << "Added Chunk" << std::endl;
 
-		meshRenderer = static_cast<MeshRenderer*>(gameObject->GetBehaviour("MeshRenderer"));
+		gameObject->AddComponent<Chunk>();
+
+		//std::cout << gameObject->componentCount << std::endl;
+
+		meshRenderer = &gameObject->AddComponent<MeshRenderer>();
 		mesh = &meshRenderer->mesh;
 	}
 

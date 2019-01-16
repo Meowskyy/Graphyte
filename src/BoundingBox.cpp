@@ -1,8 +1,8 @@
 #include "BoundingBox.h"
 
-#include "Objects\Transform.h"
-
 #include <cmath>
+
+#include "ECS.h"
 
 bool BoundingBox::Contains(BoundingBox & otherBoundingBox)
 {
@@ -85,3 +85,4 @@ bool BoundingBox::TestAABBOverlap(Transform* a, Transform* b)
 
 	return true;
 }
+

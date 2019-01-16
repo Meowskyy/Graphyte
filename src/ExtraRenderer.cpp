@@ -10,7 +10,6 @@
 
 #include "Rendering\MeshRenderer.h"
 
-
 void ExtraRenderer::DrawAABB(BoundingBox& box, Vector3& position) {
 	// Cube 1x1x1, centered on origin
 	float vertices[] = {
@@ -56,7 +55,7 @@ void ExtraRenderer::DrawAABB(BoundingBox& box, Vector3& position) {
 
 	meshRenderer.transform->scale = Vector3(width, height, depth);
 
-	meshRenderer.OnBehaviourAdded();
+	meshRenderer.OnComponentAdded();
 
 	meshRenderer.DrawLines();
 }
@@ -103,7 +102,7 @@ void ExtraRenderer::DrawUniformBox(BoundingBox& box) {
 
 	meshRenderer.transform->scale = Vector3(size, size, size);
 
-	meshRenderer.OnBehaviourAdded();
+	meshRenderer.OnComponentAdded();
 
 	meshRenderer.DrawLines();
 }

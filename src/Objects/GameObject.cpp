@@ -1,19 +1,23 @@
-#include "GameObject.h"
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
 
 #include "imgui.h"
+
 #include "Graphyte\Graphyte.h"
+
+#include <iostream>
 
 void GameObject::Update()
 {
 	if (enabled) {
-		for (int i = 0; i < childCount; i++) {
-			children[i]->Update();
+		for (auto& child : children) 
+		{
+			child->Update();
 		}
 
-		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+		for (auto& component : components)
 		{
-			behaviour.at(behaviourIndex)->Update();
+			if (component->enabled)
+				component->Update();
 		}
 	}
 }
@@ -21,13 +25,15 @@ void GameObject::Update()
 void GameObject::FixedUpdate()
 {
 	if (enabled) {
-		for (int i = 0; i < childCount; i++) {
-			children[i]->FixedUpdate();
+		for (auto& child : children) 
+		{
+			child->FixedUpdate();
 		}
 
-		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+		for (auto& component : components)
 		{
-			behaviour.at(behaviourIndex)->FixedUpdate();
+			if (component->enabled)
+				component->FixedUpdate();
 		}
 	}
 }
@@ -35,13 +41,15 @@ void GameObject::FixedUpdate()
 void GameObject::OnSceneLoad()
 {
 	if (enabled) {
-		for (int i = 0; i < childCount; i++) {
-			children[i]->OnSceneLoad();
+		for (auto& child : children)
+		{
+			child->OnSceneLoad();
 		}
 
-		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+		for (auto& component : components)
 		{
-			behaviour.at(behaviourIndex)->OnSceneLoad();
+			if (component->enabled)
+				component->OnSceneLoad();
 		}
 	}
 }
@@ -61,9 +69,9 @@ void GameObject::OnCollisionEnter(GameObject* gameObject)
 	{
 		collisionList.push_back(gameObject);
 
-		for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+		for (auto& component : components)
 		{
-			behaviour.at(behaviourIndex)->OnCollisionEnter(gameObject);
+			component->OnCollisionEnter(gameObject);
 		}
 	}
 }
@@ -77,9 +85,9 @@ void GameObject::CheckCollisions()
 		if (BoundingBox::TestAABBOverlap(&transform, &collisionList[i]->transform)) {
 			//std::cout << transform.name << " is still touching: " << collisionList[i]->transform.name << "\n";
 
-			for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+			for (auto& component : components)
 			{
-				behaviour.at(behaviourIndex)->OnCollisionStay(collisionList[i]);
+				component->OnCollisionStay(collisionList[i]);
 			}
 		}
 		else 
@@ -97,34 +105,35 @@ void GameObject::OnCollisionExit(GameObject* gameObject)
 {
 	std::cout << transform.name << " collision exit: " << gameObject->transform.name << "\n";
 
-	for (int behaviourIndex = 0; behaviourIndex < behaviourCount; behaviourIndex++)
+	for (auto& component : components)
 	{
-		behaviour.at(behaviourIndex)->OnCollisionExit(gameObject);
+		component->OnCollisionExit(gameObject);
 	}
 }
 
-void GameObject::DrawBehaviours()
+
+void GameObject::DrawComponents()
 {
 	ImGui::Text("Behaviour count: ");
 	ImGui::SameLine();
-	ImGui::Text(std::to_string(behaviourCount).c_str());
+	ImGui::Text(std::to_string(componentCount).c_str());
 
 	static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 	int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.
 
-	for (int i = 0; i < behaviour.size(); i++)
+	for (int i = 0; i < components.size(); i++)
 	{
 		// Disable the default open on single-click behavior and pass in Selected flag according to our selection state.
 		ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ((selection_mask & (1 << i)) ? ImGuiTreeNodeFlags_Selected : 0);
 		// Node
-		bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, behaviour[i]->name().c_str(), i);
+		bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, components[i]->name().c_str(), i);
 		if (ImGui::IsItemClicked()) {
 			node_clicked = i;
 		}
 		if (node_open)
 		{
-			behaviour[i]->DrawUI();
+			components[i]->DrawUI();
 			ImGui::TreePop();
 		}
 	}
@@ -177,49 +186,19 @@ void GameObject::DrawChildren()
 	ImGui::PopStyleVar();
 }
 
-void GameObject::AddChild(GameObject* object)
+void GameObject::AddChild(GameObject * gameObject)
 {
-	object->transform.parent = &transform;
-	children.push_back(object);
+	gameObject->transform.parent = &transform;
+	children.push_back(gameObject);
 
 	++childCount;
 }
 
+/*
 void GameObject::RemoveChild(int childIndex)
 {
 	children.erase(children.begin() + childIndex);
 	--childCount;
-}
-
-BehaviourScript* GameObject::AddBehaviour(BehaviourScript* script)
-{
-	script->transform = &transform;
-	script->gameObject = this;
-	script->OnBehaviourAdded();
-
-	behaviour.push_back(script);
-
-	if (behaviourDict.count(script->name()) == 0) {
-		behaviourDict[script->name()] = behaviourCount;
-	}
-
-	return behaviour[++behaviourCount - 1];
-}
-
-BehaviourScript* GameObject::GetBehaviour(std::string name)
-{
-	if (behaviourDict.count("class " + name) != 0)
-	{
-		return behaviour[behaviourDict["class " + name]];
-	}
-
-	for (int i = 0; i < behaviourCount; i++) {
-		if (behaviour[i]->name() == "class " + name) {
-			return behaviour[i];
-		}
-	}
-
-	return nullptr;
 }
 
 void GameObject::RemoveBehaviour(std::string name)
@@ -233,3 +212,4 @@ void GameObject::RemoveBehaviour(std::string name)
 		}
 	}
 }
+*/

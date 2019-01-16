@@ -11,13 +11,33 @@ struct BoundingBox
 public:
 	Vector3 min;
 	Vector3 max;
+	Vector3 center;
+	Vector3 size;
 
 	BoundingBox() {}
 
 	BoundingBox(Vector3& min, Vector3& max) {
 		this->min = min;
 		this->max = max;
+
+		Recalculate();
 	}
+
+	void Recalculate()
+	{
+		float centerX = (min.x + max.x) / 2;
+		float centerY = (min.y + max.y) / 2;
+		float centerZ = (min.z + max.z) / 2;
+		Vector3 center = Vector3(centerX, centerY, centerZ);
+
+		this->center = center;
+
+		// TODO: Calculate bounding box based on rotation
+		this->size.x = max.x - min.x;
+		this->size.y = max.y - min.y;
+		this->size.z = max.z - min.z;
+	}
+
 
 	bool Contains(BoundingBox& otherBoundingBox);
 	bool Contains(Transform& transform);
@@ -45,5 +65,4 @@ public:
 
 	// Tests for bounding box overlap with Transforms
 	static bool TestAABBOverlap(Transform* a, Transform* b);
-
 };

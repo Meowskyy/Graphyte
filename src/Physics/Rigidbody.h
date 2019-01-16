@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
 #include "Physics\Physics3D.h"
-#include "Objects\GameObject.h"
 
 class BoxShape {
 public:
@@ -12,7 +11,7 @@ public:
 	float momentOfInertia;
 };
 
-class Rigidbody : public BehaviourScript {
+class Rigidbody : public Component {
 private:
 
 public:
@@ -34,16 +33,5 @@ public:
 
 	}
 
-	void DrawUI()
-	{
-		ImGui::DragFloat("Mass", &mass);
-
-		ImGui::DragFloat3("Velocity", (float*)&velocity);
-
-		for (int i = 0; i < gameObject->collisionList.size(); i++) {
-			ImGui::Text("Colliding Object: ");
-			ImGui::SameLine();
-			ImGui::Text(gameObject->collisionList[i]->transform.name.c_str());
-		}
-	}
+	void DrawUI();
 };

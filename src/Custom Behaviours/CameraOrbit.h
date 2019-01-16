@@ -1,18 +1,19 @@
 #pragma once
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
+
 #include "Input\Input.h"
 #include "Time\Timers.h"
 #include "Cursor\Cursor.h"
 
 const float PI = 3.141592653589793;
 
-class CameraOrbit : public BehaviourScript {
+class CameraOrbit : public Component {
 public:
 	float x = 0.0;
 	float y = 0.0;
 
-	void OnBehaviourAdded() 
+	void OnComponentAdded() 
 	{
 		x = 0;
 		y = PI;
@@ -61,8 +62,10 @@ public:
 		transform->rotation = Quaternion(Vector3(y, x, 0));
 	}
 
+	/*
 	void DrawUI() {
 		ImGui::DragFloat("Rotation X", &x);
 		ImGui::DragFloat("Rotation Y", &y);
 	}
+	*/
 };

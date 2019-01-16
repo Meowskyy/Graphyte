@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
+
 #include <math.h>
 
 #include "Time\Timers.h"
 
-class MoveAround : public BehaviourScript {
+class MoveAround : public Component {
 public:
 	int i = 0;
 	float amount = 2;

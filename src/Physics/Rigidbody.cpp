@@ -2,6 +2,8 @@
 
 #include "Time\Timers.h"
 
+#include "imgui.h"
+
 Vector3 Rigidbody::ComputeForces() {
 	return Vector3(0, mass * -9.81, 0);
 }
@@ -23,4 +25,17 @@ void Rigidbody::FixedUpdate()
 	transform->position.x += velocity.x * Time::fixedDeltaTime;
 	transform->position.y += velocity.y * Time::fixedDeltaTime;
 	transform->position.z += velocity.z * Time::fixedDeltaTime;
+}
+
+void Rigidbody::DrawUI()
+{
+	ImGui::DragFloat("Mass", &mass);
+
+	ImGui::DragFloat3("Velocity", (float*)&velocity);
+
+	for (int i = 0; i < gameObject->collisionList.size(); i++) {
+		ImGui::Text("Colliding Object: ");
+		ImGui::SameLine();
+		ImGui::Text(gameObject->collisionList[i]->transform.name.c_str());
+	}
 }

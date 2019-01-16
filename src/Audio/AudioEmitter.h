@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
 
 #include "SFML\Audio.hpp"
 
 #include "Input\Input.h"
 
 // IMPORTANT: SFML Supports a maximum of 256 sounds playing simultaneously
-class AudioEmitter : public BehaviourScript {
+class AudioEmitter : public Component {
 private:
 	sf::SoundBuffer buffer;
 	sf::Sound sound;
@@ -39,7 +39,7 @@ public:
 
 	void Play() 
 	{
-		sound.setPosition(transform->position.x, transform->position.y, transform->position.z);
+		//sound.setPosition(transform->position.x, transform->position.y, transform->position.z);
 		sound.play();
 	}
 
@@ -60,14 +60,16 @@ public:
 		sound.setBuffer(buffer);
 	}
 
-#ifndef NDEBUG
-	virtual void DrawUI() 
+#ifdef _DEBUG
+	/*
+	void DrawUI() 
 	{
 		if (ImGui::SliderFloat("Volume", &volume, 0, 100)) 
 		{
 			setVolume(volume);
 		}
 	}
+	*/
 #endif
 
 	void setVolume(float val) { sound.setVolume(val); }

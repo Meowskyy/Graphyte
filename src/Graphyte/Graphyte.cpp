@@ -330,23 +330,23 @@ void Graphyte::DrawUI()
 			int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 			ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.
 			
-			selectedGameObject->DrawBehaviours();
+			selectedGameObject->DrawComponents();
 			ImGui::PopStyleVar();
 
 			// TODO: Making this dynamic instead
 			if (ImGui::Button("Add AudioEmitter"))
 			{
-				selectedGameObject->AddBehaviour(new AudioEmitter("Assets/resources/Audio/testAudio.wav"));
+				selectedGameObject->AddComponent<AudioEmitter>("Assets/resources/Audio/testAudio.wav");
 			}
 
 			if (ImGui::Button("Add MoveAround"))
 			{
-				selectedGameObject->AddBehaviour(new MoveAround());
+				selectedGameObject->AddComponent<MoveAround>();
 			}
 
 			if (ImGui::Button("Add Rigidbody"))
 			{
-				selectedGameObject->AddBehaviour(new Rigidbody());
+				selectedGameObject->AddComponent<Rigidbody>();
 			}
 		}
 
@@ -404,7 +404,7 @@ void Graphyte::DrawUI()
 		}
 		ImGui::PopStyleVar();
 
-		currentScene.uniformGrid.DrawExtra();
+		//currentScene.uniformGrid.DrawExtra();
 
 		ImGui::End();
 	}

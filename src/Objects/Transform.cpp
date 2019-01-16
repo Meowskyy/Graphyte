@@ -1,7 +1,4 @@
- #include "objects\Transform.h"
-
- #include "imgui.h"
- #include "Graphyte\Graphyte.h"
+#include "ECS.h"
 
 Vector3 Transform::getForwardVector()
 {

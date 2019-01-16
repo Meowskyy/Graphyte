@@ -59,7 +59,7 @@ void processNode(aiNode* node, const aiScene* scene)
 		std::string name = mesh->mName.C_Str();
 
 		loadedObject->transform.name = name;
-		loadedObject->AddBehaviour(new MeshRenderer(mesh, scene, directory));
+		loadedObject->AddComponent<MeshRenderer>(mesh, scene, directory);
 	}
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
 	for (unsigned int i = 0; i < node->mNumChildren; i++)

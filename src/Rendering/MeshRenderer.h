@@ -2,7 +2,7 @@
 
 #include "glm\glm.hpp"
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
 
 #include "Rendering\Material\Material.h"
 
@@ -13,7 +13,7 @@
 
 #include "BoundingBox.h"
 
-class MeshRenderer : public BehaviourScript {
+class MeshRenderer : public Component {
 private:
 	void processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory);
 
@@ -30,7 +30,7 @@ public:
 	MeshRenderer(aiMesh* mesh, const aiScene* scene, const std::string directory);
 
 	void Update();
-	void OnBehaviourAdded();
+	void OnComponentAdded();
 
 	void DrawLines();
 

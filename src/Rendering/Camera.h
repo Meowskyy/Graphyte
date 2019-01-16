@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Scripting\BehaviourScript.h"
+#include "ECS.h"
 #include "glm\gtc\matrix_transform.hpp"
 
 #include <vector>
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
-class Camera : public BehaviourScript
+class Camera : public Component
 {
 public:
 	static Camera* mainCamera;

@@ -13,48 +13,45 @@
 
 #include "ExtraRenderer.h"
 
+#include "imgui.h"
+
 bool IsExtensionSupported(const char *name);
 
 std::vector<Texture2D> loadMaterialTextures(const aiMaterial *mat, const aiTextureType type, const std::string typeName, const std::string directory);
 unsigned int TextureFromFile(const char *path, const std::string &directory, const bool gamma = true);
 
-void MeshRenderer::OnBehaviourAdded()
+void MeshRenderer::OnComponentAdded()
 {
 	RecalculateBoundingBox();
-	// Set the transform position to center of mesh
-	//glm::vec3 dimensions = transform->boundingBox.max - transform->boundingBox.min;
-	//transform->position = transform->boundingBox.min + (dimensions / 2.0f);
 
-	glm::mat4 model = glm::mat4();
-	model = glm::scale(model, transform->scale);					// SCALE
-	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
-	model = model * rot;
+	glm::mat4 scaleMatrix = glm::scale(scaleMatrix, transform->scale);		// SCALE
+	glm::mat4 rot = glm::mat4_cast(transform->rotation);					// ROTATION
+	glm::mat4 model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	model = model * rot * scaleMatrix;
 }
 
 void MeshRenderer::RecalculateBoundingBox()
 {
+	Vector3 min;
+	Vector3 max;
+
 	if (mesh.vertices.size() > 0) {
-		transform->boundingBox.min.x = transform->boundingBox.max.x = mesh.vertices[0].x;
-		transform->boundingBox.min.y = transform->boundingBox.max.y = mesh.vertices[0].y;
-		transform->boundingBox.min.z = transform->boundingBox.max.z = mesh.vertices[0].z;
+		min.x = max.x = mesh.vertices[0].x;
+		min.y = max.y = mesh.vertices[0].y;
+		min.z = max.z = mesh.vertices[0].z;
 	}
 
 	for (int i = 0; i < mesh.vertices.size(); i++) 
 	{
-		if (mesh.vertices[i].x < transform->boundingBox.min.x) { transform->boundingBox.min.x = mesh.vertices[i].x; }
-		if (mesh.vertices[i].x > transform->boundingBox.max.x) { transform->boundingBox.max.x = mesh.vertices[i].x; }
-		if (mesh.vertices[i].y < transform->boundingBox.min.y) { transform->boundingBox.min.y = mesh.vertices[i].y; }
-		if (mesh.vertices[i].y > transform->boundingBox.max.y) { transform->boundingBox.max.y = mesh.vertices[i].y; }
-		if (mesh.vertices[i].z < transform->boundingBox.min.z) { transform->boundingBox.min.z = mesh.vertices[i].z; }
-		if (mesh.vertices[i].z > transform->boundingBox.max.z) { transform->boundingBox.max.z = mesh.vertices[i].z; }
+		if (mesh.vertices[i].x < min.x) { min.x = mesh.vertices[i].x; }
+		if (mesh.vertices[i].x > max.x) { max.x = mesh.vertices[i].x; }
+		if (mesh.vertices[i].y < min.y) { min.y = mesh.vertices[i].y; }
+		if (mesh.vertices[i].y > max.y) { max.y = mesh.vertices[i].y; }
+		if (mesh.vertices[i].z < min.z) { min.z = mesh.vertices[i].z; }
+		if (mesh.vertices[i].z > max.z) { max.z = mesh.vertices[i].z; }
 	}
 
-	float centerX = (transform->boundingBox.min.x + transform->boundingBox.max.x) / 2;
-	float centerY = (transform->boundingBox.min.y + transform->boundingBox.max.y) / 2;
-	float centerZ = (transform->boundingBox.min.z + transform->boundingBox.max.z) / 2;
-	Vector3 center = Vector3(centerX, centerY, centerZ);
-
+	transform->boundingBox = BoundingBox(min, max);
 	//transform->position = center;
 }
 

@@ -1,5 +1,9 @@
 #include "UniformGrid.h"
 
+#include "imgui.h"
+
+#include <iostream>
+
 std::vector<GameObject*> UniformGrid::pendingGameObjects;		// GameObjects that will be added later
 //std::vector<GameObject*> UniformGrid::collidingGameObjects;
 std::vector<std::string> UniformGrid::collidingGameObjects;
@@ -39,7 +43,6 @@ UniformGrid::UniformGrid(int size)
 
 bool UniformGrid::InsertGameObject(GameObject* gameObject)
 {
-
 	// If the object doesnt fit try inserting it in the parent grid
 	if (!boundaries.Contains(gameObject->transform))
 	{
@@ -100,6 +103,7 @@ bool UniformGrid::InsertGameObject(GameObject* gameObject)
 
 	//std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << std::endl;
 	gameObjects.push_back(gameObject);
+
 	return false;
 }
 
@@ -248,4 +252,55 @@ void UniformGrid::CollidingObjects(GameObject* gameObject) {
 void UniformGrid::SetSize(int size)
 {
 	this->size = size;
+}
+
+void UniformGrid::DrawGrid() 
+{
+	ExtraRenderer::DrawUniformBox(boundaries);
+
+	for (int index = 0; index < 8; index++)
+	{
+		if (activeChildren[index] == true)
+		{
+			childGrid[index]->DrawGrid();
+		}
+	}
+}
+
+void UniformGrid::DrawExtra()
+{
+	for (int index = 0; index < 8; index++)
+	{
+		if (activeChildren[index] == true)
+		{
+			childGrid[index]->DrawExtra();
+		}
+	}
+
+	if (gameObjects.size() > 0) {
+		ImGui::Text("Grid");
+		ImGui::SameLine();
+		int size = boundaries.max.x - boundaries.min.x;
+		ImGui::Text(std::to_string(size).c_str());
+		ImGui::SameLine();
+		ImGui::Text("Contains");
+		for (int i = 0; i < gameObjects.size(); i++) {
+			ImGui::Text("GameObject: ");
+			ImGui::SameLine();
+
+			if (gameObjects[i] != nullptr)
+				ImGui::Text(gameObjects[i]->transform.name.c_str());
+		}
+	}
+
+	if (isRoot()) {
+		if (collidingGameObjects.size() > 0) {
+			ImGui::Text("Colliding: ");
+			for (int i = 0; i < collidingGameObjects.size(); i++) {
+				//if (collidingGameObjects[i] != nullptr)
+				ImGui::Text(collidingGameObjects[i].c_str());
+				//ImGui::Text(collidingGameObjects[i]->transform.name.c_str());
+			}
+		}
+	}
 }

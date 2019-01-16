@@ -3,7 +3,7 @@
 
 #include "Math\PerlinNoise.h"
 
-void WorldGenerator::OnBehaviourAdded() {
+void WorldGenerator::OnComponentAdded() {
 	PerlinNoise perlinNoise;
 
 	float noiseScale = 20;
@@ -31,12 +31,12 @@ void WorldGenerator::OnBehaviourAdded() {
 			for (int x = 0; x < WORLD_SIZE_X; x++) {
 
 				GameObject *object = Scene::Instantiate(new GameObject(), gameObject);
-				object->transform.name = std::to_string(x * CHUNK_SIZE) + ", " + std::to_string(y * CHUNK_SIZE) + ", " + std::to_string(z * CHUNK_SIZE);
+				//object->transform.name = std::to_string(x * CHUNK_SIZE) + ", " + std::to_string(y * CHUNK_SIZE) + ", " + std::to_string(z * CHUNK_SIZE);
 				Vector3 position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
 				
 				object->transform.position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
 			
-				Chunk* voxelGen = static_cast<Chunk*>(object->GetBehaviour("Chunk"));
+				Chunk* voxelGen = &object->AddComponent<Chunk>();
 				voxelGen->chunkX = x * CHUNK_SIZE;
 				voxelGen->chunkY = y * CHUNK_SIZE;
 				voxelGen->chunkZ = z * CHUNK_SIZE;

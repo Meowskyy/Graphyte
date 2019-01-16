@@ -1,17 +1,17 @@
 #include "Scene.h"
 
+#include "ECS.h"
 #include "Custom Behaviours\CameraOrbit.h"
 #include "Audio\AudioListener.h"
-
-#include "IO\ModelLoader.h"
+#include "Rendering\Camera.h"
 #include "Rendering\MeshRenderer.h"
 #include "Custom Behaviours\WorldGenerator.h"
+
+#include "IO\ModelLoader.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-#include "Rendering\Camera.h"
 
 // Camera
 std::vector<GameObject*> Scene::gameObjects;
@@ -43,9 +43,9 @@ void Scene::Update()
 	ResourceManager::GetShader("Standard").SetMatrix4("view", Camera::mainCamera->GetViewMatrix(), true);
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
-	for (int i = 0; i < gameObjects.size(); i++)
+	for (auto& gameObject : gameObjects)
 	{
-		gameObjects[i]->Update();
+		gameObject->Update();
 	}
 
 	//uniformGrid.Update();
@@ -58,16 +58,16 @@ void Scene::FixedUpdate()
 {
 	uniformGrid.Update();
 
-	for (int i = 0; i < gameObjects.size(); i++) {
-		gameObjects[i]->FixedUpdate();
+	for (auto& gameObject : gameObjects) 
+	{
+		gameObject->FixedUpdate();
 	}
 }
 
 void Scene::CheckCollisions()
 {
-	for (int i = 0; i < gameObjects.size(); i++) {
-		gameObjects[i]->CheckCollisions();
-	}
+	for (auto& gameObject : gameObjects)
+		gameObject->CheckCollisions();
 }
 
 // TODO: Move this somewhere more appropriate
@@ -105,12 +105,12 @@ void Scene::AddCameraObject()
 
 	object->hasCollision = false;
 
-	object->AddBehaviour(new CameraOrbit());
-	object->AddBehaviour(new Camera());
-	object->AddBehaviour(new AudioListener());
+	object->AddComponent<CameraOrbit>();
+	object->AddComponent<Camera>();
+	//object->AddComponent(new AudioListener());
 
-	Camera::mainCamera = (Camera*)(object->GetBehaviour("Camera"));
-	Camera::mainCamera->renderDistance = 1000;
+	Camera::mainCamera = &object->GetComponent<Camera>();
+	//Camera::mainCamera->renderDistance = 1000;
 }
 
 std::vector<GameObject*> Scene::GetAllRootObjects()
@@ -119,9 +119,11 @@ std::vector<GameObject*> Scene::GetAllRootObjects()
 	return objects;
 }
 
+
 // TODO: Reworking the grid to fade out at distance
 void Scene::AddGrid() 
 {
+	/*
 	GameObject* object = Instantiate(new GameObject());
 
 	//float gridScale = 1.0f;
@@ -173,6 +175,7 @@ void Scene::AddGrid()
 	mesh->indices = indices;
 
 	mesh->setupMesh();
+	*/
 }
 
 void Scene::AddWorld() 
@@ -182,7 +185,7 @@ void Scene::AddWorld()
 	GameObject* object = Instantiate(new GameObject());
 
 	object->transform.name = "World Test";
-	object->AddBehaviour(new WorldGenerator());
+	object->AddComponent<WorldGenerator>();
 }
 
 GameObject* Scene::Instantiate(GameObject *original) {
@@ -206,11 +209,13 @@ GameObject* Scene::Instantiate(GameObject *original, GameObject *parent) {
 	}
 
 	return parent->children[parent->children.size() - 1];
+
+	return nullptr;
 }
 
 GameObject* Scene::Instantiate(GameObject *original, Vector3 &position) {
 	gameObjects.push_back(original);
-	gameObjects[gameObjects.size() - 1]->transform.position = position;
+	//gameObjects[gameObjects.size() - 1]->transform.position = position;
 
 	if (uniformGrid.gridReady)
 	{
