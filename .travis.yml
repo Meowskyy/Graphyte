@@ -29,8 +29,8 @@ before_script:
 - export CC=gcc-7
 - export CXX=g++-7
 - cmake --version
-# - cmake ..
-- cmake -G "Visual Studio 15 2017 Win64"
+- cmake ..
+# - cmake -G "Visual Studio 15 2017 Win64"
 # - cmake --build . --target
 
 # - cmake --build . --target
