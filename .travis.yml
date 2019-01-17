@@ -24,11 +24,13 @@ addons:
       - libxi-dev
 
 before_script:
+- mkdir -p build
+- cd build
 - export CC=gcc-7
 - export CXX=g++-7
 - cmake --version
-- cmake CMakeLists.txt
-- cmake  --build . --target
+- cmake ..
+- cmake --build . --target
 
 # - cmake --build . --target
 
