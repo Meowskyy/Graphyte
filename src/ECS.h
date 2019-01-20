@@ -8,6 +8,8 @@
 #include "Physics\Physics3D.h"
 #include "BoundingBox.h"
 
+#include "imgui.h"
+
 class GameObject;
 class Component;
 
@@ -32,7 +34,7 @@ using ComponentArray = std::array<Component*, maxComponents>;
 
 class Transform {
 private:
-	Vector3 euler;
+	Vector3 eulerAngles;
 
 	Vector3 oldPosition = Vector3(0, 0, 0);
 	Quaternion oldRotation;
@@ -40,8 +42,8 @@ private:
 
 public:
 	std::string name = "GameObject";
-	Transform* parent;
-
+	
+	Transform* parent; // Parent transform
 	GameObject* gameObject; // THE GAMEOBJECT THIS BELONGS TO
 
 	Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
@@ -69,7 +71,7 @@ public:
 
 	Transform* GetChild(int index);
 
-	bool positionHasChanged()
+	const bool positionHasChanged()
 	{
 		bool hasChanged = position != oldPosition;
 
@@ -77,7 +79,7 @@ public:
 		return hasChanged;
 	}
 
-	bool rotationHasChanged()
+	const bool rotationHasChanged()
 	{
 		bool hasChanged = rotation != oldRotation;
 
@@ -85,7 +87,7 @@ public:
 		return hasChanged;
 	}
 
-	bool scaleHasChanged()
+	const bool scaleHasChanged()
 	{
 		bool hasChanged = scale != oldScale;
 
@@ -93,8 +95,8 @@ public:
 		return hasChanged;
 	}
 
-	void Rotate(Vector3 direction, float speed);
-	void setParent(Transform &transform);
+	void Rotate(const Vector3 direction, const float speed);
+	void setParent(Transform& transform);
 };
 
 class Component {
@@ -133,9 +135,9 @@ public:
 
 	// Functions : Physics
 	// Called every time the collider hits something
-	virtual void OnCollisionEnter(GameObject* gameObject) {}
-	virtual void OnCollisionStay(GameObject* gameObject) {}
-	virtual void OnCollisionExit(GameObject* gameObject) {}
+	virtual void OnCollisionEnter(GameObject& gameObject) {}
+	virtual void OnCollisionStay(GameObject& gameObject) {}
+	virtual void OnCollisionExit(GameObject& gameObject) {}
 
 	virtual void DrawUI() {}	// Draws info about the script, only if in _DEBUG is defined
 };
@@ -164,14 +166,14 @@ public:
 	void FixedUpdate();
 	void OnSceneLoad();
 
-	void OnCollisionEnter(GameObject* gameObject);
+	void OnCollisionEnter(GameObject& gameObject);
 	void CheckCollisions();
-	void OnCollisionExit(GameObject* gameObject);
+	void OnCollisionExit(GameObject& gameObject);
 
 	void DrawComponents();
 	void DrawChildren();
 
-	void AddChild(GameObject* gameObject);
+	void AddChild(GameObject& gameObject);
 
 	// Adds a components of type T to the object
 	template<typename T, typename... TArgs>

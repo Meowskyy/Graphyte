@@ -16,8 +16,7 @@ file(GLOB_RECURSE HEADERS
 
 # Executable definition and properties
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-# target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
-include_directories(${PROJECT_NAME} ${SRC_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_DIR})
 
 # Set standard to C++ 17
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)

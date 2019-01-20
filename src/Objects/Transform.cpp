@@ -42,12 +42,12 @@ Vector3 Transform::GetWorldPosition()
 	return pos;
 }
 
-Transform* Transform::GetChild(int index)
+Transform* Transform::GetChild(const int index)
 {
 	return &gameObject->children[index]->transform;
 }
 
-void Transform::Rotate(Vector3 direction, float speed)
+void Transform::Rotate(const Vector3 direction, const float speed)
 {
 	rotation = rotation * (direction * speed);
 }

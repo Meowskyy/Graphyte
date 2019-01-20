@@ -24,7 +24,7 @@ public:
 
 	void FixedUpdate();
 
-	void OnCollisionEnter(GameObject* gameObject) {
+	void OnCollisionEnter(GameObject& gameObject) {
 		//std::cout << "Collision with: " << gameObject->transform.name << "\n";
 	}
 

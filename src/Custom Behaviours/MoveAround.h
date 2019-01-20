@@ -15,11 +15,20 @@ public:
 	float x = 0;
 	float rotSpeed = 0.001f;
 	
-	void Update() {
-		transform->position.y = sin(i * speed) * amount;
+	float distance = 1.0f;
 
-		transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
+	void Update() {
+		//transform->position.y = sin(i * speed) * amount;
+
+		//transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
+
+		if (Input::GetKeyDown(GLFW_KEY_C))
+			transform->position = Physics::RaycastMousePosition(distance);
 
 		i++;
+	}
+
+	void DrawUI() {
+		ImGui::DragFloat("Distance from camera", &distance);
 	}
 };

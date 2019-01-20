@@ -254,13 +254,13 @@ void Graphyte::DrawUI()
 		if (ImGui::Checkbox("Backface Culling", &backFaceCulling)) {
 			if (backFaceCulling) 
 			{
-				glCullFace(GL_FRONT);
-				glDisable(GL_CULL_FACE);
+				glCullFace(GL_BACK);
+				glEnable(GL_CULL_FACE);
 			}
 			else 
 			{
-				glCullFace(GL_FRONT);
-				glEnable(GL_CULL_FACE);
+				glCullFace(GL_BACK);
+				glDisable(GL_CULL_FACE);
 			}
 		}
 

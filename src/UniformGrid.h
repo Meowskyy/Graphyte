@@ -3,6 +3,7 @@
 #include "ECS.h"
 
 #include "BoundingBox.h"
+
 #include "ExtraRenderer.h"
 
 #include <vector>
@@ -12,14 +13,21 @@ const int minSize = 16;
 class UniformGrid {
 private:
 	static float size;
+
+	// Child grids
+	std::vector<UniformGrid*> childGrid = std::vector<UniformGrid*>(8);
+	bool activeChildren[8];
+	int activeChildCount = 0;
+
+	std::vector<GameObject*> gameObjects;	// GameObjects that this grid contains
 	
-	UniformGrid(BoundingBox size) 
+	UniformGrid(const BoundingBox& size) 
 	{
 		this->boundaries = size;
 	}
 
 	// Create with only boundaries
-	UniformGrid* CreateNode(BoundingBox boundary)
+	UniformGrid* CreateNode(const BoundingBox& boundary)
 	{
 		UniformGrid* ret = new UniformGrid(boundary);
 		ret->parent = this;
@@ -32,14 +40,7 @@ public:
 	int curLife = -1;
 	int maxLifeSpan = 8;
 
-	// Child grids
-	std::vector<UniformGrid*> childGrid = std::vector<UniformGrid*>(8);
-	bool activeChildren[8];
-	int activeChildCount = 0;
-
-	std::vector<GameObject*> gameObjects;					// GameObjects that this grid contains
 	static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
-	//static std::vector<GameObject*> collidingGameObjects;	// GameObjects that are touching currently
 	static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
 
 	static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
@@ -48,7 +49,7 @@ public:
 	UniformGrid();
 
 	// Constructor with bounding box size
-	UniformGrid(int size);
+	UniformGrid(const int size);
 
 	bool isRoot() {
 		// Just check if it doesnt have a parent
@@ -56,9 +57,8 @@ public:
 		return (parent == nullptr);
 	}
 
-	bool InsertGameObject(GameObject* gameObject);
-
-	void CollidingObjects(GameObject* gameObject);
+	bool InsertGameObject(GameObject& gameObject);
+	void CollidingObjects(GameObject& gameObject);
 
 	void RebuildGrid();					// Works
 	void Update();						// Works

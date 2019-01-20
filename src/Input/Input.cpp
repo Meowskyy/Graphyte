@@ -141,8 +141,7 @@ void Input::UpdateMousePosition() {
 
 // TODO: Does not work while the mouse is locked and/or hidden in GLFW
 glm::vec2 Input::GetMousePosition() {
-	//return glm::vec2(MouseX, Screen::GetWindowSize().y - MouseY);
-	return glm::vec2(0, 0);
+	return glm::vec2(MouseX, Screen::GetWindowSize().y - MouseY);
 }
 
 #pragma region Mouse_functions

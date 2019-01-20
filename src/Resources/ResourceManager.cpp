@@ -23,7 +23,7 @@ std::map<std::string, Texture2D>    ResourceManager::Textures;
 std::map<std::string, Shader>       ResourceManager::Shaders;
 std::map<std::string, Material>     ResourceManager::Materials;
 
-Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name)
+Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, const std::string name)
 {
 	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 	Shaders[name].shaderName = name;
@@ -35,7 +35,7 @@ Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *fSha
 	return Shaders[name];
 }
 
-Shader ResourceManager::GetShader(std::string name)
+Shader ResourceManager::GetShader(const std::string name)
 {
 	return Shaders[name];
 }
@@ -48,18 +48,18 @@ Texture2D ResourceManager::LoadTexture(const GLchar *file, bool gamma, bool alph
 	return Textures[name];
 }
 
-Texture2D ResourceManager::GetTexture(std::string name)
+Texture2D ResourceManager::GetTexture(const std::string name)
 {
 	return Textures[name];
 }
 
-Material ResourceManager::LoadMaterial(std::string name)
+Material ResourceManager::LoadMaterial(const std::string name)
 {
 	Materials[name] = Material();
 	return Materials[name];
 }
 
-Material ResourceManager::GetMaterial(std::string name)
+Material ResourceManager::GetMaterial(const std::string name)
 {
 	return Materials[name];
 }

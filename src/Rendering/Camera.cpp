@@ -16,5 +16,4 @@ glm::mat4 Camera::GetViewMatrix()
 	Vector3 forwardVector = glm::vec3(transform->getForwardVector().x, transform->getForwardVector().y, transform->getForwardVector().z);
 
 	return glm::lookAt(position, position + forwardVector, upVector);
-
 }

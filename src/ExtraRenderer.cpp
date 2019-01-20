@@ -10,7 +10,7 @@
 
 #include "Rendering\MeshRenderer.h"
 
-void ExtraRenderer::DrawAABB(BoundingBox& box, Vector3& position) {
+void ExtraRenderer::DrawAABB(const BoundingBox& box, const Vector3& position) {
 	// Cube 1x1x1, centered on origin
 	float vertices[] = {
 		-0.5, -0.5, -0.5,
@@ -60,7 +60,7 @@ void ExtraRenderer::DrawAABB(BoundingBox& box, Vector3& position) {
 	meshRenderer.DrawLines();
 }
 
-void ExtraRenderer::DrawUniformBox(BoundingBox& box) {
+void ExtraRenderer::DrawUniformBox(const BoundingBox& box) {
 	// Cube 1x1x1, centered on origin
 	float vertices[] = {
 		-0.5, -0.5, -0.5,

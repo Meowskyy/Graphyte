@@ -4,6 +4,6 @@
 
 class ExtraRenderer {
 public:
-	static void DrawAABB(BoundingBox& box, Vector3& position);
-	static void DrawUniformBox(BoundingBox& box);
+	static void DrawAABB(const BoundingBox& box, const Vector3& position);
+	static void DrawUniformBox(const BoundingBox& box);
 };

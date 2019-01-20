@@ -31,8 +31,8 @@ public:
 	void AddGridTestGameObject();
 
 	static GameObject* Instantiate(GameObject* original);
-	static GameObject* Instantiate(GameObject* original, GameObject* parent);
-	static GameObject* Instantiate(GameObject* original, Vector3& position);
+	static GameObject* Instantiate(GameObject* original, GameObject& parent);
+	static GameObject* Instantiate(GameObject* original, const Vector3& position);
 
 	std::vector<GameObject*> GetAllRootObjects();
 };

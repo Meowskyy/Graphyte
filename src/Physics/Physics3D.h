@@ -1,12 +1,8 @@
 #pragma once
 
-#include "Math\Vector2.h"
-#include "Math\Vector3.h"
-#include "Math\Quaternion.h"
+#include "Math\Math.h"
 
-class World {
+class Physics {
 public:
-	World() {
-		
-	}
+	static Vector3 RaycastMousePosition(const float distance);
 };

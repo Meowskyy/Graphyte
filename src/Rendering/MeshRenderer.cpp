@@ -81,7 +81,7 @@ MeshRenderer::MeshRenderer() {
 	materials.push_back(Material());
 }
 
-MeshRenderer::MeshRenderer(aiMesh* mesh, const aiScene* scene, const std::string directory)
+MeshRenderer::MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::string directory)
 {
 	// GET MATERIAL FROM RESOURCEMANAGER
 	materials.push_back(Material());
