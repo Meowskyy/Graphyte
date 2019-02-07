@@ -16,7 +16,9 @@ private:
 
 public:
 	float mass = 1000;
+	Vector3 momentum;
 	Vector3 velocity;
+	Vector3 force;
 
 	Rigidbody() {}
 
@@ -31,6 +33,11 @@ public:
 	void OnCollisionExit() 
 	{
 
+	}
+
+	void Recalculate() 
+	{
+		velocity = momentum * -mass;
 	}
 
 	void DrawUI();

@@ -36,7 +36,7 @@ void Mesh::Render()
 void Mesh::RenderLines() {
 	setupMesh();
 
-	//glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_LINE_SMOOTH);
 	//glEnable(GL_POLYGON_OFFSET_FILL);
 	//glPolygonOffset(1, 0);
 	//glLineWidth(10);
@@ -47,7 +47,7 @@ void Mesh::RenderLines() {
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(4 * sizeof(unsigned int)));
 	glDrawElements(GL_LINES, 8, GL_UNSIGNED_INT, (GLvoid*)(8 * sizeof(unsigned int)));
 
-	//glDisable(GL_LINE_SMOOTH);
+	glDisable(GL_LINE_SMOOTH);
 
 	// Unbinding VAO
 	glBindVertexArray(0);

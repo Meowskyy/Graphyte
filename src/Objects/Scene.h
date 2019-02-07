@@ -5,7 +5,7 @@
 #include "Resources\ResourceManager.h"
 #include "Rendering\Camera.h"
 
-#include "UniformGrid.h"
+#include "Physics\UniformGrid.h"
 
 class Scene {
 public:

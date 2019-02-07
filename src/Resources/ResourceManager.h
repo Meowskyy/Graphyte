@@ -32,7 +32,7 @@ public:
 	// Retrieves a stored sader
 	static Shader   GetShader(const std::string name);
 	// Loads (and generates) a texture from file
-	static Texture2D LoadTexture(const GLchar *file, bool gamma, bool alpha, std::string name);
+	static Texture2D LoadTexture(const GLchar *file, const bool gamma, const bool alpha, const std::string name);
 	// Retrieves a stored texture
 	static Texture2D GetTexture(const std::string name);
 
@@ -47,5 +47,5 @@ private:
 	// Loads and generates a shader from file
 	static Shader    loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile = nullptr);
 	// Loads a single texture from file
-	static Texture2D loadTextureFromFile(const char *path, bool gamma, bool alpha);
+	static Texture2D loadTextureFromFile(const char *path, const bool gamma, const bool alpha);
 };

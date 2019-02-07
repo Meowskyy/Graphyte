@@ -46,10 +46,10 @@ public:
 
 					// IF BLOCK IS NOT AIR
 					if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z) != 0) {
-						// IF NO BLOCK ABOVE CREATE TOP
+						// IF NO BLOCK ABOVE CREATE PLANE_TOP
 						if (world->GetBlock(chunkX + x, chunkY + y + 1, chunkZ + z) == 0)
 							CubeTop(Vector3(x, y, z));
-						// IF NO BLOCK BELOW CREATE BOTTOM
+						// IF NO BLOCK BELOW CREATE PLANE_BOTTOM
 						if (world->GetBlock(chunkX + x, chunkY + y - 1, chunkZ + z) == 0)
 							CubeBottom(Vector3(x, y, z));
 

@@ -30,4 +30,26 @@ public:
 
 	// Tests for bounding box overlap with Transforms
 	static bool TestAABBOverlap(const Transform& a, const Transform& b);
+
+	Vector3 BoundingBox::getPositiveVertex(const Vector3& normal) const
+	{
+		Vector3 positiveVertex = min;
+
+		if (normal.x >= 0.0f) positiveVertex.x = max.x;
+		if (normal.y >= 0.0f) positiveVertex.y = max.y;
+		if (normal.z >= 0.0f) positiveVertex.z = max.z;
+
+		return positiveVertex;
+	}
+
+	Vector3 BoundingBox::getNegativeVertex(const Vector3& normal) const
+	{
+		Vector3 negativeVertex = max;
+
+		if (normal.x >= 0.0f) negativeVertex.x = min.x;
+		if (normal.y >= 0.0f) negativeVertex.y = min.y;
+		if (normal.z >= 0.0f) negativeVertex.z = min.z;
+
+		return negativeVertex;
+	}
 };

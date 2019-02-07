@@ -6,7 +6,7 @@
 #include <array>
 
 #include "Physics\Physics3D.h"
-#include "BoundingBox.h"
+#include "Physics\BoundingBox.h"
 
 #include "imgui.h"
 
@@ -69,7 +69,7 @@ public:
 	//glm::vec3 GetWorldRotation();
 	//glm::vec3 GetWorldScale();
 
-	Transform* GetChild(int index);
+	Transform* GetChild(const int index);
 
 	const bool positionHasChanged()
 	{

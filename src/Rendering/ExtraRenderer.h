@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BoundingBox.h"
+#include "Physics\BoundingBox.h"
 
 class ExtraRenderer {
 public:

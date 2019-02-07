@@ -24,7 +24,6 @@ Vector3 Transform::GetWorldPosition()
 	//std::cout << name << std::endl;
 	//return (parent != nullptr) ? parent->position + position : position;
 
-
 	Vector3 pos = position;
 	
 	if (scale.x != 0 && position.x != 0) {
@@ -49,7 +48,7 @@ Transform* Transform::GetChild(const int index)
 
 void Transform::Rotate(const Vector3 direction, const float speed)
 {
-	rotation = rotation * (direction * speed);
+	rotation *= Quaternion(direction * speed);
 }
 
 void Transform::setParent(Transform &transform)

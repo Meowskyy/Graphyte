@@ -20,7 +20,8 @@ public:
 	void Update() {
 		//transform->position.y = sin(i * speed) * amount;
 
-		//transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
+		transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
+		//transform->Rotate(transform->getRightVector(), rotSpeed);
 
 		if (Input::GetKeyDown(GLFW_KEY_C))
 			transform->position = Physics::RaycastMousePosition(distance);

@@ -61,6 +61,7 @@ void MeshRenderer::RecalculateBoundingBox()
 void MeshRenderer::DrawUI()
 {
 	ImGui::Checkbox("Draw bounding box", &drawBoundingBox);
+	ImGui::Checkbox("Is visible", &isVisible);
 
 	for (int i = 0; i < materials.size(); i++) {
 		ImGui::Text("Shader: ");
@@ -89,32 +90,47 @@ MeshRenderer::MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::
 	processMesh(mesh, scene, directory);
 }
 
-// TODO: Render only if visible
-// TODO: Add a bounding box around the mesh
 // TODO: Group objects with same shader
 void MeshRenderer::Update()
 {
-	glm::mat4 model = glm::mat4(1.0f);
+	// TODO: Update only if camera moves/rotates or this moves/rotates/scales
+	// If mesh is visible in mainCamera
+	this->isVisible = Camera::mainCamera->frustrum.TestIntersection(*transform);
 
-	// create transformations
-	model = glm::scale(model, transform->scale);					// SCALE
-	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
-	model = model * rot;
-
-	for (int i = 0; i < materials.size(); i++) {
-		materials[i].shader.SetMatrix4("model", model, true);
+	/*
+	if (
+		Camera::mainCamera->transform->positionHasChanged() || Camera::mainCamera->transform->rotationHasChanged() ||
+		this->transform->positionHasChanged() || this->transform->rotationHasChanged() || this->transform->scaleHasChanged()
+		) 
+	{
+		this->isVisible = Camera::mainCamera->frustrum.TestIntersection(*transform);
 	}
+	*/
 
-	materials[0].Use();
-	mesh.Render();
+	if (isVisible)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
 
-	if (drawBoundingBox) {
-		ExtraRenderer::DrawAABB(transform->boundingBox, transform->position);
+		// create transformations
+		model = glm::scale(model, transform->scale);					// SCALE
+		model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+		glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
+		model = model * rot;
+
+		for (int i = 0; i < materials.size(); i++) {
+			materials[i].shader.SetMatrix4("model", model, true);
+		}
+
+		materials[0].Use();
+		mesh.Render();
+
+		if (drawBoundingBox) {
+			ExtraRenderer::DrawAABB(transform->boundingBox, transform->position);
+		}
+
+		// Unbind texture
+		glActiveTexture(0);
 	}
-
-	// Unbind texture
-	glActiveTexture(0);
 }
 
 void MeshRenderer::DrawLines()

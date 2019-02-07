@@ -11,7 +11,7 @@
 
 #include "Rendering\Mesh.h"
 
-#include "BoundingBox.h"
+#include "Physics\BoundingBox.h"
 
 class MeshRenderer : public Component {
 private:
@@ -19,6 +19,7 @@ private:
 public:
 	// TODO: Remove this from release
 	bool drawBoundingBox = false;
+	bool isVisible = true;
 	BoundingBox boundaries;
 
 	Mesh mesh;
