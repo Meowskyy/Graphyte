@@ -61,7 +61,7 @@ void GameObject::OnCollisionEnter(GameObject& gameObject)
 	// If the gameObject is not in the list
 	if (std::find(collisionList.begin(), collisionList.end(), &gameObject) == collisionList.end())
 	{
-		std::cout << transform.name << " collision enter: " << gameObject.transform.name << "\n";
+		//std::cout << transform.name << " collision enter: " << gameObject.transform.name << "\n";
 		hasCollision = true;
 	}
 

@@ -12,8 +12,7 @@ public:
 	static std::vector<GameObject*> gameObjects;
 	static UniformGrid uniformGrid;
 
-	Scene(){
-	}
+	Scene(){}
 
 	// UPDATING BEHAVIOURSCRIPTS
 	void OnSceneLoad();	// Run on scene load?

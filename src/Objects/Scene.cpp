@@ -67,7 +67,9 @@ void Scene::FixedUpdate()
 void Scene::CheckCollisions()
 {
 	for (auto& gameObject : gameObjects)
+	{
 		gameObject->CheckCollisions();
+	}
 }
 
 // TODO: Move this somewhere more appropriate

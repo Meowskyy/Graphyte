@@ -29,23 +29,21 @@ UniformGrid::UniformGrid(const int size)
 }
 
 bool UniformGrid::InsertGameObject(GameObject& gameObject)
-//bool UniformGrid::InsertGameObject(Collider* gameObject)
 {
 	// If the object doesnt fit try inserting it in the parent grid
 	if (!boundaries.Contains(gameObject.transform))
 	{
 		if (this->parent != nullptr)
 		{
-			std::cout << "Trying to insert into parent" << std::endl;
+			// std::cout << "Trying to insert into parent" << std::endl;
 			return this->parent->InsertGameObject(gameObject);
 		}
 		else
 		{
 			RebuildGrid();
-			return true;
+			return false;
 		}
 	}
-
 
 	Vector3 dimensions = boundaries.max - boundaries.min;
 	if (dimensions.x <= minSize && dimensions.y <= minSize && dimensions.z <= minSize)
@@ -87,9 +85,9 @@ bool UniformGrid::InsertGameObject(GameObject& gameObject)
 		}
 	}
 
-	std::cout << "Does not fit in any child" << std::endl;
+	// std::cout << "Does not fit in any child \n";
 
-	//std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << std::endl;
+	// std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << std::endl;
 	gameObjects.push_back(&gameObject);
 
 	return false;
@@ -116,9 +114,12 @@ void UniformGrid::RebuildGrid()
 
 	this->boundaries = BoundingBox(Vector3(-halfSize, -halfSize, -halfSize), Vector3(halfSize, halfSize, halfSize));
 
+	// std::cout << "Pending gameObject count: " << pendingGameObjects.size() << "\n";
+
 	for (int i = 0; i < pendingGameObjects.size(); i++) 
 	{
 		InsertGameObject(*pendingGameObjects[i]);
+		// std::cout << "pending gameObject: " << pendingGameObjects[i]->transform.name << "\n";
 	}
 
 	gridReady = true;
@@ -144,7 +145,7 @@ void UniformGrid::Update() {
 
 				if (boundaries.Contains(gameObjects[i]->transform)) 
 				{
-					std::cout << "Still fits inside / Updating Grid position" << std::endl;
+					//std::cout << "Still fits inside / Updating Grid position" << std::endl;
 
 					InsertGameObject(*gameObjects[i]);
 
@@ -218,10 +219,12 @@ void UniformGrid::CollidingObjects(GameObject& gameObject) {
 			continue;
 		}
 
-		if (BoundingBox::TestAABBOverlap(gameObject.transform, gameObjects[i]->transform))
-		{
-			gameObject.OnCollisionEnter(*gameObjects[i]);
-			gameObjects[i]->OnCollisionEnter(gameObject);
+		if (gameObject.hasCollision) {
+			if (BoundingBox::TestAABBOverlap(gameObject.transform, gameObjects[i]->transform))
+			{
+				gameObject.OnCollisionEnter(*gameObjects[i]);
+				gameObjects[i]->OnCollisionEnter(gameObject);
+			}
 		}
 	}
 
@@ -282,12 +285,14 @@ void UniformGrid::DrawExtra()
 	}
 
 	if (isRoot()) {
-		if (collidingGameObjects.size() > 0) {
-			ImGui::Text("Colliding: ");
-			for (int i = 0; i < collidingGameObjects.size(); i++) {
-				//if (collidingGameObjects[i] != nullptr)
-				ImGui::Text(collidingGameObjects[i].c_str());
-				//ImGui::Text(collidingGameObjects[i]->transform.name.c_str());
+		if (pendingGameObjects.size() > 0) {
+			ImGui::Text("Grid Pending");
+			for (int i = 0; i < pendingGameObjects.size(); i++) {
+				ImGui::Text("GameObject: ");
+				ImGui::SameLine();
+
+				if (pendingGameObjects[i] != nullptr)
+					ImGui::Text(pendingGameObjects[i]->transform.name.c_str());
 			}
 		}
 	}

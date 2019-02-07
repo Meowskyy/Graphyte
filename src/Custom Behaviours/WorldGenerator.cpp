@@ -33,6 +33,7 @@ void WorldGenerator::OnComponentAdded() {
 				GameObject *object = Scene::Instantiate(new GameObject(), *gameObject);
 				object->transform.name = std::to_string(x * CHUNK_SIZE) + ", " + std::to_string(y * CHUNK_SIZE) + ", " + std::to_string(z * CHUNK_SIZE);
 				object->transform.position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
+				//object->hasCollision = false;
 			
 				Chunk* voxelGen = &object->AddComponent<Chunk>();
 				voxelGen->chunkX = x * CHUNK_SIZE;
