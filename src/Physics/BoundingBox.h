@@ -12,24 +12,19 @@ public:
 	Vector3 max;
 	Vector3 center;
 	Vector3 size;
+	Vector3* position;
 
 	BoundingBox() {}
 	BoundingBox(const Vector3& min, const Vector3& max);
 
 	void Recalculate();
 
-	bool Contains(const BoundingBox& otherBoundingBox);
-	bool Contains(const Transform& transform);
+	bool Contains(const BoundingBox& otherBoundingBox) const;
+	bool Contains(const Transform& transform) const;
 
 	// Is this touching the other Collider
-	bool Touching(const Transform& transform);
-	bool Touching(const Collider& transform);
-
-	// Tests for bounding box overlap
-	static bool TestAABBOverlap(const BoundingBox& a, const BoundingBox& b);
-
-	// Tests for bounding box overlap with Transforms
-	static bool TestAABBOverlap(const Transform& a, const Transform& b);
+	bool Touching(const Transform& transform) const;
+	bool Touching(const Collider& transform) const;
 
 	Vector3 BoundingBox::getPositiveVertex(const Vector3& normal) const
 	{
@@ -52,4 +47,10 @@ public:
 
 		return negativeVertex;
 	}
+
+	// Tests for bounding box overlap
+	static bool TestAABBOverlap(const BoundingBox& a, const BoundingBox& b);
+
+	// Tests for bounding box overlap with Transforms
+	static bool TestAABBOverlap(const Transform& a, const Transform& b);
 };

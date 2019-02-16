@@ -52,24 +52,19 @@ public:
 
 	BoundingBox boundingBox;
 
-	Transform() { }
-
-	// Transform directions
-	Vector3 forward = getForwardVector();
-	Vector3 right = getRightVector();
-	Vector3 up = getUpVector();
+	Transform() {}
 
 	// Transform direction methods
-	Vector3 getForwardVector();
-	Vector3 getRightVector();
-	Vector3 getUpVector();
+	Vector3 getForwardVector() const;
+	Vector3 getRightVector() const;
+	Vector3 getUpVector() const;
 
 	// Position Parent + Local
-	Vector3 GetWorldPosition();
-	//glm::vec3 GetWorldRotation();
-	//glm::vec3 GetWorldScale();
+	Vector3 GetWorldPosition() const;
+	// Vector3 GetWorldRotation() const;
+	// Vector3 GetWorldScale() const;
 
-	Transform* GetChild(const int index);
+	Transform* GetChild(const int index) const;
 
 	const bool positionHasChanged()
 	{
@@ -162,9 +157,9 @@ public:
 	int componentCount = 0;
 	int childCount = 0;
 
-	void Update();
-	void FixedUpdate();
-	void OnSceneLoad();
+	void Update() const;
+	void FixedUpdate() const;
+	void OnSceneLoad() const;
 
 	void OnCollisionEnter(GameObject& gameObject);
 	void CheckCollisions();

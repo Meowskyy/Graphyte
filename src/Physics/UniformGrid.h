@@ -8,7 +8,7 @@
 
 #include <vector>
 
-const int minSize = 16;
+const int minSize = 8;
 
 class UniformGrid {
 private:
@@ -21,9 +21,9 @@ private:
 
 	std::vector<GameObject*> gameObjects;	// GameObjects that this grid contains
 	
-	UniformGrid(const BoundingBox& size) 
+	UniformGrid(const BoundingBox& boundaries) 
 	{
-		this->boundaries = size;
+		this->boundaries = boundaries;
 	}
 
 	// Create with only boundaries
@@ -37,9 +37,6 @@ public:
 	BoundingBox boundaries;
 	UniformGrid* parent;
 
-	int curLife = -1;
-	int maxLifeSpan = 8;
-
 	static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
 	static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
 
@@ -48,22 +45,22 @@ public:
 	// Default constructor
 	UniformGrid();
 
-	// Constructor with bounding box size
+	// Constructor with bounding box boundaries
 	UniformGrid(const int size);
 
-	bool isRoot() {
-		// Just check if it doesnt have a parent
-		// Might be a bad idea, as you could manually assign it to be the root node somehow
+	bool isRoot() const 
+	{
 		return (parent == nullptr);
 	}
 
 	bool InsertGameObject(GameObject& gameObject);
-	void CollidingObjects(GameObject& gameObject);
 
-	void RebuildGrid();					// Works
-	void Update();						// Works
-	void SetSize(int size);				// Do not call this more than once
+	void CollidingObjects(GameObject& gameObject) const;
+	void CollidingObjects(GameObject& gameObject, const int index) const;
 
-	void DrawGrid();
-	void DrawExtra();
+	void RebuildGrid();
+	void Update();
+
+	void DrawGrid() const;
+	void DrawExtra() const;
 };

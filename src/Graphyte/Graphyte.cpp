@@ -127,28 +127,21 @@ float frameTime = 0;
 int nbFrames = 0;
 float inputTime = 0;
 
+// Physics loop based off https://gafferongames.com/post/fix_your_timestep/
 void Graphyte::mainLoop() 
 {
 	currentScene.OnSceneLoad();
 
 	glCullFace(GL_FRONT);
 
-	float previousdt = 0;
-	float currentdt = 0;
+	float previousState = 0;
+	float currentState = 0;
 
-	float dt = 0.01f; // 1/100 of a second
 	float currentTime = glfwGetTime();
 	float accumulator = 0.0f;
 
-	while (!glfwWindowShouldClose(mainWindow)) {
-		// Deltatime		
-		float currentTime = 0; // This accumulates the time that has passed.
-		float previousTime = 0;
-
-		currentTime = glfwGetTime();
-		Time::deltaTime = currentTime - previousTime; 	// UPDATE DELTATIME
-		previousTime = currentTime;
-
+	while (!glfwWindowShouldClose(mainWindow)) 
+	{
 		Input::UpdateKeyStates();
 		Input::UpdateMousePosition();
 
@@ -183,20 +176,21 @@ void Graphyte::mainLoop()
 
 		while (accumulator >= Time::fixedTimestep)
 		{
-			previousdt = currentdt;
-			currentdt = Time::fixedTimestep;
+			previousState = currentState;
+			currentState = currentState + Time::fixedTimestep;
+			currentState += Time::fixedTimestep;
+
 			accumulator -= Time::fixedTimestep;
 
 			currentScene.FixedUpdate();
 		}
 
-		float alpha = accumulator / dt;
-
-		// Blending current and passed time
-		Time::timeRemainder = currentdt * alpha + previousdt * (1.0f - alpha);
+		float alpha = accumulator / Time::fixedTimestep;
 
 		Time::deltaTime = frameTime;
 
+		// TODO: Blending physics based on alpha
+		// std::cout << "Remainder: " << alpha << "\n";
 		// std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedDeltaTime << std::endl;
 
 		// configure global opengl state
@@ -210,8 +204,6 @@ void Graphyte::mainLoop()
 
 		// Scene Update()
 		currentScene.Update();
-
-		currentTime += Time::deltaTime;
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -358,7 +350,7 @@ void Graphyte::DrawUI()
 	if (show_scene_window) 
 	{
 		ImGui::Begin("Scene");
-		if (ImGui::Button("Create Crysis Model"))
+		if (ImGui::Button("Create Planet"))
 			currentScene.AddGameObject();
 
 		if (ImGui::Button("Create Child GameObject"))
@@ -406,7 +398,7 @@ void Graphyte::DrawUI()
 		}
 		ImGui::PopStyleVar();
 
-		//currentScene.uniformGrid.DrawExtra();
+		currentScene.uniformGrid.DrawExtra();
 
 		ImGui::End();
 	}

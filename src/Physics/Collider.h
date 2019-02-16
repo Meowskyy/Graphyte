@@ -13,7 +13,10 @@ class Collider : public Component {
 public:
 	Bounds bounds;
 
-	Collider() {}
+	Collider() 
+	{
+		
+	}
 
 	// Useful for spheres
 	Vector3 ClosestPoint(const Vector3& position) {}

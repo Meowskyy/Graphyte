@@ -21,7 +21,10 @@ UniformGrid Scene::uniformGrid;
 void Scene::OnSceneLoad()
 {
 	AddCameraObject();
-	// AddGrid();
+
+#ifdef _DEBUG
+	AddGrid();
+#endif
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
 	for (int i = 0; i < gameObjects.size(); i++)
@@ -29,8 +32,7 @@ void Scene::OnSceneLoad()
 		gameObjects[i]->OnSceneLoad();
 	}
 
-	uniformGrid = UniformGrid(64);
-	uniformGrid.SetSize(32);
+	uniformGrid = UniformGrid(32);
 	uniformGrid.RebuildGrid();
 }
 
@@ -48,15 +50,14 @@ void Scene::Update()
 		gameObject->Update();
 	}
 
-	//uniformGrid.Update();
-
+	uniformGrid.Update();
 	uniformGrid.DrawGrid();
 }
 
 // FixedUpdate on BehaviourScripts
 void Scene::FixedUpdate()
 {
-	uniformGrid.Update();
+	//uniformGrid.Update();
 
 	for (auto& gameObject : gameObjects) 
 	{

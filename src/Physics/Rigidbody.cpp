@@ -4,7 +4,7 @@
 
 #include "imgui.h"
 
-Vector3 Rigidbody::ComputeForces() {
+Vector3 Rigidbody::ComputeForces() const {
 	return Vector3(0, mass * -9.81, 0);
 }
 

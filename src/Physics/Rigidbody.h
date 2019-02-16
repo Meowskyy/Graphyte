@@ -22,15 +22,15 @@ public:
 
 	Rigidbody() {}
 
-	Vector3 ComputeForces();
+	Vector3 ComputeForces() const;
 
 	void FixedUpdate();
 
-	void OnCollisionEnter(GameObject& gameObject) {
+	void OnCollisionEnter(const GameObject& gameObject) {
 		//std::cout << "Collision with: " << gameObject->transform.name << "\n";
 	}
 
-	void OnCollisionExit() 
+	void OnCollisionExit()
 	{
 
 	}

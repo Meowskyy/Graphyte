@@ -1,6 +1,6 @@
 #include "ECS.h"
 
-Vector3 Transform::getForwardVector()
+Vector3 Transform::getForwardVector() const
 {
 	Vector3 front = rotation * Vector3(0, 0, 1);
 	front = glm::normalize(front);
@@ -8,18 +8,18 @@ Vector3 Transform::getForwardVector()
 	return front;
 }
 
-Vector3 Transform::getRightVector()
+Vector3 Transform::getRightVector() const
 {
 	return glm::normalize(glm::cross(getForwardVector(), Vector3(0, 1, 0)));
 }
 
-Vector3 Transform::getUpVector()
+Vector3 Transform::getUpVector() const
 {
 	return glm::normalize(glm::cross(getRightVector(), getForwardVector()));
 }
 
 // TODO: Fixing this error in modelLoader
-Vector3 Transform::GetWorldPosition()
+Vector3 Transform::GetWorldPosition() const
 {
 	//std::cout << name << std::endl;
 	//return (parent != nullptr) ? parent->position + position : position;
@@ -41,7 +41,7 @@ Vector3 Transform::GetWorldPosition()
 	return pos;
 }
 
-Transform* Transform::GetChild(const int index)
+Transform* Transform::GetChild(const int index) const
 {
 	return &gameObject->children[index]->transform;
 }

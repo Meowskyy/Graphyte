@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-void GameObject::Update()
+void GameObject::Update() const
 {
 	if (enabled) {
 		for (auto& child : children) 
@@ -22,7 +22,7 @@ void GameObject::Update()
 	}
 }
 
-void GameObject::FixedUpdate()
+void GameObject::FixedUpdate() const
 {
 	if (enabled) {
 		for (auto& child : children) 
@@ -38,7 +38,7 @@ void GameObject::FixedUpdate()
 	}
 }
 
-void GameObject::OnSceneLoad()
+void GameObject::OnSceneLoad() const
 {
 	if (enabled) {
 		for (auto& child : children)

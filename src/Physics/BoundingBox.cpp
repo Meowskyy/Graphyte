@@ -25,7 +25,7 @@ void BoundingBox::Recalculate()
 	this->size.z = max.z - min.z;
 }
 
-bool BoundingBox::Contains(const BoundingBox& otherBoundingBox)
+bool BoundingBox::Contains(const BoundingBox& otherBoundingBox) const
 {
 	if (this->min.x < otherBoundingBox.min.x &&
 		this->min.y < otherBoundingBox.min.y &&
@@ -41,7 +41,7 @@ bool BoundingBox::Contains(const BoundingBox& otherBoundingBox)
 	return false;
 }
 
-bool BoundingBox::Contains(const Transform& transform)
+bool BoundingBox::Contains(const Transform& transform) const
 {
 	if (this->min.x < transform.position.x + transform.boundingBox.min.x &&
 		this->min.y < transform.position.y + transform.boundingBox.min.y &&
@@ -57,7 +57,7 @@ bool BoundingBox::Contains(const Transform& transform)
 	return false;
 }
 
-bool BoundingBox::Touching(const Transform& transform)
+bool BoundingBox::Touching(const Transform& transform) const
 {
 	Vector3 aMin = min;
 	Vector3 aMax = max;
@@ -82,7 +82,7 @@ bool BoundingBox::Touching(const Transform& transform)
 	return true;
 }
 
-bool BoundingBox::Touching(const Collider& collider)
+bool BoundingBox::Touching(const Collider& collider) const
 {
 	Vector3 aMin = min;
 	Vector3 aMax = max;
@@ -109,13 +109,19 @@ bool BoundingBox::Touching(const Collider& collider)
 
 bool BoundingBox::TestAABBOverlap(const BoundingBox& a, const BoundingBox& b)
 {
-	float d1x = b.min.x - a.max.x;
-	float d1y = b.min.y - a.max.y;
-	float d1z = b.min.z - a.max.z;
+	Vector3 aMin = a.min + *a.position;
+	Vector3 aMax = a.max + *a.position;
 
-	float d2x = a.min.x - b.max.x;
-	float d2y = a.min.y - b.max.y;
-	float d2z = a.min.z - b.max.z;
+	Vector3 bMin = b.min + *b.position;
+	Vector3 bMax = b.max + *b.position;
+
+	float d1x = bMin.x - aMax.x;
+	float d1y = bMin.y - aMax.y;
+	float d1z = bMin.z - aMax.z;
+
+	float d2x = aMin.x - bMax.x;
+	float d2y = aMin.y - bMax.y;
+	float d2z = aMin.z - bMax.z;
 
 	if (d1x > 0.0f || d1y > 0.0f || d1z > 0.0f)
 		return false;
