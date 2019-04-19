@@ -18,7 +18,7 @@ public:
 	float volume = 100;
 
 	// Empty constructor
-	AudioEmitter() {}
+	AudioEmitter() = default;
 
 	AudioEmitter(const std::string path)
 	{

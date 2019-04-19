@@ -8,23 +8,24 @@
 
 class Graphyte {
 private:
-
-public:
-	static GameObject* selectedGameObject;
-	static Scene currentScene;
-	static GLFWwindow *mainWindow;
-
-	void run();
-	void cleanup();
+	void initWindow();
+	void setupCallbacks();
 	void loadShaders();
 	void loadModels();
-	void setupCallbacks();
 	void mainLoop();
-	void initWindow();
+	void cleanup();
 
 	// UI
 	void DrawUI();
 
 	// IMGUI
 	void SetupIMGUI();
+public:
+	static GameObject* selectedGameObject;
+	static Scene currentScene;
+	static GLFWwindow *mainWindow;
+
+	Graphyte() = default;
+
+	void run();
 };

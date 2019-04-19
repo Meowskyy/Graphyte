@@ -7,13 +7,7 @@
 
 class AudioListener : public Component {
 public:
-	AudioListener()
-	{
-		//std::cout << "Setup audio listener" << std::endl;
-
-		// TODO: Add this as a separate option
-		sf::Listener::setGlobalVolume(50.0);
-	}
+	AudioListener() = default;
 
 	void Update() 
 	{

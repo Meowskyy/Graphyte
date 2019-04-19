@@ -18,7 +18,8 @@ enum KeyStates {
 
 class Input {
 private:
-	Input();
+	Input() = default;
+
 	static KeyStates keys[1024];
 	static KeyStates oldKeys[1024];
 	static KeyStates mouseKeys[4];

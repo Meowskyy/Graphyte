@@ -12,7 +12,7 @@ public:
 	static std::vector<GameObject*> gameObjects;
 	static UniformGrid uniformGrid;
 
-	Scene(){}
+	Scene() = default;
 
 	// UPDATING BEHAVIOURSCRIPTS
 	void OnSceneLoad();	// Run on scene load?
@@ -33,5 +33,5 @@ public:
 	static GameObject* Instantiate(GameObject* original, GameObject& parent);
 	static GameObject* Instantiate(GameObject* original, const Vector3& position);
 
-	std::vector<GameObject*> GetAllRootObjects();
+	std::vector<GameObject*> GetAllRootObjects() const;
 };

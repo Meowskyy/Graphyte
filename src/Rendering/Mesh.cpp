@@ -25,8 +25,10 @@ Mesh::~Mesh() {
 
 void Mesh::Render()
 {
-	// draw mesh
+	// Bind VAO
 	glBindVertexArray(VAO);
+
+	// draw mesh
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
 	// Unbinding VAO

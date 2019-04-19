@@ -20,8 +20,8 @@ private:
 	int activeChildCount = 0;
 
 	std::vector<GameObject*> gameObjects;	// GameObjects that this grid contains
-	
-	UniformGrid(const BoundingBox& boundaries) 
+
+	UniformGrid(const BoundingBox& boundaries)
 	{
 		this->boundaries = boundaries;
 	}
@@ -43,9 +43,12 @@ public:
 	static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 
 	// Default constructor
-	UniformGrid();
+	UniformGrid() : boundaries(BoundingBox(Vector3(0, 0, 0), Vector3(0, 0, 0))) 
+	{
 
-	// Constructor with bounding box boundaries
+	}
+
+	// Constructor with size
 	UniformGrid(const int size);
 
 	bool isRoot() const 

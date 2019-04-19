@@ -52,8 +52,10 @@ void Graphyte::run()
 	initWindow();
 
 	loadShaders();
+	loadModels();
 
 	mainLoop();
+
 	cleanup();
 }
 
@@ -110,9 +112,6 @@ void Graphyte::initWindow()
 
 	SetupIMGUI();
 
-	loadShaders();
-	loadModels();
-
 	setupCallbacks();
 }
 
@@ -130,6 +129,7 @@ float inputTime = 0;
 // Physics loop based off https://gafferongames.com/post/fix_your_timestep/
 void Graphyte::mainLoop() 
 {
+	// Once the scene is loaded
 	currentScene.OnSceneLoad();
 
 	glCullFace(GL_FRONT);
@@ -193,16 +193,15 @@ void Graphyte::mainLoop()
 		// std::cout << "Remainder: " << alpha << "\n";
 		// std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedDeltaTime << std::endl;
 
+		// TODO: Is it better if this is after or before Update()
+		currentScene.CheckCollisions();
+
+		// Scene Update()
 		// configure global opengl state
 		// -----------------------------
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// TODO: Is it better if this is after or before Update()
-		currentScene.CheckCollisions();
-
-		// Scene Update()
 		currentScene.Update();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

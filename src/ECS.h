@@ -52,7 +52,10 @@ public:
 
 	BoundingBox boundingBox;
 
-	Transform() {}
+	Transform() : position(Vector3(0.0f, 0.0f, 0.0f)), scale(Vector3(1, 1, 1))
+	{ 
+		boundingBox.transform = this; 
+	}
 
 	// Transform direction methods
 	Vector3 getForwardVector() const;
@@ -101,9 +104,8 @@ public:
 	GameObject* gameObject;
 	Transform* transform;
 
-	Component() 
+	Component() : transform(new Transform())
 	{
-		transform = new Transform();
 		//gameObject = new GameObject();
 	}
 
@@ -130,9 +132,9 @@ public:
 
 	// Functions : Physics
 	// Called every time the collider hits something
-	virtual void OnCollisionEnter(GameObject& gameObject) {}
-	virtual void OnCollisionStay(GameObject& gameObject) {}
-	virtual void OnCollisionExit(GameObject& gameObject) {}
+	virtual void OnCollisionEnter(GameObject& gameObject)	{}
+	virtual void OnCollisionStay(GameObject& gameObject)	{}
+	virtual void OnCollisionExit(GameObject& gameObject)	{}
 
 	virtual void DrawUI() {}	// Draws info about the script, only if in _DEBUG is defined
 };

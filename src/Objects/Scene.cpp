@@ -23,13 +23,13 @@ void Scene::OnSceneLoad()
 	AddCameraObject();
 
 #ifdef _DEBUG
-	AddGrid();
+	//AddGrid();
 #endif
 
 	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
-	for (int i = 0; i < gameObjects.size(); i++)
+	for (auto& gameObject : gameObjects)
 	{
-		gameObjects[i]->OnSceneLoad();
+		gameObject->OnSceneLoad();
 	}
 
 	uniformGrid = UniformGrid(32);
@@ -121,7 +121,7 @@ void Scene::AddCameraObject()
 	object = nullptr;
 }
 
-std::vector<GameObject*> Scene::GetAllRootObjects()
+std::vector<GameObject*> Scene::GetAllRootObjects() const
 {
 	std::vector<GameObject*> objects;
 	return objects;

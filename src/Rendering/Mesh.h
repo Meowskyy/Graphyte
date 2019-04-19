@@ -17,7 +17,7 @@ public:
 
 	/*  Functions  */
 	// constructor
-	Mesh() {};
+	Mesh() = default;
 	~Mesh();
 	Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, const std::vector<unsigned int> indices);
 

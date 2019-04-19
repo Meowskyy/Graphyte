@@ -20,7 +20,7 @@ public:
 	Vector3 velocity;
 	Vector3 force;
 
-	Rigidbody() {}
+	Rigidbody() = default;
 
 	Vector3 ComputeForces() const;
 

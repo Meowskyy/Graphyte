@@ -11,12 +11,6 @@ bool UniformGrid::gridReady; // FALSE by default. the tree has a few objects whi
 float UniformGrid::size;
 
 // Public
-UniformGrid::UniformGrid() 
-{
-	boundaries = BoundingBox(Vector3(0, 0, 0), Vector3(0, 0, 0));
-}
-
-// Public
 UniformGrid::UniformGrid(const int size)
 {
 	this->size = size;

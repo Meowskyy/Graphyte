@@ -7,14 +7,17 @@ class Collider;
 
 struct BoundingBox
 {
+private:
+
 public:
 	Vector3 min;
 	Vector3 max;
 	Vector3 center;
 	Vector3 size;
 	Vector3* position;
+	Transform* transform;
 
-	BoundingBox() {}
+	BoundingBox() = default;
 	BoundingBox(const Vector3& min, const Vector3& max);
 
 	void Recalculate();
@@ -26,27 +29,9 @@ public:
 	bool Touching(const Transform& transform) const;
 	bool Touching(const Collider& transform) const;
 
-	Vector3 BoundingBox::getPositiveVertex(const Vector3& normal) const
-	{
-		Vector3 positiveVertex = min;
+	Vector3 BoundingBox::getPositiveVertex(const Vector3& normal) const;
 
-		if (normal.x >= 0.0f) positiveVertex.x = max.x;
-		if (normal.y >= 0.0f) positiveVertex.y = max.y;
-		if (normal.z >= 0.0f) positiveVertex.z = max.z;
-
-		return positiveVertex;
-	}
-
-	Vector3 BoundingBox::getNegativeVertex(const Vector3& normal) const
-	{
-		Vector3 negativeVertex = max;
-
-		if (normal.x >= 0.0f) negativeVertex.x = min.x;
-		if (normal.y >= 0.0f) negativeVertex.y = min.y;
-		if (normal.z >= 0.0f) negativeVertex.z = min.z;
-
-		return negativeVertex;
-	}
+	Vector3 BoundingBox::getNegativeVertex(const Vector3& normal) const;
 
 	// Tests for bounding box overlap
 	static bool TestAABBOverlap(const BoundingBox& a, const BoundingBox& b);

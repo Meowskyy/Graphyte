@@ -38,6 +38,7 @@ Vector3 Transform::GetWorldPosition() const
 		pos.z = position.z / scale.z;
 	}
 
+	//return (parent != nullptr) ? parent->GetWorldPosition() + pos : pos;
 	return pos;
 }
 

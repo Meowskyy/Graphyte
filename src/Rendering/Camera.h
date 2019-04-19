@@ -30,7 +30,8 @@ public:
 		projection = glm::perspective(glm::radians(fov), (float)1920 / (float)1080, nearClipPlane, farClipPlane);
 	}
 
-	void Update() {
+	void Update() 
+	{
 		frustrum = Frustum(GetViewMatrix(), GetProjectionMatrix());
 	}
 
