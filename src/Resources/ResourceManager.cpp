@@ -17,12 +17,21 @@ std::map<std::string, Texture2D>    ResourceManager::Textures;
 std::map<std::string, Shader>       ResourceManager::Shaders;
 std::map<std::string, Material>     ResourceManager::Materials;
 
-void Graphyte::ResourceManager::UpdateProjection(Matrix4 projection)
+void ResourceManager::UpdateProjection(Matrix4 projection)
 {
 	// Set projection uniform in all shaders
 	for (auto const&[key, val] : Shaders)
 	{
 		Shaders[key].SetMatrix4("projection", projection, true);
+	}
+}
+
+void ResourceManager::UpdateView(Matrix4 view)
+{
+	// Set projection uniform in all shaders
+	for (auto const&[key, val] : Shaders)
+	{
+		Shaders[key].SetMatrix4("view", view, true);
 	}
 }
 

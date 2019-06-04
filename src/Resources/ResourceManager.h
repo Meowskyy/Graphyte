@@ -32,6 +32,7 @@ namespace Graphyte {
 		static std::map<std::string, Material> Materials;
 
 		static void UpdateProjection(Matrix4 projection);
+		static void UpdateView(Matrix4 view);
 
 		// Loads (and generates) a shader program from file loading vertex, fragment (and geometry) shader's source code. If gShaderFile is not nullptr, it also loads a geometry shader
 		static Shader   LoadShader(const GLchar *vertexShaderFile, const GLchar *fragmentShaderFile, const GLchar *geometryShaderFile, const std::string name);

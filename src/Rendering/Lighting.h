@@ -43,15 +43,21 @@ namespace Graphyte {
 
 	class Light : public Component {
 	public:
+		float size = 10;
+		float nearClipPlane = 0.1f, farClipPlane = 10;
 		LightMode mode;
 		Vector3 direction;
 		Vector3 color;
-		float ambientIntensity;
-		float diffuseIntensity;
+		float ambientIntensity, diffuseIntensity;
 
 		void DrawUI()
 		{
-			ImGui::ColorEdit3("Light Color", (float*)&color); // Edit 3 floats representing a color
+			ImGui::DragFloat("Size", &size);
+
+			ImGui::DragFloat("Near Clip", &nearClipPlane);
+			ImGui::DragFloat("Far Clip", &farClipPlane);
+
+			ImGui::ColorEdit3("Light Color", (float*)&color);
 			ImGui::DragFloat3("Ambient Intensity", (float*)&direction);
 			ImGui::SliderFloat("Ambient Intensity", &ambientIntensity, 0.0f, 2.0f);
 			ImGui::SliderFloat("Diffuse Intensity", &diffuseIntensity, 0.0f, 2.0f);

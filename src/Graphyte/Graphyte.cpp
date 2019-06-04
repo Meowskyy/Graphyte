@@ -56,7 +56,8 @@ static void glfw_error_callback(int error, const char* description)
 void window_size_callback(GLFWwindow* window, int width, int height);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-void UpdateProjection();
+void UpdateProjectionMatrix();
+void UpdateViewMatrix(Camera& camera);
 
 // timing
 float lastFrame = 0.0f;
@@ -145,7 +146,7 @@ void GraphyteEditor::mainLoop()
 	// Once the scene is loaded
 	currentScene.OnSceneLoad();
 
-	UpdateProjection();
+	//UpdateProjection();
 
 	float previousState = 0;
 	float currentState = 0;
@@ -162,6 +163,14 @@ void GraphyteEditor::mainLoop()
 
 	while (!glfwWindowShouldClose(mainWindow)) 
 	{
+		UpdateProjectionMatrix();
+
+#ifdef _DEBUG
+		UpdateViewMatrix(*editorCamera);
+#else
+		UpdateViewMatrix(Camera::mainCamera);
+#endif
+
 		mouseOnGui = ImGui::IsMouseHoveringAnyWindow();
 		//std::cout << "START OF FRAME" << std::endl;
 		Input::UpdateKeyStates();
@@ -586,11 +595,6 @@ void GraphyteEditor::loadShaders()
 	//ResourceManager::GetShader("Grid").shaderName = "Grid";
 
 	//ResourceManager::GetTexture("Grid").SetFiltering(false);
-	// TODO: Move these somewhere more appropriate
-	//glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(1920), 0.0f, static_cast<GLfloat>(1080));
-	//ResourceManager::LoadShader("Shaders/GUIText.vert", "Shaders/GUIText.frag", nullptr, "GUIText").SetMatrix4("projection", projection, GL_TRUE);
-	//ResourceManager::LoadShader("Shaders/GUI.vert", "Shaders/GUI.frag", nullptr, "GUI").SetMatrix4("projection", projection, GL_TRUE);
-	//projection = glm::perspective(glm::radians(65.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 }
 
 // TODO: Moving these somewhere more appropriate
@@ -646,13 +650,17 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 
 	Screen::UpdateWindowSize(width, height);
 
-	UpdateProjection();
+	UpdateProjectionMatrix();
 }
 
-void UpdateProjection() 
+void UpdateProjectionMatrix() 
 {
-	Matrix4 projection = glm::perspective(Camera::mainCamera->fov, (float)Screen::width / (float)Screen::height, Camera::mainCamera->nearClipPlane, Camera::mainCamera->farClipPlane);
-	ResourceManager::UpdateProjection(projection);
+	ResourceManager::UpdateProjection(Camera::mainCamera->GetProjectionMatrix());
+}
+
+void UpdateViewMatrix(Camera& camera)
+{
+	ResourceManager::UpdateView(camera.GetViewMatrix());
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

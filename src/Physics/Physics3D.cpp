@@ -2,6 +2,8 @@
 
 #include "Input\Input.h"
 
+#include "Rendering\Screen.h"
+
 using namespace Graphyte;
 
 // https://github.com/capnramses/antons_opengl_tutorials_book/blob/master/07_ray_picking/main.cpp
@@ -9,17 +11,16 @@ using namespace Graphyte;
 Vector3 Physics::RaycastMousePosition(const float distance) {
 	Vector2 mousePos = Input::GetMousePosition();
 
-	// TODO: Raycasting only works properly with 1920x1080 right now
 	// screen space (viewport coordinates)
-	float x = (2.0f * mousePos.x) / 1920 - 1.0f;
-	float y = 1.0f - (2.0f * -mousePos.y) / 1080;
+	float x = (2.0f * mousePos.x) / Screen::width - 1.0f;
+	float y = 1.0f - (2.0f * -mousePos.y) / Screen::height;
 	float z = 1.0f;
 	// normalised device space
 	Vector3 ray_nds = Vector3(x, y, z);
 	// clip space
 	Vector4 ray_clip = Vector4(ray_nds.x, ray_nds.y, -1.0, 1.0);
 	// eye space
-	glm::mat4 projection = glm::perspective(glm::radians(70.0f), (float)1920 / (float)1080, 0.1f, 1000.0f);
+	glm::mat4 projection = Camera::mainCamera->GetProjectionMatrix();
 	Vector4 ray_eye = glm::inverse(projection) * ray_clip;
 	ray_eye = Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0);
 	// world space
@@ -33,17 +34,16 @@ Vector3 Physics::RaycastMousePosition(const float distance) {
 Vector3 Physics::RaycastMouseDirection() {
 	Vector2 mousePos = Input::GetMousePosition();
 
-	// TODO: Raycasting only works properly with 1920x1080 right now
 	// screen space (viewport coordinates)
-	float x = (2.0f * mousePos.x) / 1920 - 1.0f;
-	float y = 1.0f - (2.0f * -mousePos.y) / 1080;
+	float x = (2.0f * mousePos.x) / Screen::width - 1.0f;
+	float y = 1.0f - (2.0f * -mousePos.y) / Screen::height;
 	float z = 1.0f;
 	// normalised device space
 	Vector3 ray_nds = Vector3(x, y, z);
 	// clip space
 	Vector4 ray_clip = Vector4(ray_nds.x, ray_nds.y, -1.0, 1.0);
 	// eye space
-	Matrix4 projection = glm::perspective(glm::radians(70.0f), (float)1920 / (float)1080, 0.1f, 1000.0f);
+	Matrix4 projection = Camera::mainCamera->GetProjectionMatrix();
 	Vector4 ray_eye = glm::inverse(projection) * ray_clip;
 	ray_eye = Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0);
 	// world space

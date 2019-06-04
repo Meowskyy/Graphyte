@@ -15,6 +15,8 @@
 
 #include "Rendering\Lighting.h"
 
+#include "Rendering/Screen.h"
+
 using namespace Graphyte;
 
 // Camera
@@ -107,26 +109,21 @@ void Scene::Render(Camera& camera)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	Matrix4 viewMatrix = camera.GetViewMatrix();
-
 	ResourceManager::GetShader("Grid").SetVector3f("cameraPosition", camera.transform->position, true);
-	ResourceManager::GetShader("Grid").SetMatrix4("view", viewMatrix);
 
 	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
 	ResourceManager::GetShader("Standard").SetVector3f("cameraPosition", camera.transform->position, true);
-	ResourceManager::GetShader("Standard").SetMatrix4("view", viewMatrix);
-
-	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
-	ResourceManager::GetShader("Unlit").SetMatrix4("view", viewMatrix, true);
 
 	// 1. render depth of scene to texture (from light's perspective)
 	// --------------------------------------------------------------
 	Matrix4 lightProjection, lightView;
 	Matrix4 lightSpaceMatrix;
-	float near_plane = 0.0f, far_plane = 75.5f;
-	//lightProjection = glm::perspective(glm::radians(70.0f), (GLfloat)1024 / (GLfloat)1024, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
-	lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-	lightView = glm::lookAt(light->transform->position, Vector3(0.0f), Vector3(0.0, 1.0, 0.0));
+	float near_plane = light->nearClipPlane, far_plane = light->farClipPlane;
+	float lightSize = light->size;
+	lightProjection = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, near_plane, far_plane);
+
+	lightView = glm::mat4_cast(light->transform->rotation);
+	//lightView = glm::lookAt(light->transform->position, Vector3(0.0f), Vector3(0.0, 1.0, 0.0));
 	lightSpaceMatrix = lightProjection * lightView;
 	// render scene from light's point of view
 	ResourceManager::GetShader("ShadowMap").Use();
@@ -139,7 +136,7 @@ void Scene::Render(Camera& camera)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// reset viewport
-	glViewport(0, 0, 1920, 1080);
+	glViewport(0, 0, Screen::width, Screen::height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	uniformGrid.DrawGrid();
@@ -151,6 +148,8 @@ void Scene::Render(Camera& camera)
 	m_lighting->SetDirectionalLight(*light);
 
 	Renderer::RenderAllGrouped(camera);
+
+	// FOR DEBUGGING LATER
 	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
 	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Standard"));
 	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));

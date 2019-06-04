@@ -32,5 +32,7 @@ namespace Graphyte {
 		// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
 		Matrix4 GetViewMatrix();
 		Matrix4 GetProjectionMatrix();
+
+		void DrawUI();
 	};
 }

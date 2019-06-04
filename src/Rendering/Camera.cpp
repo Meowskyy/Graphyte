@@ -25,3 +25,10 @@ Matrix4 Camera::GetProjectionMatrix()
 {
 	return 	glm::perspective(glm::radians(fov), (float)Screen::width / (float)Screen::height, nearClipPlane, farClipPlane);
 }
+
+void Camera::DrawUI()
+{
+	ImGui::DragFloat("FoV", &fov);
+	ImGui::DragFloat("Near Clip Plane", &nearClipPlane);
+	ImGui::DragFloat("Far Clip Plane", &farClipPlane);
+}
