@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+using namespace Graphyte;
+
 void GameObject::Update() const
 {
 	if (enabled) {
@@ -18,6 +20,22 @@ void GameObject::Update() const
 		{
 			if (component->enabled)
 				component->Update();
+		}
+	}
+}
+
+void GameObject::LateUpdate() const
+{
+	if (enabled) {
+		for (auto& child : children)
+		{
+			child->LateUpdate();
+		}
+
+		for (auto& component : components)
+		{
+			if (component->enabled)
+				component->LateUpdate();
 		}
 	}
 }
@@ -165,7 +183,7 @@ void GameObject::DrawChildren()
 		// Node
 		bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, children[i]->transform.name.data(), i);
 		if (ImGui::IsItemClicked()) {
-			Graphyte::selectedGameObject = children[i];
+			GraphyteEditor::selectedGameObject = children[i];
 			node_clicked = i;
 		}
 		if (node_open)

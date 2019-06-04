@@ -8,6 +8,8 @@
 #include "imgui.h"
 #include "examples\imgui_impl_glfw.h"
 
+using namespace Graphyte;
+
 KeyStates Input::keys[1024];
 KeyStates Input::oldKeys[1024];
 KeyStates Input::mouseKeys[4];
@@ -140,8 +142,8 @@ void Input::UpdateMousePosition() {
 }
 
 // TODO: Does not work while the mouse is locked and/or hidden in GLFW
-glm::vec2 Input::GetMousePosition() {
-	return glm::vec2(MouseX, Screen::GetWindowSize().y - MouseY);
+Vector2 Input::GetMousePosition() {
+	return Vector2(MouseX, Screen::GetWindowSize().y - MouseY);
 }
 
 #pragma region Mouse_functions

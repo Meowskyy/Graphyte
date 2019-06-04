@@ -10,6 +10,8 @@
 
 #include "texture.h"
 
+using namespace Graphyte;
+
 // TODO: Textures are by default GL_REPEAT with no option to change it
 // TODO: Filtering is also linear
 Texture2D::Texture2D() : Width(0), Height(0), Internal_Format(GL_RGBA), Image_Format(GL_RGBA), Wrap_S(GL_REPEAT), Wrap_T(GL_REPEAT), Filter_Min(GL_LINEAR_MIPMAP_LINEAR), Filter_Max(GL_LINEAR)
@@ -50,7 +52,7 @@ void Texture2D::SetFiltering(bool point) {
 	glBindTexture(GL_TEXTURE_2D, this->ID);
 
 	// Point filtering / No filtering at all
-	if (point) 
+	if (!point) 
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

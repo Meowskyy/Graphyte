@@ -1,11 +1,3 @@
-/*******************************************************************
-** This code is part of Breakout.
-**
-** Breakout is free software: you can redistribute it and/or modify
-** it under the terms of the CC BY 4.0 license as published by
-** Creative Commons, either version 4 of the License, or (at your
-** option) any later version.
-******************************************************************/
 #include "ResourceManager.h"
 
 #include <iostream>
@@ -18,19 +10,26 @@
 // TODO: Temporary
 #include "glm\gtc\matrix_transform.hpp"
 
+using namespace Graphyte;
+
 // Instantiate static variables
 std::map<std::string, Texture2D>    ResourceManager::Textures;
 std::map<std::string, Shader>       ResourceManager::Shaders;
 std::map<std::string, Material>     ResourceManager::Materials;
 
+void Graphyte::ResourceManager::UpdateProjection(Matrix4 projection)
+{
+	// Set projection uniform in all shaders
+	for (auto const&[key, val] : Shaders)
+	{
+		Shaders[key].SetMatrix4("projection", projection, true);
+	}
+}
+
 Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, const std::string name)
 {
 	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 	Shaders[name].shaderName = name;
-
-	// TODO: Move these somewhere more appropriate
-	glm::mat4 projection = glm::perspective(glm::radians(70.0f), (float)1920 / (float)1080, 0.1f, 1000.0f);
-	Shaders[name].SetMatrix4("projection", projection, GL_TRUE);
 
 	return Shaders[name];
 }
@@ -56,10 +55,11 @@ Texture2D ResourceManager::GetTexture(const std::string name)
 Material ResourceManager::LoadMaterial(const std::string name)
 {
 	Materials[name] = Material();
+	Materials[name].name = name;
 	return Materials[name];
 }
 
-Material ResourceManager::GetMaterial(const std::string name)
+Material &ResourceManager::GetMaterial(const std::string name)
 {
 	return Materials[name];
 }
@@ -107,11 +107,14 @@ Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLch
 	}
 	catch (std::exception e)
 	{
+		std::cout << "ERROR IN FILE: " << fShaderFile << std::endl;
 		std::cout << "ERROR::SHADER: Failed to read shader files" << std::endl;
 	}
 	const GLchar *vShaderCode = vertexCode.c_str();
 	const GLchar *fShaderCode = fragmentCode.c_str();
 	const GLchar *gShaderCode = geometryCode.c_str();
+
+	std::cout << "COMPILING FILE: " << fShaderFile << std::endl;
 	// 2. Now create shader object from source code
 	Shader shader;
 	shader.Compile(vShaderCode, fShaderCode, gShaderFile != nullptr ? gShaderCode : nullptr);

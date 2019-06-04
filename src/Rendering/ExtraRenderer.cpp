@@ -10,41 +10,31 @@
 
 #include "Rendering\MeshRenderer.h"
 
+using namespace Graphyte;
+
 void ExtraRenderer::DrawAABB(const BoundingBox& box, const Vector3& position) {
-	// Cube 1x1x1, centered on origin
-	float vertices[] = {
-		-0.5, -0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5,  0.5, -0.5,
-		-0.5,  0.5, -0.5,
-		-0.5, -0.5,  0.5,
-		 0.5, -0.5,  0.5,
-		 0.5,  0.5,  0.5,
-		-0.5,  0.5,  0.5,
+
+	MeshRenderer meshRenderer = MeshRenderer();
+
+	meshRenderer.mesh.vertices = std::vector<Vector3>
+	{
+		Vector3(-0.5, -0.5, -0.5),
+		Vector3(0.5, -0.5, -0.5),
+		Vector3(0.5,  0.5, -0.5),
+		Vector3(-0.5,  0.5, -0.5),
+		Vector3(-0.5, -0.5,  0.5),
+		Vector3(0.5, -0.5,  0.5),
+		Vector3(0.5,  0.5,  0.5),
+		Vector3(-0.5,  0.5,  0.5),
 	};
 
-	unsigned int indices[] = {
+	meshRenderer.mesh.indices = std::vector<unsigned int>
+	{
 		0, 1, 2, 3,
 		4, 5, 6, 7,
 		0, 4, 1, 5,
 		2, 6, 3, 7
 	};
-	
-	MeshRenderer meshRenderer = MeshRenderer();
-
-	std::vector<Vector3> newVertices;
-	std::vector<unsigned int> newIndices;
-
-	for (int i = 0; i < sizeof(vertices); i += 3) {
-		newVertices.push_back(Vector3(vertices[i], vertices[i + 1], vertices[i + 2]));
-	}
-
-	for (int i = 0; i < sizeof(indices); i++) {
-		newIndices.push_back(indices[i]);
-	}
-
-	meshRenderer.mesh.vertices = newVertices;
-	meshRenderer.mesh.indices = newIndices;
 
 	// TODO: Calculate bounding box based on rotation
 	float width = box.max.x - box.min.x;
@@ -57,52 +47,69 @@ void ExtraRenderer::DrawAABB(const BoundingBox& box, const Vector3& position) {
 
 	meshRenderer.OnComponentAdded();
 
+	ResourceManager::GetShader("Unlit").SetVector3f("Color", Vector3(1, 1, 1), true);
 	meshRenderer.DrawLines();
 }
 
 void ExtraRenderer::DrawUniformBox(const BoundingBox& box) {
-	// Cube 1x1x1, centered on origin
-	float vertices[] = {
-		-0.5, -0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5,  0.5, -0.5,
-		-0.5,  0.5, -0.5,
-		-0.5, -0.5,  0.5,
-		 0.5, -0.5,  0.5,
-		 0.5,  0.5,  0.5,
-		-0.5,  0.5,  0.5,
+	MeshRenderer meshRenderer = MeshRenderer();
+
+	meshRenderer.mesh.vertices = std::vector<Vector3>
+	{
+		Vector3(-0.5, -0.5, -0.5),
+		Vector3(0.5, -0.5, -0.5),
+		Vector3(0.5,  0.5, -0.5),
+		Vector3(-0.5,  0.5, -0.5),
+		Vector3(-0.5, -0.5,  0.5),
+		Vector3(0.5, -0.5,  0.5),
+		Vector3(0.5,  0.5,  0.5),
+		Vector3(-0.5,  0.5,  0.5),
 	};
 
-	unsigned int indices[] = {
+	meshRenderer.mesh.indices = std::vector<unsigned int>
+	{ 
 		0, 1, 2, 3,
 		4, 5, 6, 7,
 		0, 4, 1, 5,
 		2, 6, 3, 7
 	};
 
-	MeshRenderer meshRenderer = MeshRenderer();
-
-	std::vector<Vector3> newVertices;
-	std::vector<unsigned int> newIndices;
-
-	for (int i = 0; i < sizeof(vertices); i += 3) {
-		newVertices.push_back(Vector3(vertices[i], vertices[i + 1], vertices[i + 2]));
-	}
-
-	for (int i = 0; i < sizeof(indices); i++) {
-		newIndices.push_back(indices[i]);
-	}
-
-	meshRenderer.mesh.vertices = newVertices;
-	meshRenderer.mesh.indices = newIndices;
-
 	float size = box.max.x - box.min.x;
 
 	meshRenderer.transform->position = Vector3(box.min.x + size / 2, box.min.y + size / 2, (box.min.z + size / 2));
-
 	meshRenderer.transform->scale = Vector3(size, size, size);
 
 	meshRenderer.OnComponentAdded();
 
+	ResourceManager::GetShader("Unlit").SetVector3f("Color", Vector3(1, 1, 1), true);
 	meshRenderer.DrawLines();
+}
+
+void ExtraRenderer::DrawLine(const Vector3& start, const Vector3& end, const Vector3& color)
+{
+	MeshRenderer meshRenderer = MeshRenderer();
+
+	meshRenderer.mesh.vertices = std::vector<Vector3> 
+	{
+		start,
+		start + end
+	};
+
+	meshRenderer.mesh.indices = std::vector<unsigned int>
+	{
+		0, 1
+	};
+
+	meshRenderer.OnComponentAdded();
+
+	ResourceManager::GetShader("Unlit").SetVector3f("Color", color, true);
+	meshRenderer.DrawLine(color);
+}
+
+void ExtraRenderer::DrawSelectionArrows(const Transform* transf, const float distance)
+{
+	glDisable(GL_DEPTH_TEST);
+	DrawLine(transf->position, transf->getForwardVector() * distance, Vector3(0, 1, 0));
+	DrawLine(transf->position, transf->getRightVector()* distance, Vector3(1, 0, 0));
+	DrawLine(transf->position, transf->getUpVector()* distance, Vector3(0, 0, 1));
 }

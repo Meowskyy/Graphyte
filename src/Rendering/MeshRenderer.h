@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ECS.h"
+#include "Rendering\Renderer.h"
 
 #include "glm\glm.hpp"
 
@@ -13,28 +13,31 @@
 
 #include "Physics\BoundingBox.h"
 
-class MeshRenderer : public Component {
-private:
-	void processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory);
-public:
-	// TODO: Remove this from release
-	bool drawBoundingBox = false;
-	bool isVisible = true;
-	BoundingBox boundaries;
+namespace Graphyte {
+	class Camera;
 
-	Mesh mesh;
+	class MeshRenderer : public Renderer {
+	private:
+		void processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory);
+	public:
+		Mesh mesh;
 
-	std::vector<Material> materials;
+		float specularIntensity = 0;
+		float specularPower = 32;
+		Vector3 objectColor = Vector3(1, 1, 1);
 
-	// Constructor
-	MeshRenderer();
-	MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::string directory);
+		// Constructor
+		MeshRenderer();
+		MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::string directory);
 
-	void Update();
-	void OnComponentAdded();
+		void Render(Camera& camera);
+		void RenderExtras();
+		void OnComponentAdded();
 
-	void RecalculateBoundingBox();
+		void RecalculateBoundingBox();
 
-	void DrawLines();
-	void DrawUI();
-};
+		void DrawLines();
+		void DrawLine(const Vector3 color);
+		void DrawUI();
+	};
+}

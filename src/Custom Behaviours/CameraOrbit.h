@@ -6,66 +6,85 @@
 #include "Time\Timers.h"
 #include "Cursor\Cursor.h"
 
-const float PI = 3.141592653589793;
+namespace Graphyte {
+	class CameraOrbit : public Component {
+	public:
+		float x = 0.0;
+		float y = 0.0;
 
-class CameraOrbit : public Component {
-public:
-	float x = 0.0;
-	float y = 0.0;
+		float flightSpeedMul = 1;
 
-	void OnComponentAdded() 
-	{
-		x = 0;
-		y = PI;
-	}
-
-	// Update is called every frame
-	void Update() {
-		movement();
-
-		//MouseCursor::SetVisible(!Input::GetMouseButtonDown(1));
-		if (Input::GetMouseButtonDown(1))
+		void OnComponentAdded()
 		{
-			rotation();
+			x = 0;
+			y = PI;
 		}
-	}
 
-	float flightSpeed = 250;
+		void Update()
+		{
+			if (Input::GetKeyDown(GLFW_KEY_C)) {
+				ExtraRenderer::DrawLine(transform->position + transform->getForwardVector(), Physics::RaycastMousePosition(100));
+			}
 
-	void movement()
-	{
-		if (Input::GetKeyDown(GLFW_KEY_W))
-			transform->position += transform->getForwardVector() * Time::deltaTime * flightSpeed;
-		if (Input::GetKeyDown(GLFW_KEY_S))
-			transform->position -= transform->getForwardVector() * Time::deltaTime * flightSpeed;
-		if (Input::GetKeyDown(GLFW_KEY_A))
-			transform->position -= transform->getRightVector() * Time::deltaTime * flightSpeed;
-		if (Input::GetKeyDown(GLFW_KEY_D))
-			transform->position += transform->getRightVector() * Time::deltaTime * flightSpeed;
-	}
+			if (Input::GetKeyDown(GLFW_KEY_K))
+				Scene::DestroyLast();
+		}
 
-	float mouseSensitivity = 0.005f;
+		// Update is called every frame
+		void LateUpdate() {
+			movement();
 
-	void rotation()
-	{
-		x -= Input::GetAxis("Mouse X") * mouseSensitivity;
-		y += Input::GetAxis("Mouse Y") * mouseSensitivity;
+			//MouseCursor::SetVisible(!Input::GetMouseButtonDown(1));
+			if (Input::GetMouseButtonDown(1))
+			{
+				rotation();
+			}
+		}
 
-		bool constrainPitch = true;
+		float flightSpeed = 3;
 
-		// Make sure that when pitch is out of bounds, screen doesn't get flipped
-		if (y > 89.0f)
-			y = 89.0f;
-		if (y < -89.0f)
-			y = -89.0f;
+		void movement()
+		{
+			if (Input::GetKeyDown(GLFW_KEY_W))
+				transform->position += transform->getForwardVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+			if (Input::GetKeyDown(GLFW_KEY_S))
+				transform->position -= transform->getForwardVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+			if (Input::GetKeyDown(GLFW_KEY_A))
+				transform->position -= transform->getRightVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+			if (Input::GetKeyDown(GLFW_KEY_D))
+				transform->position += transform->getRightVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
 
-		transform->rotation = Quaternion(Vector3(y, x, 0));
-	}
+			if (Input::GetKeyDown(GLFW_KEY_W) || Input::GetKeyDown(GLFW_KEY_S) || Input::GetKeyDown(GLFW_KEY_D) || Input::GetKeyDown(GLFW_KEY_A)) {
+				flightSpeedMul += 1.5f * Time::deltaTime;
+			}
+			else {
+				flightSpeedMul = 1;
+			}
+		}
 
-	/*
-	void DrawUI() {
-		ImGui::DragFloat("Rotation X", &x);
-		ImGui::DragFloat("Rotation Y", &y);
-	}
-	*/
-};
+		float mouseSensitivity = 0.005f;
+
+		void rotation()
+		{
+			x -= Input::GetAxis("Mouse X") * mouseSensitivity;
+			y += Input::GetAxis("Mouse Y") * mouseSensitivity;
+
+			bool constrainPitch = true;
+
+			// Make sure that when pitch is out of bounds, screen doesn't get flipped
+			if (y > 89.0f)
+				y = 89.0f;
+			if (y < -89.0f)
+				y = -89.0f;
+
+			transform->rotation = Quaternion(Vector3(y, x, 0));
+		}
+
+		/*
+		void DrawUI() {
+			ImGui::DragFloat("Rotation X", &x);
+			ImGui::DragFloat("Rotation Y", &y);
+		}
+		*/
+	};
+}

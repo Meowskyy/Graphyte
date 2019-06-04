@@ -10,8 +10,12 @@
 
 #include <iostream>
 
+std::string Shader::currentShader;
+
 Shader &Shader::Use()
 {
+	currentShader = shaderName;
+
 	glUseProgram(this->ID);
 	return *this;
 }
@@ -52,7 +56,13 @@ void Shader::Compile(const GLchar* vertexSource, const GLchar* fragmentSource, c
 		glDeleteShader(gShader);
 }
 
-void Shader::setFloat(const GLchar *name, GLfloat value, GLboolean useShader)
+void Shader::SetBool(const GLchar *name, GLboolean value, GLboolean useShader)
+{
+	if (useShader)
+		this->Use();
+	glUniform1i(glGetUniformLocation(this->ID, name), value);
+}
+void Shader::SetFloat(const GLchar *name, GLfloat value, GLboolean useShader)
 {
 	if (useShader)
 		this->Use();

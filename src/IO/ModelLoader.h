@@ -2,7 +2,9 @@
 
 #include <string>
 
-class ModelLoader {
-public:
-	static void loadGameObject(std::string const path);
-};
+namespace Graphyte {
+	class ModelLoader {
+	public:
+		static void loadGameObject(std::string const path);
+	};
+}

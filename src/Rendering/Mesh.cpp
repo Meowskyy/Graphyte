@@ -5,6 +5,16 @@
 
 #include <glad/glad.h> 
 
+Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector3> normals, const std::vector<Vector2> uvs, const std::vector<unsigned int> indices)
+{
+	this->vertices = vertices;
+	this->indices = indices;
+	this->uvs = uvs;
+	this->normals = normals;
+
+	// now that we have all the required data, set the vertex buffers and its attribute pointers.
+	SetupMesh();
+}
 Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, const std::vector<unsigned int> indices)
 {
 	this->vertices = vertices;
@@ -13,7 +23,7 @@ Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, 
 	//this->normals = std::vector<Vector3>(0);
 
 	// now that we have all the required data, set the vertex buffers and its attribute pointers.
-	setupMesh();
+	SetupMesh();
 }
 
 Mesh::~Mesh() {
@@ -23,33 +33,92 @@ Mesh::~Mesh() {
 	//glDeleteBuffers(1, &EBO);
 }
 
-void Mesh::Render()
+void Mesh::Bind() const
 {
 	// Bind VAO
 	glBindVertexArray(VAO);
-
-	// draw mesh
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-	// Unbinding VAO
-	glBindVertexArray(0);
 }
 
-void Mesh::RenderLines() {
-	setupMesh();
+void Mesh::RecalculateNormals()
+{
+	normals.clear();
+
+	int faces = vertices.size() % 4;
+
+#define V1
+#ifdef V1
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		normals.push_back(Vector3(0, 0, 1));
+	}
+
+	for (int i = 0; i < faces; i++)
+	{
+		//Vector3 normal = glm::normalize(glm::cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]));
+
+		//normals[i] = normal;
+		//normals[i + 1] = normal;
+		//normals[i + 2] = normal;
+		//normals[i + 3] = normal;
+	}
+#else
+	for (int i = 0; i < vertices.size(); i++) 
+	{ 
+		normals.push_back(Vector3(0, 0, 0));
+	}
+
+	for (int i = 0; i < faces; i++)
+	{
+		int ia = i;
+		int ib = i + 1;
+		int ic = i + 2;
+
+		Vector3 e1 = vertices[ia] - vertices[ib];
+		Vector3 e2 = vertices[ic] - vertices[ib];
+		Vector3 no = cross(e1, e2);
+
+		normals[ia] += no;
+		normals[ib] += no;
+		normals[ic] += no;
+	}
+
+	for (int i = 0; i < vertices.size(); i++) 
+	{
+		normals[i] = glm::normalize(normals[i]);
+	}
+#endif
+}
+
+void Mesh::RenderLines()
+{
+#pragma region CreateBuffers
+	// create buffers/arrays
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	// VERTEX BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vector3), &vertices[0], GL_STATIC_DRAW);
+
+	// INDEX BUFFER
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+
+	// vertex Positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3), (void*)0);
+#pragma endregion
 
 	glEnable(GL_LINE_SMOOTH);
-	//glEnable(GL_POLYGON_OFFSET_FILL);
-	//glPolygonOffset(1, 0);
-	//glLineWidth(10);
 
 	glBindVertexArray(VAO);
 
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(4 * sizeof(unsigned int)));
 	glDrawElements(GL_LINES, 8, GL_UNSIGNED_INT, (GLvoid*)(8 * sizeof(unsigned int)));
-
-	glDisable(GL_LINE_SMOOTH);
 
 	// Unbinding VAO
 	glBindVertexArray(0);
@@ -58,9 +127,52 @@ void Mesh::RenderLines() {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
+
+	glDisable(GL_LINE_SMOOTH);
 }
 
-void Mesh::setupMesh()
+void Mesh::RenderLine(const Vector3 color) 
+{
+#pragma region CreateBuffers
+	// create buffers/arrays
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	// VERTEX BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vector3), &vertices[0], GL_STATIC_DRAW);
+
+	// INDEX BUFFER
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+
+	// vertex Positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3), (void*)0);
+#pragma endregion
+
+	glEnable(GL_LINE_SMOOTH);
+	glColor3f(color.x, color.y, color.z);
+
+	glBindVertexArray(VAO);
+
+	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
+
+	// Unbinding VAO
+	glBindVertexArray(0);
+
+	// Delete all buffers at the end
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+
+	glDisable(GL_LINE_SMOOTH);
+}
+
+void Mesh::SetupMesh()
 {
 	// create buffers/arrays
 	glGenVertexArrays(1, &VAO);
@@ -87,7 +199,6 @@ void Mesh::setupMesh()
 
 		// TODO: Checking if everything works properly and adding normals
 		// Vertex positions
-		if (vertexArraySize > 0) // TODO: Do this somehow else
 			glBufferSubData(GL_ARRAY_BUFFER, 0, vertexArraySize, &vertices[0]);
 		// Normal positions
 		if (normalArraySize > 0) // TODO: Do this somehow else
@@ -106,8 +217,8 @@ void Mesh::setupMesh()
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3), (void*)0);
 		// vertex normals
-		//glEnableVertexAttribArray(1);
-		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)(vertexArraySize));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3), (void*)(vertexArraySize));
 		// vertex texture coords
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vector2), (void*)(vertexArraySize + normalArraySize));

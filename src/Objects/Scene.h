@@ -7,31 +7,52 @@
 
 #include "Physics\UniformGrid.h"
 
-class Scene {
-public:
-	static std::vector<GameObject*> gameObjects;
-	static UniformGrid uniformGrid;
+#include "Rendering\ShadowMap.h"
 
-	Scene() = default;
+namespace Graphyte {
+	class Lighting;
+	class Light;
 
-	// UPDATING BEHAVIOURSCRIPTS
-	void OnSceneLoad();	// Run on scene load?
-	void Update();		// Run after every frame
-	void FixedUpdate(); // Used for physics?
-	void CheckCollisions(); // Check collisions for each gameObject once each frame
+	class Scene {
+	private:
+		ShadowMap m_shadowMap;
+		Lighting* m_lighting;
+		Light* light;
+	public:
+		static std::vector<GameObject*> gameObjects;
+		static UniformGrid uniformGrid;
 
-	// TODO: All these are temporary
-	void AddGameObject();
-	void AddChild();
-	void Add1000GameObjects();
-	void AddCameraObject();
-	void AddWorld();
-	void AddGrid();
-	void AddGridTestGameObject();
+		Scene() = default;
+		~Scene();
 
-	static GameObject* Instantiate(GameObject* original);
-	static GameObject* Instantiate(GameObject* original, GameObject& parent);
-	static GameObject* Instantiate(GameObject* original, const Vector3& position);
+		// UPDATING COMPONENTS
+		void OnSceneLoad();	// Run on scene load?
+		void Update();		// Run after every frame
+		void LateUpdate();	// Run at the end of every frame
+		void FixedUpdate(); // Called multiple times during physics checks
+		void CheckCollisions(); // Check collisions for each gameObject once each frame
 
-	std::vector<GameObject*> GetAllRootObjects() const;
-};
+		// RENDERING OBJECTS
+		void Render(Camera& camera);		// Render meshes on screen
+
+		// TODO: All these are temporary
+		void AddGameObject();
+		void AddCrysisGameObject();
+		void AddChild();
+		void Add1000GameObjects();
+		void AddWorld();
+		void AddGrid();
+		void AddGridTestGameObject();
+
+		void AddLight();
+		void AddCameraObject();
+
+		static GameObject* Instantiate(GameObject* original);
+		static GameObject* Instantiate(GameObject* original, GameObject& parent);
+		static GameObject* Instantiate(GameObject* original, const Vector3& position);
+		static void Destroy(GameObject* original);
+		static void DestroyLast();
+
+		std::vector<GameObject*> GetAllRootObjects() const;
+	};
+}

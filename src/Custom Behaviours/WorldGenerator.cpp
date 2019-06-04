@@ -3,6 +3,8 @@
 
 #include "Math\PerlinNoise.h"
 
+using namespace Graphyte;
+
 void WorldGenerator::OnComponentAdded() {
 	PerlinNoise perlinNoise;
 
@@ -25,14 +27,15 @@ void WorldGenerator::OnComponentAdded() {
 
 	std::cout << "Added VoxelGenerator" << std::endl;
 
+	float worldSize = WORLD_SIZE_X * CHUNK_SIZE;
+
 	// Creates a chunk
 	for (int y = 0; y < WORLD_SIZE_Y; y++) {
 		for (int z = 0; z < WORLD_SIZE_Z; z++) {
 			for (int x = 0; x < WORLD_SIZE_X; x++) {
-
 				GameObject *object = Scene::Instantiate(new GameObject(), *gameObject);
 				object->transform.name = std::to_string(x * CHUNK_SIZE) + ", " + std::to_string(y * CHUNK_SIZE) + ", " + std::to_string(z * CHUNK_SIZE);
-				object->transform.position = Vector3(x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE);
+				object->transform.position = Vector3(x * CHUNK_SIZE - worldSize / 2, y * CHUNK_SIZE - worldSize / 2, z * CHUNK_SIZE - worldSize / 2);
 				//object->hasCollision = false;
 			
 				Chunk* voxelGen = &object->AddComponent<Chunk>();

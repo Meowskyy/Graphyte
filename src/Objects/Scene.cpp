@@ -13,20 +13,47 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "Rendering\Lighting.h"
+
+using namespace Graphyte;
+
 // Camera
 std::vector<GameObject*> Scene::gameObjects;
 UniformGrid Scene::uniformGrid;
 
-// TODO: Settings up OnSceneLoad function
+Scene::~Scene() 
+{
+	std::cout << "Cleaning up Scene\n";
+	// Call Update on all components
+	for (auto& gameObject : gameObjects)
+	{
+		delete gameObject;
+	}
+
+	delete m_lighting;
+	m_lighting = nullptr;
+
+	delete light->gameObject;
+	light = nullptr;
+}
+
 void Scene::OnSceneLoad()
 {
+	m_shadowMap.Init(1024, 1024);
+	m_lighting = new Lighting();
+	m_lighting->Init();
+
+	AddLight();
 	AddCameraObject();
+
+	ResourceManager::GetShader("Standard").SetInteger("mainTexture", 0);
+	ResourceManager::GetShader("Standard").SetInteger("shadowMap", 1);
 
 #ifdef _DEBUG
 	//AddGrid();
 #endif
 
-	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
+	// Call OnSceneLoad on all components
 	for (auto& gameObject : gameObjects)
 	{
 		gameObject->OnSceneLoad();
@@ -36,33 +63,35 @@ void Scene::OnSceneLoad()
 	uniformGrid.RebuildGrid();
 }
 
+// Update on Components
 void Scene::Update()
 {
-	ResourceManager::GetShader("Grid").SetVector3f("cameraPosition", Camera::mainCamera->transform->position, true);
-	ResourceManager::GetShader("Grid").SetMatrix4("view", Camera::mainCamera->GetViewMatrix(), true);
-
-	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
-	ResourceManager::GetShader("Standard").SetMatrix4("view", Camera::mainCamera->GetViewMatrix(), true);
-
-	// UPDATING BEHAVIOURSCRIPTS AND RENDERING MESHES
+	// Call Update on all components
 	for (auto& gameObject : gameObjects)
 	{
 		gameObject->Update();
 	}
-
-	uniformGrid.Update();
-	uniformGrid.DrawGrid();
 }
 
-// FixedUpdate on BehaviourScripts
+// LateUpdate on Components
+void Scene::LateUpdate()
+{
+	// Call LateUpdate on all components
+	for (auto& gameObject : gameObjects)
+	{
+		gameObject->LateUpdate();
+	}
+}
+
+// FixedUpdate on Components
 void Scene::FixedUpdate()
 {
-	//uniformGrid.Update();
-
 	for (auto& gameObject : gameObjects) 
 	{
 		gameObject->FixedUpdate();
 	}
+
+	uniformGrid.Update();
 }
 
 void Scene::CheckCollisions()
@@ -73,11 +102,71 @@ void Scene::CheckCollisions()
 	}
 }
 
+void Scene::Render(Camera& camera)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	Matrix4 viewMatrix = camera.GetViewMatrix();
+
+	ResourceManager::GetShader("Grid").SetVector3f("cameraPosition", camera.transform->position, true);
+	ResourceManager::GetShader("Grid").SetMatrix4("view", viewMatrix);
+
+	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
+	ResourceManager::GetShader("Standard").SetVector3f("cameraPosition", camera.transform->position, true);
+	ResourceManager::GetShader("Standard").SetMatrix4("view", viewMatrix);
+
+	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
+	ResourceManager::GetShader("Unlit").SetMatrix4("view", viewMatrix, true);
+
+	// 1. render depth of scene to texture (from light's perspective)
+	// --------------------------------------------------------------
+	Matrix4 lightProjection, lightView;
+	Matrix4 lightSpaceMatrix;
+	float near_plane = 0.0f, far_plane = 75.5f;
+	//lightProjection = glm::perspective(glm::radians(70.0f), (GLfloat)1024 / (GLfloat)1024, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+	lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+	lightView = glm::lookAt(light->transform->position, Vector3(0.0f), Vector3(0.0, 1.0, 0.0));
+	lightSpaceMatrix = lightProjection * lightView;
+	// render scene from light's point of view
+	ResourceManager::GetShader("ShadowMap").Use();
+	ResourceManager::GetShader("ShadowMap").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+
+	m_shadowMap.BindForWriting();
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);
+	Renderer::RenderAllDepth(camera);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// reset viewport
+	glViewport(0, 0, 1920, 1080);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	uniformGrid.DrawGrid();
+
+	glCullFace(GL_BACK);
+	m_shadowMap.BindForReading(GL_TEXTURE1);
+	ResourceManager::GetShader("Standard").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix, true);
+
+	m_lighting->SetDirectionalLight(*light);
+
+	Renderer::RenderAllGrouped(camera);
+	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
+	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Standard"));
+	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
+}
+
 // TODO: Move this somewhere more appropriate
 void Scene::AddGameObject()
 {
 	//ModelLoader::loadGameObject("Assets/resources/nanosuit/nanosuit.obj");
 	ModelLoader::loadGameObject("Assets/resources/planet/planet.obj");
+}
+
+// TODO: Move this somewhere more appropriate
+void Scene::AddCrysisGameObject()
+{
+	ModelLoader::loadGameObject("Assets/resources/nanosuit/nanosuit.obj");
 }
 
 // TODO: Move this somewhere more appropriate
@@ -87,7 +176,7 @@ void Scene::AddGridTestGameObject()
 }
 
 void Scene::AddChild() {
-	Instantiate(new GameObject(), *Graphyte::selectedGameObject);
+	Instantiate(new GameObject(), *GraphyteEditor::selectedGameObject);
 }
 
 void Scene::Add1000GameObjects()
@@ -95,6 +184,18 @@ void Scene::Add1000GameObjects()
 	for (int i = 0; i < 1000; i++) {
 		AddGameObject();
 	}
+}
+
+void Graphyte::Scene::AddLight()
+{
+	GameObject* object = Instantiate(new GameObject());
+	object->transform.position = Vector3(-2.0f, 4.0f, -1.0f);
+
+	light = &object->AddComponent<Light>();
+	light->color = Vector3(1, 1, 1);
+	light->ambientIntensity = 0;
+	light->diffuseIntensity = 0;
+	light->transform->name = "Directional Light";
 }
 
 void Scene::AddCameraObject()
@@ -110,13 +211,7 @@ void Scene::AddCameraObject()
 	object->hasCollision = false;
 
 	Camera::mainCamera = &object->AddComponent<Camera>();
-
-	// Other components
-	object->AddComponent<CameraOrbit>();
 	object->AddComponent<AudioListener>();
-
-	//Camera::mainCamera = &object->GetComponent<Camera>();
-	//Camera::mainCamera->renderDistance = 1000;
 
 	object = nullptr;
 }
@@ -127,27 +222,19 @@ std::vector<GameObject*> Scene::GetAllRootObjects() const
 	return objects;
 }
 
-
-// TODO: Reworking the grid to fade out at distance
 void Scene::AddGrid() 
 {
 	GameObject* object = Instantiate(new GameObject());
 
-	//float gridScale = 1.0f;
-	//object->transform.scale = glm::vec3(1, 1, 1) * gridScale;
-	//object->transform.position = glm::vec3(-0.5f, 0, -0.5f);
 	object->transform.name = "Grid";
 	object->hasCollision = false;
 
 	// MESH RENDERER
 	MeshRenderer* meshRenderer = &object->AddComponent<MeshRenderer>();
 	Mesh* mesh = &meshRenderer->mesh;
-	meshRenderer->materials[0].shader = ResourceManager::GetShader("Grid");
-	meshRenderer->materials[0].textures.push_back(ResourceManager::GetTexture("Grid"));
+	meshRenderer->SetMaterial(ResourceManager::GetMaterial("GridMaterial"));
 
 	std::vector<Vector3> vertices;
-	std::vector<unsigned int> indices;
-	std::vector<Vector2> uvs;
 	// MESH
 	// VERTICES
 	for (int z = 0; z < 2; z++) {
@@ -156,30 +243,29 @@ void Scene::AddGrid()
 		}
 	}
 
-	// INDICES
-	indices.push_back(2);	//1
-	indices.push_back(3);	//2
-	indices.push_back(1);	//3
-	indices.push_back(2);	//1
-	indices.push_back(1);	//3
-	indices.push_back(0);	//4
-
-	// UVS
 	// UV SIZE
 	float tilingAmount = 1000;
-	uvs.push_back(Vector2(0, 0) * tilingAmount);
-	uvs.push_back(Vector2(1, 0) * tilingAmount);
-	uvs.push_back(Vector2(0, 1) * tilingAmount);
-	uvs.push_back(Vector2(1, 1) * tilingAmount);
 
 	object->transform.scale = Vector3(1, 1, 1) * tilingAmount;
 	object->transform.position = Vector3(0, 0, 0);
 
 	mesh->vertices = vertices;
-	mesh->uvs = uvs;
-	mesh->indices = indices;
 
-	mesh->setupMesh();
+	mesh->uvs = std::vector<Vector2>
+	{
+		Vector2(0, 0) * tilingAmount,
+		Vector2(1, 0) * tilingAmount,
+		Vector2(0, 1) * tilingAmount,
+		Vector2(1, 1) * tilingAmount,
+	};
+
+	mesh->indices = std::vector<unsigned int>
+	{
+		2, 3, 1,
+		2, 1, 0
+	};
+
+	mesh->SetupMesh();
 }
 
 void Scene::AddWorld() 
@@ -189,6 +275,7 @@ void Scene::AddWorld()
 	GameObject* object = Instantiate(new GameObject());
 
 	object->transform.name = "World Test";
+	object->transform.scale = Vector3(1, 1, 1);
 	object->AddComponent<WorldGenerator>();
 }
 
@@ -206,6 +293,7 @@ GameObject* Scene::Instantiate(GameObject* original) {
 
 GameObject* Scene::Instantiate(GameObject* original, GameObject& parent) {
 	parent.AddChild(*original);
+	original->transform.parent = &parent.transform;
 
 	if (uniformGrid.gridReady)
 	{
@@ -226,4 +314,16 @@ GameObject* Scene::Instantiate(GameObject* original, const Vector3 &position) {
 	}
 
 	return gameObjects[gameObjects.size() - 1];
+}
+
+void Scene::Destroy(GameObject* original)
+{
+	delete original;
+	gameObjects.erase(std::remove(gameObjects.begin(), gameObjects.end(), nullptr), gameObjects.end());
+}
+
+void Scene::DestroyLast()
+{
+	delete gameObjects[gameObjects.size() - 1];
+	gameObjects.erase(std::remove(gameObjects.begin(), gameObjects.end(), nullptr), gameObjects.end());
 }

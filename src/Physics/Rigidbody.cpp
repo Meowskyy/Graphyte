@@ -4,6 +4,8 @@
 
 #include "imgui.h"
 
+using namespace Graphyte;
+
 Vector3 Rigidbody::ComputeForces() const {
 	return Vector3(0, mass * -9.81, 0);
 }
@@ -25,6 +27,11 @@ void Rigidbody::FixedUpdate()
 	transform->position.x += velocity.x * Time::fixedDeltaTime;
 	transform->position.y += velocity.y * Time::fixedDeltaTime;
 	transform->position.z += velocity.z * Time::fixedDeltaTime;
+}
+
+void Rigidbody::AddForce(const Vector3 force)
+{
+	velocity += force;
 }
 
 void Rigidbody::DrawUI()

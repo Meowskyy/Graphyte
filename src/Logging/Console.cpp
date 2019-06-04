@@ -6,6 +6,8 @@
 #include "Input\Input.h"
 #include "Rendering\Screen.h"
 
+using namespace Graphyte;
+
 std::string Console::inputText;
 
 void Console::Update()

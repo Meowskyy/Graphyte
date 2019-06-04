@@ -6,30 +6,34 @@
 
 #include "Time\Timers.h"
 
-class MoveAround : public Component {
-public:
-	int i = 0;
-	float amount = 2;
-	float speed = 0.01f;
+namespace Graphyte {
+	class MoveAround : public Component {
+	public:
+		int i = 0;
+		float amount = 2;
+		float speed = 0.01f;
 
-	float x = 0;
-	float rotSpeed = 0.001f;
-	
-	float distance = 1.0f;
+		float x = 0;
+		float rotSpeed = 0.001f;
 
-	void Update() {
-		//transform->position.y = sin(i * speed) * amount;
+		float distance = 1.0f;
 
-		transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
-		//transform->Rotate(transform->getRightVector(), rotSpeed);
+		void Update() {
+			//transform->position.y = sin(i * speed) * amount;
 
-		if (Input::GetKeyDown(GLFW_KEY_C))
-			transform->position = Physics::RaycastMousePosition(distance);
+			transform->rotation = Quaternion(Vector3(0, i * rotSpeed, 0));
+			//transform->Rotate(transform->getRightVector(), rotSpeed);
 
-		i++;
-	}
+			if (Input::GetKeyDown(GLFW_KEY_C)) {
+				transform->position = Physics::RaycastMousePosition(distance);
+				//ExtraRenderer::DrawLine(transform->position, Physics::RaycastMousePosition(distance));
+			}
 
-	void DrawUI() {
-		ImGui::DragFloat("Distance from camera", &distance);
-	}
-};
+			i++;
+		}
+
+		void DrawUI() {
+			ImGui::DragFloat("Distance from camera", &distance);
+		}
+	};
+}

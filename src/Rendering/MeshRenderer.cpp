@@ -15,6 +15,10 @@
 
 #include "imgui.h"
 
+#include "Camera.h"
+
+using namespace Graphyte;
+
 bool IsExtensionSupported(const char *name);
 
 std::vector<Texture2D> loadMaterialTextures(const aiMaterial *mat, const aiTextureType type, const std::string typeName, const std::string directory);
@@ -23,11 +27,6 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, con
 void MeshRenderer::OnComponentAdded()
 {
 	RecalculateBoundingBox();
-
-	glm::mat4 scaleMatrix = glm::scale(scaleMatrix, transform->scale);		// SCALE
-	glm::mat4 rot = glm::mat4_cast(transform->rotation);					// ROTATION
-	glm::mat4 model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	model = model * rot * scaleMatrix;
 }
 
 void MeshRenderer::RecalculateBoundingBox()
@@ -60,20 +59,30 @@ void MeshRenderer::RecalculateBoundingBox()
 
 void MeshRenderer::DrawUI()
 {
+	ImGui::Checkbox("Draw mesh", &drawMesh);
 	ImGui::Checkbox("Draw bounding box", &drawBoundingBox);
 	ImGui::Checkbox("Is visible", &isVisible);
 
-	for (int i = 0; i < materials.size(); i++) {
+	for (int i = 0; i < materials.size(); i++) 
+	{
+		ImGui::Text("Material: ");
+		ImGui::SameLine();
+		ImGui::Text(materials[i].name.c_str());
+
 		ImGui::Text("Shader: ");
 		ImGui::SameLine();
 		ImGui::Text(materials[i].shader.shaderName.c_str());
 
 		ImGui::Text("Main Texture: ");
-
-		for (auto& texture : materials[i].textures) {
-			ImGui::SameLine();
+		ImGui::SameLine();
+		for (auto& texture : materials[i].textures) 
+		{
 			ImGui::Text(texture.name.c_str());
 		}
+
+		ImGui::ColorEdit3("Object Color", (float*)&objectColor);
+		ImGui::DragFloat("Specular Intensity", &specularIntensity, 0.05f, 0.0, 1.0f);
+		ImGui::DragFloat("Specular Power", &specularPower);
 	}
 }
 
@@ -90,12 +99,11 @@ MeshRenderer::MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::
 	processMesh(mesh, scene, directory);
 }
 
-// TODO: Group objects with same shader
-void MeshRenderer::Update()
+void MeshRenderer::Render(Camera& camera)
 {
 	// TODO: Update only if camera moves/rotates or this moves/rotates/scales
 	// If mesh is visible in mainCamera
-	this->isVisible = Camera::mainCamera->frustrum.TestIntersection(*transform);
+	this->isVisible = camera.frustrum.TestIntersection(*transform);
 
 	/*
 	if (
@@ -107,29 +115,43 @@ void MeshRenderer::Update()
 	}
 	*/
 
-	if (isVisible)
+	//std::cout << "Rendering " << transform->name << " with shader: " << Shader::currentShader << std::endl;
+	if (isVisible && drawMesh && mesh.vertices.size() > 0)
 	{
-		glm::mat4 model = glm::mat4(1.0f);
+		// TODO: Bugged
+		//materials[0].Use();
 
-		// create transformations
-		model = glm::scale(model, transform->scale);					// SCALE
-		model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-		glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
-		model = model * rot;
+		Matrix4 RotationMatrix = glm::mat4_cast(transform->rotation);
+		Matrix4 TranslationMatrix = glm::translate(Matrix4(), transform->position);
+		Matrix4 ScaleMatrix = glm::scale(Matrix4(), transform->scale);
+		Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
 
 		for (int i = 0; i < materials.size(); i++) {
-			materials[i].shader.SetMatrix4("model", model, true);
+			materials[i].shader.SetMatrix4("model", ModelMatrix);
+			materials[i].shader.SetVector3f("objectColor", objectColor);
+			materials[i].shader.SetFloat("specularIntensity", specularIntensity);
+			materials[i].shader.SetFloat("specularPower", specularPower);
+			//materials[i].shader.SetBool("blinn", false);
 		}
 
-		materials[0].Use();
-		mesh.Render();
+		// Bind VAO
+		mesh.Bind();
+		// draw mesh
+		//glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
+		glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
 
-		if (drawBoundingBox) {
-			ExtraRenderer::DrawAABB(transform->boundingBox, transform->position);
-		}
+		// Unbinding VAO
+		glBindVertexArray(0);
 
-		// Unbind texture
-		glActiveTexture(0);
+		// TODO: Remove from release
+		RenderExtras();
+	}
+}
+
+void MeshRenderer::RenderExtras() 
+{
+	if (drawBoundingBox) {
+		ExtraRenderer::DrawAABB(transform->boundingBox, transform->position);
 	}
 }
 
@@ -143,9 +165,24 @@ void MeshRenderer::DrawLines()
 
 	model = model * rot;
 
-	materials[0].shader.SetMatrix4("model", model, true);
+	ResourceManager::GetShader("Unlit").SetMatrix4("model", model);
 
 	mesh.RenderLines();
+}
+
+void MeshRenderer::DrawLine(const Vector3 color)
+{
+	// create transformations
+	glm::mat4 model = glm::mat4();
+	model = glm::scale(model, transform->scale);					// SCALE
+	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
+	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
+
+	model = model * rot;
+
+	ResourceManager::GetShader("Unlit").SetMatrix4("model", model);
+
+	mesh.RenderLine(color);
 }
 
 void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const std::string directory)
@@ -154,30 +191,27 @@ void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const s
 	std::vector<Vector3> vertices;
 	std::vector<Vector3> normals;
 	std::vector<Vector2> uv;
-	//std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture2D> textures;
 
 	// Walk through each of the mesh's vertices
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
-		//Vertex vertex;
+		// Position
 		Vector3 vertex; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-
-		// positions
 		vertex.x = mesh->mVertices[i].x;
 		vertex.y = mesh->mVertices[i].y;
 		vertex.z = mesh->mVertices[i].z;
 		vertices.push_back(vertex);
 
-		//Vertex vertex;
+		// Normal
 		Vector3 normal; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
 		normal.x = mesh->mNormals[i].x;
 		normal.y = mesh->mNormals[i].y;
 		normal.z = mesh->mNormals[i].z;
 		normals.push_back(normal);
 
-		// texture coordinates
+		// UV Coordinates
 		if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
 		{
 			Vector2 vec;
@@ -238,10 +272,15 @@ void MeshRenderer::processMesh(const aiMesh* mesh, const aiScene* scene, const s
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	// TODO: Being able to Assign multiple different materials
-	materials[0].textures = textures;
+	//materials[0].textures = textures;
 
-	// return a mesh object created from the extracted mesh data
-	this->mesh = Mesh(vertices, uv, indices);
+	Material mat = ResourceManager::LoadMaterial(mesh->mName.C_Str());
+	mat.textures = textures;
+	SetMaterial(mat);
+
+	this->mesh = Mesh(vertices, normals, uv, indices);
+	//this->mesh.RecalculateNormals();
+
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -271,6 +310,7 @@ std::vector<Texture2D> loadMaterialTextures(const aiMaterial *mat, const aiTextu
 			Texture2D texture;
 			texture.ID = TextureFromFile(str.C_Str(), directory);
 			texture.type = typeName;
+			texture.name = typeName;
 			texture.path = str.C_Str();
 			textures.push_back(texture);
 			textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.

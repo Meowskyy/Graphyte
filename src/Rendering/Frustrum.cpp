@@ -2,6 +2,8 @@
 
 #include "ECS.h"
 
+using namespace Graphyte;
+
 Frustum::Frustum(const glm::mat4& v, const glm::mat4& p)
 {
 	glm::mat4 clip;

@@ -2,11 +2,13 @@
 
 #include <string>
 
-class Console {
-private:
-	static std::string inputText;
+namespace Graphyte {
+	class Console {
+	private:
+		static std::string inputText;
 
-	static void GetCommand();
-public:
-	static void Update();
-};
+		static void GetCommand();
+	public:
+		static void Update();
+	};
+}

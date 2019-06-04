@@ -4,6 +4,8 @@
 
 #include "Physics\Collider.h"
 
+using namespace Graphyte;
+
 BoundingBox::BoundingBox(const Vector3& min, const Vector3& max)
 {
 	this->min = min;

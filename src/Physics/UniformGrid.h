@@ -10,60 +10,62 @@
 
 const int minSize = 8;
 
-class UniformGrid {
-private:
-	static float size;
+namespace Graphyte {
+	class UniformGrid {
+	private:
+		static float size;
 
-	// Child grids
-	std::vector<UniformGrid*> childGrid = std::vector<UniformGrid*>(8);
-	bool activeChildren[8];
-	int activeChildCount = 0;
+		// Child grids
+		std::vector<UniformGrid*> childGrid = std::vector<UniformGrid*>(8);
+		bool activeChildren[8];
+		int activeChildCount = 0;
 
-	std::vector<GameObject*> gameObjects;	// GameObjects that this grid contains
+		std::vector<GameObject*> gameObjects;	// GameObjects that this grid contains
 
-	UniformGrid(const BoundingBox& boundaries)
-	{
-		this->boundaries = boundaries;
-	}
+		UniformGrid(const BoundingBox& boundaries)
+		{
+			this->boundaries = boundaries;
+		}
 
-	// Create with only boundaries
-	UniformGrid* CreateNode(const BoundingBox& boundary)
-	{
-		UniformGrid* ret = new UniformGrid(boundary);
-		ret->parent = this;
-		return ret;
-	}
-public:
-	BoundingBox boundaries;
-	UniformGrid* parent;
+		// Create with only boundaries
+		UniformGrid* CreateNode(const BoundingBox& boundary)
+		{
+			UniformGrid* ret = new UniformGrid(boundary);
+			ret->parent = this;
+			return ret;
+		}
+	public:
+		BoundingBox boundaries;
+		UniformGrid* parent;
 
-	static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
-	static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
+		static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
+		static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
 
-	static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
+		static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 
-	// Default constructor
-	UniformGrid() : boundaries(BoundingBox(Vector3(0, 0, 0), Vector3(0, 0, 0))) 
-	{
+		// Default constructor
+		UniformGrid() : boundaries(BoundingBox(Vector3(0, 0, 0), Vector3(0, 0, 0)))
+		{
 
-	}
+		}
 
-	// Constructor with size
-	UniformGrid(const int size);
+		// Constructor with size
+		UniformGrid(const int size);
 
-	bool isRoot() const 
-	{
-		return (parent == nullptr);
-	}
+		bool isRoot() const
+		{
+			return (parent == nullptr);
+		}
 
-	bool InsertGameObject(GameObject& gameObject);
+		bool InsertGameObject(GameObject& gameObject);
 
-	void CollidingObjects(GameObject& gameObject) const;
-	void CollidingObjects(GameObject& gameObject, const int index) const;
+		void CollidingObjects(GameObject& gameObject) const;
+		void CollidingObjects(GameObject& gameObject, const int index) const;
 
-	void RebuildGrid();
-	void Update();
+		void RebuildGrid();
+		void Update();
 
-	void DrawGrid() const;
-	void DrawExtra() const;
-};
+		void DrawGrid() const;
+		void DrawExtra() const;
+	};
+}

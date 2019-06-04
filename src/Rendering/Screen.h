@@ -4,14 +4,20 @@
 
 #include "GLFW\glfw3.h"
 
-class Screen {
-private:
-	static int screenWidth, screenHeight;
-	static int resX, resY;
-public:
-	static glm::vec2 GetScreenResolution();
-	static void UpdateScreenResolution();
+#include "Math\Math.h"
 
-	static glm::vec2 GetWindowSize();
-	static void UpdateWindowSize(GLFWwindow * window);
-};
+namespace Graphyte {
+	class Screen {
+	private:
+
+	public:
+		static int width, height;
+		static Vector2 resolution;
+
+		static Vector2 GetScreenResolution();
+		static void UpdateScreenResolution();
+
+		static Vector2 GetWindowSize();
+		static void UpdateWindowSize(int width, int height);
+	};
+}

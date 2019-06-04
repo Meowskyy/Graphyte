@@ -1,19 +1,21 @@
 #pragma once
 #include "ECS.h"
 
-// The size of one chunk X, Y, Z
-const int CHUNK_SIZE = 8;
-const int WORLD_SIZE_X = 16;
-const int WORLD_SIZE_Y = 16;
-const int WORLD_SIZE_Z = 16;
+namespace Graphyte {
+	// The size of one chunk X, Y, Z
+	const int CHUNK_SIZE = 32;
+	const int WORLD_SIZE_X = 4;
+	const int WORLD_SIZE_Y = 4;
+	const int WORLD_SIZE_Z = 4;
 
-class WorldGenerator : public Component {
-private:
-	int blocks[(CHUNK_SIZE * WORLD_SIZE_X) * (CHUNK_SIZE * WORLD_SIZE_Y) * (CHUNK_SIZE * WORLD_SIZE_Z)];
-public:
-	int seed = 0;
+	class WorldGenerator : public Component {
+	private:
+		int blocks[(CHUNK_SIZE * WORLD_SIZE_X) * (CHUNK_SIZE * WORLD_SIZE_Y) * (CHUNK_SIZE * WORLD_SIZE_Z)];
+	public:
+		int seed = 0;
 
-	void OnComponentAdded();
+		void OnComponentAdded();
 
-	int GetBlock(int x, int y, int z);
-};
+		int GetBlock(int x, int y, int z);
+	};
+}

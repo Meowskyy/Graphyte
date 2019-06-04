@@ -3,13 +3,14 @@
 #include <windows.h>
 #include <cstdio>
 
+
 int main()
 {
 	// This removes the console from the application
 	// FreeConsole();
 
 	// Init
-	Graphyte graphyte;
+	Graphyte::GraphyteEditor graphyte;
 
 	// Run the application
 	graphyte.run();

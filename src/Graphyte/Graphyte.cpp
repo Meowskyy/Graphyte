@@ -14,6 +14,9 @@
 
 #include "IO\ModelLoader.h"
 
+// EDITOR COMPONENTS
+#include "Custom Behaviours\EditorCamera.h"
+
 // SFML AUDIO
 #include "Audio\AudioListener.h"
 #include "Audio\AudioEmitter.h"
@@ -24,34 +27,50 @@
 
 // PHYSICS
 #include "Physics\Rigidbody.h"
+#include "Physics\Collider.h"
 
 #include "imgui.h"
 #include "examples\imgui_impl_glfw.h"
-#include "examples\imgui_impl_opengl3.h"
 
-Scene Graphyte::currentScene;
+#ifdef USE_VULKAN
 
-GLFWwindow* Graphyte::mainWindow;
+#else
+#include "examples\imgui_impl_opengl3.h" // OPENGL 
+#endif
 
-GameObject* Graphyte::selectedGameObject;
+using namespace Graphyte;
+
+Scene GraphyteEditor::currentScene;
+
+GLFWwindow* GraphyteEditor::mainWindow;
+
+GameObject* GraphyteEditor::selectedGameObject;
+
+bool mouseOnGui = false;
+
+static void glfw_error_callback(int error, const char* description)
+{
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+void window_size_callback(GLFWwindow* window, int width, int height);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+void UpdateProjection();
 
 // timing
 float lastFrame = 0.0f;
-
 static float frameTimes[500];
 static int frameTimeOffset = 0;
+int currentFrame = 0;
 
-enum test_enum {
-	Item1 = 0,
-	Item2,
-	Item3
-};
-
-void Graphyte::run() 
+void GraphyteEditor::run() 
 {
 	initWindow();
 
 	loadShaders();
+	loadTextures();
+	loadMaterials();
 	loadModels();
 
 	mainLoop();
@@ -59,13 +78,7 @@ void Graphyte::run()
 	cleanup();
 }
 
-static void glfw_error_callback(int error, const char* description)
-{
-	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-}
-
-//Model test;
-void Graphyte::initWindow()
+void GraphyteEditor::initWindow()
 {
 	// Setup window
 	glfwSetErrorCallback(glfw_error_callback);
@@ -89,7 +102,7 @@ void Graphyte::initWindow()
 	glfwWindowHint(GLFW_ALPHA_BITS, 8);
 	glfwWindowHint(GLFW_STENCIL_BITS, 8);
 	glfwWindowHint(GLFW_DEPTH_BITS, 24);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	//glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 
 	// Create a GLFWwindow object
@@ -110,14 +123,14 @@ void Graphyte::initWindow()
 	glViewport(0, 0, width, height);
 	glfwSwapInterval(0);
 
+	Screen::UpdateWindowSize(width, height);
+
 	SetupIMGUI();
 
 	setupCallbacks();
 }
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-int currentFrame = 0;
-
 
 // TODO: Move somewhere more appropriate
 double lastTime = glfwGetTime();
@@ -127,12 +140,12 @@ int nbFrames = 0;
 float inputTime = 0;
 
 // Physics loop based off https://gafferongames.com/post/fix_your_timestep/
-void Graphyte::mainLoop() 
+void GraphyteEditor::mainLoop() 
 {
 	// Once the scene is loaded
 	currentScene.OnSceneLoad();
 
-	glCullFace(GL_FRONT);
+	UpdateProjection();
 
 	float previousState = 0;
 	float currentState = 0;
@@ -140,8 +153,17 @@ void Graphyte::mainLoop()
 	float currentTime = glfwGetTime();
 	float accumulator = 0.0f;
 
+	float distToSelectedObject = 10000;
+
+	GameObject* editorCameraObject = new GameObject();
+	editorCamera = &editorCameraObject->AddComponent<Camera>();
+	editorCameraObject->AddComponent<EditorCamera>();
+	editorCamera->transform->position = Vector3(0, 0, -20);
+
 	while (!glfwWindowShouldClose(mainWindow)) 
 	{
+		mouseOnGui = ImGui::IsMouseHoveringAnyWindow();
+		//std::cout << "START OF FRAME" << std::endl;
 		Input::UpdateKeyStates();
 		Input::UpdateMousePosition();
 
@@ -153,7 +175,7 @@ void Graphyte::mainLoop()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		DrawUI();
+		DrawEditorUI();
 
 		ImGui::Render();
 		int display_w, display_h;
@@ -162,6 +184,7 @@ void Graphyte::mainLoop()
 		glViewport(0, 0, display_w, display_h);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 		float newTime = glfwGetTime();
 		float frameTime = newTime - currentTime;
@@ -196,13 +219,95 @@ void Graphyte::mainLoop()
 		// TODO: Is it better if this is after or before Update()
 		currentScene.CheckCollisions();
 
-		// Scene Update()
-		// configure global opengl state
-		// -----------------------------
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		currentScene.Update();
+		currentScene.LateUpdate();
+
+#ifndef EDITOR
+		editorCameraObject->LateUpdate();
+		currentScene.Render(*editorCamera);
+#else
+		currentScene.Render(*Camera::mainCamera);
+#endif
+
+		if (selectedGameObject)
+			ExtraRenderer::DrawSelectionArrows(&selectedGameObject->transform);
+
+		if (Input::GetMouseButtonPressed(0) && !mouseOnGui) 
+		{
+			selectedGameObject = nullptr;
+			GameObject* closestObject = nullptr;
+			float distToClosest = 100000;
+
+			for (int i = 0; i < currentScene.gameObjects.size(); i++) {
+				float intersection_distance; // Output of TestRayOBBIntersection()
+
+				for (int j = 0; j < currentScene.gameObjects[i]->children.size(); j++)
+				{
+					Vector3 aabb_min = currentScene.gameObjects[i]->children[j]->transform.boundingBox.min;
+					Vector3 aabb_max = currentScene.gameObjects[i]->children[j]->transform.boundingBox.max;
+
+					// The ModelMatrix transforms :
+					// - the mesh to its desired position and orientation
+					// - but also the AABB (defined with aabb_min and aabb_max) into an OBB
+					Matrix4 RotationMatrix = glm::mat4_cast(currentScene.gameObjects[i]->children[j]->transform.rotation);
+					Matrix4 TranslationMatrix = glm::translate(Matrix4(), currentScene.gameObjects[i]->children[j]->transform.position);
+					Matrix4 ScaleMatrix = glm::scale(Matrix4(), currentScene.gameObjects[i]->children[j]->transform.scale);
+					Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
+
+					if (Physics::TestRayOBBIntersection(editorCamera->transform->position, Physics::RaycastMouseDirection(), aabb_min, aabb_max, ModelMatrix, intersection_distance))
+					{
+						if (closestObject == nullptr || intersection_distance < distToClosest)
+						{
+							closestObject = currentScene.gameObjects[i]->children[j];
+							selectedGameObject = currentScene.gameObjects[i]->children[j];
+
+							distToClosest = glm::distance(selectedGameObject->transform.position, editorCamera->transform->position);
+							distToSelectedObject = glm::distance(selectedGameObject->transform.position, editorCamera->transform->position);
+						}
+					}
+				}
+
+				Vector3 aabb_min = currentScene.gameObjects[i]->transform.boundingBox.min;
+				Vector3 aabb_max = currentScene.gameObjects[i]->transform.boundingBox.max;
+
+				// The ModelMatrix transforms :
+				// - the mesh to its desired position and orientation
+				// - but also the AABB (defined with aabb_min and aabb_max) into an OBB
+				Matrix4 RotationMatrix = glm::mat4_cast(currentScene.gameObjects[i]->transform.rotation);
+				Matrix4 TranslationMatrix = glm::translate(Matrix4(), currentScene.gameObjects[i]->transform.position);
+				//Matrix4 ScaleMatrix = glm::scale(Matrix4(), currentScene.gameObjects[i]->transform.scale);
+				Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix;
+
+				if (Physics::TestRayOBBIntersection(editorCamera->transform->position, Physics::RaycastMouseDirection(), aabb_min, aabb_max, ModelMatrix, intersection_distance))
+				{
+					if (i > 2) {
+						if (closestObject == nullptr || intersection_distance < distToClosest)
+						{
+							closestObject = currentScene.gameObjects[i];
+							selectedGameObject = currentScene.gameObjects[i];
+
+							distToClosest = glm::distance(selectedGameObject->transform.position, editorCamera->transform->position);
+							distToSelectedObject = glm::distance(selectedGameObject->transform.position, editorCamera->transform->position);
+						}
+					}
+				}
+
+				if (closestObject)
+					selectedGameObject = closestObject;
+
+				//ExtraRenderer::DrawLine(currentScene.gameObjects[i]->transform.position, Physics::RaycastMouseDirection());
+			}
+		}
+
+		if (Input::GetMouseButtonDown(0) && !mouseOnGui) 
+		{
+			if (selectedGameObject) 
+			{
+				//selectedGameObject->transform.position = Physics::RaycastMousePosition(distToSelectedObject);
+			}
+		}
+
+		//std::cout << "END OF FRAME" << std::endl;
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -216,6 +321,9 @@ void Graphyte::mainLoop()
 		glfwMakeContextCurrent(mainWindow);
 		glfwSwapBuffers(mainWindow);
 	}
+
+	//delete editorCameraObject;
+	//editorCameraObject = nullptr;
 }
 
 bool show_demo_window = true;
@@ -225,7 +333,7 @@ bool show_scene_window = true;
 bool backFaceCulling = false;
 bool wireframe = false;
 bool alpha = false;
-void Graphyte::DrawUI()
+void GraphyteEditor::DrawEditorUI()
 {
 	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 	if (show_demo_window) 
@@ -281,7 +389,11 @@ void Graphyte::DrawUI()
 			}
 		}
 
+		ImGui::Checkbox("Draw Scene Window", &show_scene_window);
+		ImGui::Checkbox("Draw Transform Window", &show_transform_window);
+
 		ImGui::Checkbox("Grid Ready", &UniformGrid::gridReady);
+		ImGui::Checkbox("Mouse over GUI", &mouseOnGui);
 		//ImGui::Checkbox("Grid Built", &UniformGrid::gridBuilt);
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -326,7 +438,7 @@ void Graphyte::DrawUI()
 			selectedGameObject->DrawComponents();
 			ImGui::PopStyleVar();
 
-			// TODO: Making this dynamic instead
+			// TODO: Making all of the following dynamic instead?
 			if (ImGui::Button("Add AudioEmitter"))
 			{
 				selectedGameObject->AddComponent<AudioEmitter>("Assets/resources/Audio/testAudio.wav");
@@ -341,6 +453,11 @@ void Graphyte::DrawUI()
 			{
 				selectedGameObject->AddComponent<Rigidbody>();
 			}
+
+			if (ImGui::Button("Add Collider"))
+			{
+				selectedGameObject->AddComponent<Collider>();
+			}
 		}
 
 		ImGui::End();
@@ -351,6 +468,9 @@ void Graphyte::DrawUI()
 		ImGui::Begin("Scene");
 		if (ImGui::Button("Create Planet"))
 			currentScene.AddGameObject();
+
+		if (ImGui::Button("Create Crysis Model"))
+			currentScene.AddCrysisGameObject();
 
 		if (ImGui::Button("Create Child GameObject"))
 			currentScene.AddChild();
@@ -403,7 +523,7 @@ void Graphyte::DrawUI()
 	}
 }
 
-void Graphyte::SetupIMGUI() 
+void GraphyteEditor::SetupIMGUI() 
 {
 	const char* glsl_version = "#version 330";
 	IMGUI_CHECKVERSION();
@@ -437,7 +557,7 @@ void Graphyte::SetupIMGUI()
 	//IM_ASSERT(font != NULL);
 }
 
-void Graphyte::cleanup() 
+void GraphyteEditor::cleanup() 
 {
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
@@ -448,15 +568,23 @@ void Graphyte::cleanup()
 }
 
 // TODO: Moving these somewhere more appropriate
-void Graphyte::loadShaders() 
+void GraphyteEditor::loadShaders() 
 {
-	ResourceManager::LoadShader("Assets/shaders/Standard.vert", "Assets/shaders/Standard.frag", nullptr, "Standard");
-
+	// EDITOR STUFF
 	ResourceManager::LoadShader("Assets/shaders/Grid.vert", "Assets/shaders/Grid.frag", nullptr, "Grid");
-	ResourceManager::GetShader("Grid").shaderName = "Grid";
+	//ResourceManager::LoadShader("Assets/shaders/SimpleDepth.vert", "Assets/shaders/SimpleDepth.frag", nullptr, "SimpleDepth");
+	ResourceManager::LoadShader("Assets/shaders/DepthDebug.vert", "Assets/shaders/DepthDebug.frag", nullptr, "DepthDebug");
+	ResourceManager::LoadShader("Assets/shaders/ShadowMap.vert", "Assets/shaders/ShadowMap.frag", nullptr, "ShadowMap");
 
-	//ResourceManager::LoadTexture("Textures/Grid/texture_diffuse.psd", true, true, "Grid");
-	ResourceManager::LoadTexture("Assets/textures/Grid/texture_diffuse.psd", false, true, "Grid");
+	// ACTUAL SHADERS
+	ResourceManager::LoadShader("Assets/shaders/Standard.vert", "Assets/shaders/Standard.frag", nullptr, "Standard");
+	ResourceManager::LoadShader("Assets/shaders/Unlit.vert", "Assets/shaders/Unlit.frag", nullptr, "Unlit");
+
+	//ResourceManager::LoadShader("Assets/shaders/Lighting.vert", "Assets/shaders/Lighting.frag", nullptr, "Lighting");
+
+	//ResourceManager::LoadShader("Assets/shaders/ScreenShader.vert", "Assets/shaders/ScreenShader.frag", nullptr, "ScreenShader");
+	//ResourceManager::GetShader("Grid").shaderName = "Grid";
+
 	//ResourceManager::GetTexture("Grid").SetFiltering(false);
 	// TODO: Move these somewhere more appropriate
 	//glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(1920), 0.0f, static_cast<GLfloat>(1080));
@@ -466,7 +594,31 @@ void Graphyte::loadShaders()
 }
 
 // TODO: Moving these somewhere more appropriate
-void Graphyte::loadModels()
+void GraphyteEditor::loadTextures() 
+{
+	//ResourceManager::LoadTexture("Textures/Grid/texture_diffuse.psd", true, true, "Grid");
+	ResourceManager::LoadTexture("Assets/textures/Grid/texture_diffuse.psd", false, true, "Grid");
+
+	ResourceManager::LoadTexture("Assets/textures/GrassTexture.psd", false, false, "GrassTexture");
+	ResourceManager::GetTexture("GrassTexture").SetFiltering(false);
+}
+
+// TODO: Moving these somewhere more appropriate
+void GraphyteEditor::loadMaterials()
+{
+	ResourceManager::LoadMaterial("GridMaterial");
+	ResourceManager::GetMaterial("GridMaterial").textures.push_back(ResourceManager::GetTexture("Grid"));
+	ResourceManager::GetMaterial("GridMaterial").shader = ResourceManager::GetShader("Grid");
+	
+	ResourceManager::LoadMaterial("TerrainMaterial");
+	ResourceManager::GetMaterial("TerrainMaterial").textures.push_back(ResourceManager::GetTexture("GrassTexture"));
+
+	ResourceManager::LoadMaterial("LightingMat");
+	ResourceManager::GetMaterial("LightingMat").shader = ResourceManager::GetShader("Lighting");
+}
+
+// TODO: Moving these somewhere more appropriate
+void GraphyteEditor::loadModels()
 {
 	//test = Model("Assets/resources/nanosuit/nanosuit.obj");
 
@@ -474,10 +626,41 @@ void Graphyte::loadModels()
 	//TextRenderer::SetShader(ResourceManager::GetShader("GUIText"));
 }
 
-void Graphyte::setupCallbacks()
+void GraphyteEditor::setupCallbacks()
 {
 	// SET CALLBACKS
+
+	// INPUT
 	glfwSetCursorPosCallback(mainWindow, Input::mouse_callback);
 	glfwSetMouseButtonCallback(mainWindow, Input::mouse_button_callback);
 	glfwSetKeyCallback(mainWindow, Input::key_callback);
+
+	// WINDOW
+	glfwSetWindowSizeCallback(mainWindow, window_size_callback);
+	glfwSetFramebufferSizeCallback(mainWindow, framebuffer_size_callback);
+}
+
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+	std::cout << "New size: " << width << "x" << height << "\n";
+
+	Screen::UpdateWindowSize(width, height);
+
+	UpdateProjection();
+}
+
+void UpdateProjection() 
+{
+	Matrix4 projection = glm::perspective(Camera::mainCamera->fov, (float)Screen::width / (float)Screen::height, Camera::mainCamera->nearClipPlane, Camera::mainCamera->farClipPlane);
+	ResourceManager::UpdateProjection(projection);
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	std::cout << "New framebuffer size: " << width << "x" << height << "\n";
+
+	//Matrix4 projection = glm::perspective(Camera::mainCamera->fov, (float)width / (float)height, 0.1f, 1000.0f);
+	//ResourceManager::UpdateProjection(projection);
+
+	glViewport(0, 0, width, height);
 }

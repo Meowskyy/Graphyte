@@ -2,31 +2,34 @@
 
 #include <iostream>
 
-int Screen::resX, Screen::resY;
-int Screen::screenWidth, Screen::screenHeight;
+using namespace Graphyte;
 
-glm::vec2 Screen::GetScreenResolution()
+int Screen::width, Screen::height;
+Vector2 Screen::resolution;
+
+Vector2 Screen::GetScreenResolution()
 {
-	return glm::vec2(resX, resY);
+	return Vector2(0, 0);
 }
 
 void Screen::UpdateScreenResolution()
 {
-	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-	resX = mode->width;
-	resY = mode->height;
-	std::cout << "Screen Resolution: " << resX << ", " << resY << std::endl;
+	//resX = mode->width;
+	//resY = mode->height;
+	//std::cout << "Screen Resolution: " << resX << ", " << resY << std::endl;
 }
 
-glm::vec2 Screen::GetWindowSize()
+Vector2 Screen::GetWindowSize()
 {
-	return glm::vec2(screenWidth, screenHeight);
+	return Vector2(width, height);
 }
 
-void Screen::UpdateWindowSize(GLFWwindow * window)
+void Screen::UpdateWindowSize(int newWidth, int newHeight)
 {
-	glfwGetWindowSize(window, &screenWidth, &screenHeight);
+	width = newWidth;
+	height = newHeight;
 
-	std::cout << "Window Size: " << screenWidth << ", " << screenHeight << std::endl;
+	std::cout << "Window Size: " << width << ", " << height << std::endl;
 }

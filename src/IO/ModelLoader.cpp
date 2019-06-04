@@ -23,6 +23,8 @@
 
 #include "Objects\Scene.h"
 
+using namespace Graphyte;
+
 void processNode(aiNode* node, const aiScene* scene);
 
 std::string directory;
@@ -57,8 +59,8 @@ void processNode(aiNode* node, const aiScene* scene)
 		aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
 
 		std::string name = mesh->mName.C_Str();
-
 		loadedObject->transform.name = name;
+
 		loadedObject->AddComponent<MeshRenderer>(mesh, scene, directory);
 	}
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes

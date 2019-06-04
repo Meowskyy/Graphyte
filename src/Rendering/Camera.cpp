@@ -5,21 +5,23 @@
 
 #include <vector>
 
+#include "Rendering/Screen.h"
+
+using namespace Graphyte;
+
 Camera* Camera::mainCamera;
 
 // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
-glm::mat4 Camera::GetViewMatrix()
+Matrix4 Camera::GetViewMatrix()
 {
-	// TODO: Fixing transform to work with this
-	// What do you mean?
-	Vector3 position = glm::vec3(transform->position.x, transform->position.y, transform->position.z);
-	Vector3 upVector = glm::vec3(transform->getUpVector().x, transform->getUpVector().y, transform->getUpVector().z);
-	Vector3 forwardVector = glm::vec3(transform->getForwardVector().x, transform->getForwardVector().y, transform->getForwardVector().z);
+	Vector3 position = Vector3(transform->position.x, transform->position.y, transform->position.z);
+	Vector3 upVector = Vector3(transform->getUpVector().x, transform->getUpVector().y, transform->getUpVector().z);
+	Vector3 forwardVector = Vector3(transform->getForwardVector().x, transform->getForwardVector().y, transform->getForwardVector().z);
 
 	return glm::lookAt(position, position + forwardVector, upVector);
 }
 
-glm::mat4 Camera::GetProjectionMatrix() 
+Matrix4 Camera::GetProjectionMatrix()
 {
-	return projection;
+	return 	glm::perspective(glm::radians(fov), (float)Screen::width / (float)Screen::height, nearClipPlane, farClipPlane);
 }

@@ -9,159 +9,167 @@
 
 #include <math.h>
 
-class Chunk : public Component {
-private:
-	std::vector<Vector3> vertices;
-	std::vector<Vector2> uvs;
-	std::vector<unsigned int> indices;
-	int faceCount = 0;
+namespace Graphyte {
+	class Chunk : public Component {
+	private:
+		std::vector<Vector3> vertices;
+		std::vector<Vector2> uvs;
+		std::vector<unsigned int> indices;
+		int faceCount = 0;
 
-	MeshRenderer* meshRenderer;
-	Mesh* mesh;
+		MeshRenderer* meshRenderer;
+		Mesh* mesh;
 
-	Vector2 tStone = Vector2(0, 0);
-	float tUnit = 1.0f;
-public:
-	WorldGenerator* world;
+		Vector2 tStone = Vector2(0, 0);
+		float tUnit = 1.0f;
+	public:
+		WorldGenerator* world;
 
-	int chunkX, chunkY, chunkZ;
+		int chunkX, chunkY, chunkZ;
 
-	bool update = false;
+		bool update = false;
 
-	void OnComponentAdded() 
-	{
-		meshRenderer = &gameObject->AddComponent<MeshRenderer>();
-		mesh = &meshRenderer->mesh;
-	}
+		void OnComponentAdded()
+		{
+			meshRenderer = &gameObject->AddComponent<MeshRenderer>();
+			mesh = &meshRenderer->mesh;
 
-	void InitializeChunk() 
-	{
-		vertices.clear();
-		uvs.clear();
-		indices.clear();
+			meshRenderer->SetMaterial(ResourceManager::GetMaterial("TerrainMaterial"));
 
-		for (int y = 0; y < CHUNK_SIZE; y++) {
-			for (int z = 0; z < CHUNK_SIZE; z++) {
-				for (int x = 0; x < CHUNK_SIZE; x++) {
+			Material test = ResourceManager::GetMaterial("TerrainMaterial");
+		}
 
-					// IF BLOCK IS NOT AIR
-					if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z) != 0) {
-						// IF NO BLOCK ABOVE CREATE PLANE_TOP
-						if (world->GetBlock(chunkX + x, chunkY + y + 1, chunkZ + z) == 0)
-							CubeTop(Vector3(x, y, z));
-						// IF NO BLOCK BELOW CREATE PLANE_BOTTOM
-						if (world->GetBlock(chunkX + x, chunkY + y - 1, chunkZ + z) == 0)
-							CubeBottom(Vector3(x, y, z));
+		void InitializeChunk()
+		{
+			vertices.clear();
+			uvs.clear();
+			indices.clear();
 
-						// IF NO BLOCK NORTH CREATE NORTH
-						if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z + 1) == 0)
-							CubeNorth(Vector3(x, y, z));
-						// IF NO BLOCK SOUTH CREATE SOUTH
-						if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z - 1) == 0)
-							CubeSouth(Vector3(x, y, z));
+			for (int y = 0; y < CHUNK_SIZE; y++) {
+				for (int z = 0; z < CHUNK_SIZE; z++) {
+					for (int x = 0; x < CHUNK_SIZE; x++) {
 
-						// IF NO BLOCK EAST CREATE EAST
-						if (world->GetBlock(chunkX + x + 1, chunkY + y, chunkZ + z) == 0)
-							CubeEast(Vector3(x, y, z));
-						// IF NO BLOCK WEST CREATE WEST
-						if (world->GetBlock(chunkX + x - 1, chunkY + y, chunkZ + z) == 0)
-							CubeWest(Vector3(x, y, z));
+						// IF BLOCK IS NOT AIR
+						if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z) != 0) {
+							// IF NO BLOCK ABOVE CREATE PLANE_TOP
+							if (world->GetBlock(chunkX + x, chunkY + y + 1, chunkZ + z) == 0)
+								CubeTop(Vector3(x, y, z));
+							// IF NO BLOCK BELOW CREATE PLANE_BOTTOM
+							if (world->GetBlock(chunkX + x, chunkY + y - 1, chunkZ + z) == 0)
+								CubeBottom(Vector3(x, y, z));
+
+							// IF NO BLOCK NORTH CREATE NORTH
+							if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z + 1) == 0)
+								CubeNorth(Vector3(x, y, z));
+							// IF NO BLOCK SOUTH CREATE SOUTH
+							if (world->GetBlock(chunkX + x, chunkY + y, chunkZ + z - 1) == 0)
+								CubeSouth(Vector3(x, y, z));
+
+							// IF NO BLOCK EAST CREATE EAST
+							if (world->GetBlock(chunkX + x + 1, chunkY + y, chunkZ + z) == 0)
+								CubeEast(Vector3(x, y, z));
+							// IF NO BLOCK WEST CREATE WEST
+							if (world->GetBlock(chunkX + x - 1, chunkY + y, chunkZ + z) == 0)
+								CubeWest(Vector3(x, y, z));
+						}
+
 					}
-
 				}
+			}
+
+			UpdateMesh();
+		}
+
+		void Update() {
+			if (update) {
+				InitializeChunk();
+				UpdateMesh();
+				update = false;
 			}
 		}
 
-		UpdateMesh();
-	}
+		void UpdateMesh()
+		{
+			mesh->vertices = vertices;
+			mesh->indices = indices;
+			mesh->uvs = uvs;
+			mesh->RecalculateNormals();
+			mesh->SetupMesh();
 
-	void Update() {
-		if (update) {
-			InitializeChunk();
-			UpdateMesh();
-			update = false;
+
+			meshRenderer->RecalculateBoundingBox();
 		}
-	}
 
-	void UpdateMesh() 
-	{
-		mesh->vertices = vertices;
-		mesh->indices = indices;
-		mesh->uvs = uvs;
-		mesh->setupMesh();
+		void CubeTop(Vector3 position) {
+			vertices.push_back(Vector3(position.x, position.y, position.z + 1));
+			vertices.push_back(Vector3(position.x + 1, position.y, position.z + 1));
+			vertices.push_back(Vector3(position.x + 1, position.y, position.z));
+			vertices.push_back(Vector3(position.x, position.y, position.z));
 
-		meshRenderer->RecalculateBoundingBox();
-	}
+			CreateTriangles();
+		}
 
-	void CubeTop(Vector3 position) {
-		vertices.push_back(Vector3(position.x, position.y, position.z + 1));
-		vertices.push_back(Vector3(position.x + 1, position.y, position.z + 1));
-		vertices.push_back(Vector3(position.x + 1, position.y, position.z));
-		vertices.push_back(Vector3(position.x, position.y, position.z));
+		void CubeBottom(Vector3 position) {
+			vertices.push_back(Vector3(position.x, position.y - 1, position.z));
+			vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z));
+			vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z + 1));
+			vertices.push_back(Vector3(position.x, position.y - 1, position.z + 1));
 
-		CreateTriangles();
-	}
+			CreateTriangles();
+		}
 
-	void CubeBottom(Vector3 position) {
-		vertices.push_back(Vector3(position.x, position.y - 1, position.z));
-		vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z));
-		vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z + 1));
-		vertices.push_back(Vector3(position.x, position.y - 1, position.z + 1));
+		void CubeNorth(Vector3 position) {
+			vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z + 1));
+			vertices.push_back(Vector3(position.x + 1, position.y, position.z + 1));
+			vertices.push_back(Vector3(position.x, position.y, position.z + 1));
+			vertices.push_back(Vector3(position.x, position.y - 1, position.z + 1));
 
-		CreateTriangles();
-	}
+			CreateTriangles();
+		}
 
-	void CubeNorth(Vector3 position) {
-		vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z + 1));
-		vertices.push_back(Vector3(position.x + 1, position.y, position.z + 1));
-		vertices.push_back(Vector3(position.x, position.y, position.z + 1));
-		vertices.push_back(Vector3(position.x, position.y - 1, position.z + 1));
+		void CubeSouth(Vector3 position) {
+			vertices.push_back(Vector3(position.x, position.y - 1, position.z));
+			vertices.push_back(Vector3(position.x, position.y, position.z));
+			vertices.push_back(Vector3(position.x + 1, position.y, position.z));
+			vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z));
 
-		CreateTriangles();
-	}
+			CreateTriangles();
+		}
 
-	void CubeSouth(Vector3 position) {
-		vertices.push_back(Vector3(position.x, position.y - 1, position.z));
-		vertices.push_back(Vector3(position.x, position.y, position.z));
-		vertices.push_back(Vector3(position.x + 1, position.y, position.z));
-		vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z));
+		void CubeWest(Vector3 position) {
+			vertices.push_back(Vector3(position.x, position.y - 1, position.z + 1));
+			vertices.push_back(Vector3(position.x, position.y, position.z + 1));
+			vertices.push_back(Vector3(position.x, position.y, position.z));
+			vertices.push_back(Vector3(position.x, position.y - 1, position.z));
 
-		CreateTriangles();
-	}
+			CreateTriangles();
+		}
 
-	void CubeWest(Vector3 position) {
-		vertices.push_back(Vector3(position.x, position.y - 1, position.z + 1));
-		vertices.push_back(Vector3(position.x, position.y, position.z + 1));
-		vertices.push_back(Vector3(position.x, position.y, position.z));
-		vertices.push_back(Vector3(position.x, position.y - 1, position.z));
+		void CubeEast(Vector3 position) {
+			vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z));
+			vertices.push_back(Vector3(position.x + 1, position.y, position.z));
+			vertices.push_back(Vector3(position.x + 1, position.y, position.z + 1));
+			vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z + 1));
 
-		CreateTriangles();
-	}
+			CreateTriangles();
+		}
 
-	void CubeEast(Vector3 position) {
-		vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z));
-		vertices.push_back(Vector3(position.x + 1, position.y, position.z));
-		vertices.push_back(Vector3(position.x + 1, position.y, position.z + 1));
-		vertices.push_back(Vector3(position.x + 1, position.y - 1, position.z + 1));
+		void CreateTriangles() {
+			indices.push_back(faceCount * 4);		//1
+			indices.push_back(faceCount * 4 + 1);	//2
+			indices.push_back(faceCount * 4 + 2);	//3
+			indices.push_back(faceCount * 4);		//1
+			indices.push_back(faceCount * 4 + 2);	//3
+			indices.push_back(faceCount * 4 + 3);	//4
 
-		CreateTriangles();
-	}
+			Vector2 texturePos = tStone;
 
-	void CreateTriangles() {
-		indices.push_back(faceCount * 4);		//1
-		indices.push_back(faceCount * 4 + 1);	//2
-		indices.push_back(faceCount * 4 + 2);	//3
-		indices.push_back(faceCount * 4);		//1
-		indices.push_back(faceCount * 4 + 2);	//3
-		indices.push_back(faceCount * 4 + 3);	//4
+			uvs.push_back(Vector2(tUnit * texturePos.x + tUnit, tUnit * texturePos.y));
+			uvs.push_back(Vector2(tUnit * texturePos.x + tUnit, tUnit * texturePos.y + tUnit));
+			uvs.push_back(Vector2(tUnit * texturePos.x, tUnit * texturePos.y + tUnit));
+			uvs.push_back(Vector2(tUnit * texturePos.x, tUnit * texturePos.y));
 
-		Vector2 texturePos = tStone;
-
-		uvs.push_back(Vector2(tUnit * texturePos.x + tUnit, tUnit * texturePos.y));
-		uvs.push_back(Vector2(tUnit * texturePos.x + tUnit, tUnit * texturePos.y + tUnit));
-		uvs.push_back(Vector2(tUnit * texturePos.x, tUnit * texturePos.y + tUnit));
-		uvs.push_back(Vector2(tUnit * texturePos.x, tUnit * texturePos.y));
-
-		faceCount++;
-	}
-};
+			faceCount++;
+		}
+	};
+}

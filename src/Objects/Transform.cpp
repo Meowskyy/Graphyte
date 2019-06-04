@@ -1,5 +1,7 @@
 #include "ECS.h"
 
+using namespace Graphyte;
+
 Vector3 Transform::getForwardVector() const
 {
 	Vector3 front = rotation * Vector3(0, 0, 1);
@@ -38,7 +40,7 @@ Vector3 Transform::GetWorldPosition() const
 		pos.z = position.z / scale.z;
 	}
 
-	//return (parent != nullptr) ? parent->GetWorldPosition() + pos : pos;
+	//return (parent == nullptr) ? pos : parent->GetWorldPosition() + pos;
 	return pos;
 }
 

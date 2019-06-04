@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+using namespace Graphyte;
+
 std::vector<GameObject*> UniformGrid::pendingGameObjects;		// GameObjects that will be added later
 std::vector<std::string> UniformGrid::collidingGameObjects;
 

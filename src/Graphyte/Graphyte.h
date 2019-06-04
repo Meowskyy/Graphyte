@@ -5,27 +5,32 @@
 #include "Objects\Scene.h"
 
 #include <vector>
+namespace Graphyte {
+	class GraphyteEditor {
+	private:
+		void initWindow();
+		void setupCallbacks();
+		void loadShaders();
+		void loadTextures();
+		void loadModels();
+		void loadMaterials();
+		void mainLoop();
+		void cleanup();
 
-class Graphyte {
-private:
-	void initWindow();
-	void setupCallbacks();
-	void loadShaders();
-	void loadModels();
-	void mainLoop();
-	void cleanup();
+		// EDITOR UI
+		void DrawEditorUI();
 
-	// UI
-	void DrawUI();
+		// IMGUI
+		void SetupIMGUI();
 
-	// IMGUI
-	void SetupIMGUI();
-public:
-	static GameObject* selectedGameObject;
-	static Scene currentScene;
-	static GLFWwindow *mainWindow;
+		Camera* editorCamera;
+	public:
+		static GameObject* selectedGameObject;
+		static Scene currentScene;
+		static GLFWwindow *mainWindow;
 
-	Graphyte() = default;
+		GraphyteEditor() = default;
 
-	void run();
-};
+		void run();
+	};
+}
