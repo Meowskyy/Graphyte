@@ -35,8 +35,7 @@ namespace Graphyte {
 			mesh = &meshRenderer->mesh;
 
 			meshRenderer->SetMaterial(ResourceManager::GetMaterial("TerrainMaterial"));
-
-			Material test = ResourceManager::GetMaterial("TerrainMaterial");
+			//meshRenderer->SetMaterial(ResourceManager::GetMaterial("Standard"));
 		}
 
 		void InitializeChunk()

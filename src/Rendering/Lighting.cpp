@@ -15,20 +15,22 @@ bool Lighting::Init()
 
 void Lighting::SetDirectionalLight(const Light& Light)
 {
-	Shader& shader = ResourceManager::GetShader("Standard");
-	shader.SetVector3f("lightPos", Light.transform->position);
-	shader.SetFloat("ambientStrength", Light.ambientIntensity);
-	//Vector3 Direction = Light.direction;
-	//Direction = glm::normalize(Direction);
-	shader.SetVector3f("lightColor", Light.color);
-	shader.SetVector3f("objectColor", Vector3(0.6f, 0, 0));
-	//shader.SetFloat("gDirectionalLight.Base.Color", Light.diffuseIntensity);
+	Shader& shader = ResourceManager::GetShader("Standard").Use();
+	shader.SetVector3f("directionalLight.Direction", Light.transform->getForwardVector());
+	shader.SetFloat("directionalLight.Base.AmbientIntensity", Light.ambientIntensity);
+	shader.SetFloat("directionalLight.Base.DiffuseIntensity", Light.diffuseIntensity);
+	shader.SetVector3f("directionalLight.Base.Color", Light.color);
+	shader.SetVector3f("directionalLight.Base.Position", Light.transform->position);
+	shader.SetVector3f("objectColor", Vector3(1, 1, 1));
+
+	shader.SetVector3f("lightPositions[0]", Light.transform->position);
+	shader.SetVector3f("lightColors[0]", Light.color);
 }
 
 void Lighting::SetPointLights(unsigned int NumLights, const PointLight* pLights)
 {
-	Shader &shader = ResourceManager::GetShader("Standard");
-	shader.SetInteger("gNumPointLights", NumLights);
+	Shader &shader = ResourceManager::GetShader("Standard").Use();
+	shader.SetInteger("numPointLights", NumLights);
 
 	for (unsigned int i = 0; i < NumLights; i++) {
 		shader.SetVector3f("gPointLights[%d].Base.Color", pLights[i].Color);

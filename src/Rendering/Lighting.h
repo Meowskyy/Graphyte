@@ -26,15 +26,6 @@ namespace Graphyte {
 		} Attenuation;
 	};
 
-	class DirectionalLightLoc
-	{
-	public:
-		GLuint Color;
-		GLuint AmbientIntensity;
-		GLuint Direction;
-		GLuint DiffuseIntensity;
-	};
-
 	enum LightMode {
 		Directional,
 		Spot,
@@ -45,10 +36,10 @@ namespace Graphyte {
 	public:
 		float size = 10;
 		float nearClipPlane = 0.1f, farClipPlane = 10;
-		LightMode mode;
+		LightMode mode = Directional;
 		Vector3 direction;
-		Vector3 color;
-		float ambientIntensity, diffuseIntensity;
+		Vector3 color = Vector3(1, 1, 1);
+		float ambientIntensity = 0.5f, diffuseIntensity = 0.5f;
 
 		void DrawUI()
 		{
@@ -59,27 +50,14 @@ namespace Graphyte {
 
 			ImGui::ColorEdit3("Light Color", (float*)&color);
 			ImGui::DragFloat3("Ambient Intensity", (float*)&direction);
-			ImGui::SliderFloat("Ambient Intensity", &ambientIntensity, 0.0f, 2.0f);
-			ImGui::SliderFloat("Diffuse Intensity", &diffuseIntensity, 0.0f, 2.0f);
+			ImGui::SliderFloat("Ambient Intensity", &ambientIntensity, 0.0f, 1.0f);
+			ImGui::SliderFloat("Diffuse Intensity", &diffuseIntensity, 0.0f, 1.0f);
 		}
 	};
 
 	class Lighting {
 	private:
-		struct {
-			GLuint Color;
-			GLuint AmbientIntensity;
-			GLuint DiffuseIntensity;
-			GLuint Position;
-			struct
-			{
-				GLuint Constant;
-				GLuint Linear;
-				GLuint Exp;
-			} Atten;
-		} m_pointLightsLocation[1];
 
-		DirectionalLightLoc m_dirLightLocation;
 	public:
 		Lighting();
 

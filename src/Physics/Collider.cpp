@@ -45,6 +45,23 @@ void Graphyte::Collider::CreateConvex()
 
 	std::cout << "Vertices in original collider: " << mesh->vertices.size() << std::endl;
 	std::cout << "Vertices in convex collider: " << points.size() << std::endl;
+
+	/*
+	std::vector<Vector3> axes = std::vector<Vector3>(points.size());
+	// loop over the vertices
+	for (int i = 0; i < points.size(); i++) {
+		// get the current vertex
+		Vector3 p1 = points[i];
+		// get the next vertex
+		Vector3 p2 = points[i == points.size() ? 0 : i + 1];
+		// subtract the two to get the edge vector
+		Vector3 edge = p1 - p2;
+		// get either perpendicular vector
+		Vector3 normal = edge.perp();
+		// the perp method is just (x, y) => (-y, x) or (y, -x)
+		axes[i] = normal;
+	}
+	*/
 }
 
 void Collider::DrawCollider()
@@ -60,5 +77,10 @@ void Collider::DrawCollider()
 
 	//meshRenderer.Update();
 
-	meshRenderer.DrawLines();
+	for each (Vector3 vert in points)
+	{
+
+	}
+
+	//meshRenderer.DrawLines();
 }

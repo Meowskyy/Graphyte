@@ -41,7 +41,7 @@ Scene::~Scene()
 
 void Scene::OnSceneLoad()
 {
-	m_shadowMap.Init(1024, 1024);
+	m_shadowMap.Init(56, 56);
 	m_lighting = new Lighting();
 	m_lighting->Init();
 
@@ -106,53 +106,68 @@ void Scene::CheckCollisions()
 
 void Scene::Render(Camera& camera)
 {
+	ResourceManager::GetShader("Grid").SetVector3f("cameraPosition", camera.transform->position, true);
+	ResourceManager::GetShader("Standard").SetVector3f("cameraPosition", camera.transform->position, true);
+
+	RenderDepth(camera);
+
+	uniformGrid.DrawGrid();
+
+	RenderObjects(camera);
+
+	// FOR DEBUGGING LATER
+	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
+	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Standard"));
+	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
+}
+
+void Scene::RenderDepth(Camera& camera) 
+{
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	ResourceManager::GetShader("Grid").SetVector3f("cameraPosition", camera.transform->position, true);
-
-	// TODO: IMPORTANT Moving this somewhere else and only updating when necessary
-	ResourceManager::GetShader("Standard").SetVector3f("cameraPosition", camera.transform->position, true);
-
 	// 1. render depth of scene to texture (from light's perspective)
 	// --------------------------------------------------------------
-	Matrix4 lightProjection, lightView;
-	Matrix4 lightSpaceMatrix;
-	float near_plane = light->nearClipPlane, far_plane = light->farClipPlane;
-	float lightSize = light->size;
-	lightProjection = glm::ortho(-lightSize, lightSize, -lightSize, lightSize, near_plane, far_plane);
+	glm::mat4 lightProjection, lightView;
+	glm::mat4 lightSpaceMatrix;
+	lightProjection = glm::ortho(-light->size, light->size, -light->size, light->size, light->nearClipPlane, light->farClipPlane);
 
-	lightView = glm::mat4_cast(light->transform->rotation);
-	//lightView = glm::lookAt(light->transform->position, Vector3(0.0f), Vector3(0.0, 1.0, 0.0));
+	Vector3 position = Vector3(light->transform->position.x, light->transform->position.y, light->transform->position.z);
+	Vector3 upVector = Vector3(light->transform->getUpVector().x, light->transform->getUpVector().y, light->transform->getUpVector().z);
+	Vector3 forwardVector = Vector3(light->transform->getForwardVector().x, light->transform->getForwardVector().y, light->transform->getForwardVector().z);
+
+	lightView = glm::lookAt(position, position + forwardVector, upVector);
+
 	lightSpaceMatrix = lightProjection * lightView;
 	// render scene from light's point of view
 	ResourceManager::GetShader("ShadowMap").Use();
 	ResourceManager::GetShader("ShadowMap").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
 
 	m_shadowMap.BindForWriting();
+
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_FRONT);
+
 	Renderer::RenderAllDepth(camera);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// reset viewport
-	glViewport(0, 0, Screen::width, Screen::height);
+	// render scene from light's point of view
+	ResourceManager::GetShader("Standard").Use();
+	ResourceManager::GetShader("Standard").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+}
+
+void Scene::RenderObjects(Camera & camera)
+{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	uniformGrid.DrawGrid();
-
-	glCullFace(GL_BACK);
 	m_shadowMap.BindForReading(GL_TEXTURE1);
-	ResourceManager::GetShader("Standard").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix, true);
 
 	m_lighting->SetDirectionalLight(*light);
 
+	//glDisable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 	Renderer::RenderAllGrouped(camera);
-
-	// FOR DEBUGGING LATER
-	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
-	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Standard"));
-	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
 }
 
 // TODO: Move this somewhere more appropriate
@@ -174,6 +189,113 @@ void Scene::AddGridTestGameObject()
 	Instantiate(new GameObject(), Vector3(-6, 6, -6));
 }
 
+void Scene::AddPlane()
+{
+	GameObject* object = Instantiate(new GameObject());
+	object->transform.name = "Plane";
+
+	object->transform.scale = Vector3(10, 1, 10);
+	object->transform.position = Vector3(0, -2, 0);
+
+	// MESH RENDERER
+	MeshRenderer* meshRenderer = &object->AddComponent<MeshRenderer>();
+	meshRenderer->SetMaterial(ResourceManager::GetMaterial("Standard"));
+
+	// SETUP THE MESH
+	Mesh* mesh = &meshRenderer->mesh;
+	std::vector<Vector3> vertices;
+	// MESH
+	// VERTICES
+	for (int z = 0; z < 2; z++) {
+		for (int x = 0; x < 2; x++) {
+			vertices.push_back(Vector3(x - 0.5f, 0, z - 0.5f));
+		}
+	}
+
+	mesh->vertices = vertices;
+
+	mesh->uvs = std::vector<Vector2>
+	{
+		Vector2(0, 0),
+		Vector2(1, 0),
+		Vector2(0, 1),
+		Vector2(1, 1),
+	};
+
+	mesh->indices = std::vector<unsigned int>
+	{
+		2, 3, 1,
+		2, 1, 0
+	};
+
+	//object->AddComponent<Collider>();
+
+	meshRenderer->RecalculateBoundingBox();
+	
+	mesh->RecalculateNormals();
+	mesh->SetupMesh();
+}
+
+void Scene::AddCube()
+{
+	GameObject* object = Instantiate(new GameObject());
+	object->transform.name = "Cube";
+
+	// MESH RENDERER
+	MeshRenderer* meshRenderer = &object->AddComponent<MeshRenderer>();
+	meshRenderer->SetMaterial(ResourceManager::GetMaterial("Standard"));
+
+	// SETUP THE MESH
+	Mesh* mesh = &meshRenderer->mesh;
+
+	mesh->vertices = std::vector<Vector3>
+	{
+		// front
+		Vector3(-1.0, -1.0,  1.0),
+		Vector3(1.0, -1.0,  1.0),
+		Vector3(1.0,  1.0,  1.0),
+		Vector3(-1.0,  1.0,  1.0),
+		// back
+		Vector3(-1.0, -1.0, -1.0),
+		Vector3(1.0, -1.0, -1.0),
+		Vector3(1.0,  1.0, -1.0),
+		Vector3(-1.0,  1.0, -1.0)
+	};
+
+	mesh->indices = std::vector<unsigned int>
+	{
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// right
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// left
+		4, 0, 3,
+		3, 7, 4,
+		// bottom
+		4, 5, 1,
+		1, 0, 4,
+		// top
+		3, 2, 6,
+		6, 7, 3
+	};
+
+	//object->AddComponent<Collider>();
+
+	meshRenderer->RecalculateBoundingBox();
+	
+	mesh->RecalculateNormals();
+	mesh->SetupMesh();
+}
+
+void Scene::AddSphere()
+{
+}
+
 void Scene::AddChild() {
 	Instantiate(new GameObject(), *GraphyteEditor::selectedGameObject);
 }
@@ -191,9 +313,6 @@ void Graphyte::Scene::AddLight()
 	object->transform.position = Vector3(-2.0f, 4.0f, -1.0f);
 
 	light = &object->AddComponent<Light>();
-	light->color = Vector3(1, 1, 1);
-	light->ambientIntensity = 0;
-	light->diffuseIntensity = 0;
 	light->transform->name = "Directional Light";
 }
 

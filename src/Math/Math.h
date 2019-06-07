@@ -15,6 +15,20 @@ typedef glm::mat4 Matrix4;
 const float PI = 3.141592653589793;
 
 namespace Graphyte {
+	/*
+	struct Vector2 {
+
+	};
+
+	struct Vector3 {
+
+	};
+
+	struct Quaternion {
+
+	};
+	*/
+
 	struct Matrix4x4 {
 		float m[4][4];
 	};

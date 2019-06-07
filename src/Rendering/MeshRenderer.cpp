@@ -73,6 +73,7 @@ void MeshRenderer::DrawUI()
 		ImGui::SameLine();
 		ImGui::Text(materials[i].shader.shaderName.c_str());
 
+		ImGui::ColorEdit3("Object Color", (float*)&objectColor);
 		ImGui::Text("Main Texture: ");
 		ImGui::SameLine();
 		for (auto& texture : materials[i].textures) 
@@ -80,9 +81,12 @@ void MeshRenderer::DrawUI()
 			ImGui::Text(texture.name.c_str());
 		}
 
-		ImGui::ColorEdit3("Object Color", (float*)&objectColor);
 		ImGui::DragFloat("Specular Intensity", &specularIntensity, 0.05f, 0.0, 1.0f);
 		ImGui::DragFloat("Specular Power", &specularPower);
+
+		ImGui::DragFloat("Roughness", &roughness, 0.05f, 0.0, 1.0f);
+		ImGui::DragFloat("Metallic", &metallic, 0.05f, 0.0, 1.0f);
+		ImGui::DragFloat("AO", &ao, 0.05f, 0.0, 1.0f);
 	}
 }
 
@@ -131,14 +135,23 @@ void MeshRenderer::Render(Camera& camera)
 			materials[i].shader.SetVector3f("objectColor", objectColor);
 			materials[i].shader.SetFloat("specularIntensity", specularIntensity);
 			materials[i].shader.SetFloat("specularPower", specularPower);
+
+			materials[i].shader.SetVector3f("albedo", objectColor);
+			materials[i].shader.SetFloat("roughness", roughness);
+			materials[i].shader.SetFloat("metallic", metallic);
+			materials[i].shader.SetFloat("ao", ao);
 			//materials[i].shader.SetBool("blinn", false);
 		}
 
 		// Bind VAO
 		mesh.Bind();
 		// draw mesh
-		//glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
-		glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+		if (mesh.indices.size() > 0) {
+			glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+		}
+		else {
+			glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
+		}
 
 		// Unbinding VAO
 		glBindVertexArray(0);

@@ -52,7 +52,7 @@ namespace Graphyte {
 		Quaternion rotation;
 		Vector3 scale = Vector3(1, 1, 1);
 
-		Graphyte::BoundingBox boundingBox;
+		BoundingBox boundingBox;
 
 		Transform() : position(Vector3(0.0f, 0.0f, 0.0f)), scale(Vector3(1, 1, 1))
 		{

@@ -34,6 +34,8 @@ namespace Graphyte {
 
 		// RENDERING OBJECTS
 		void Render(Camera& camera);		// Render meshes on screen
+		void RenderDepth(Camera& camera);
+		void RenderObjects(Camera& camera);
 
 		// TODO: All these are temporary
 		void AddGameObject();
@@ -43,6 +45,11 @@ namespace Graphyte {
 		void AddWorld();
 		void AddGrid();
 		void AddGridTestGameObject();
+		
+		// SHAPES
+		void AddPlane();
+		void AddCube();
+		void AddSphere();
 
 		void AddLight();
 		void AddCameraObject();

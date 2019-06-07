@@ -168,7 +168,7 @@ void GraphyteEditor::mainLoop()
 #ifdef _DEBUG
 		UpdateViewMatrix(*editorCamera);
 #else
-		UpdateViewMatrix(Camera::mainCamera);
+		UpdateViewMatrix(*Camera::mainCamera);
 #endif
 
 		mouseOnGui = ImGui::IsMouseHoveringAnyWindow();
@@ -496,6 +496,12 @@ void GraphyteEditor::DrawEditorUI()
 		if (ImGui::Button("Create Grid Test Object"))
 			currentScene.AddGridTestGameObject();
 
+		if (ImGui::Button("Create Plane"))
+			currentScene.AddPlane();
+
+		if (ImGui::Button("Create Cube"))
+			currentScene.AddCube();
+
 		static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 		int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 		
@@ -586,7 +592,8 @@ void GraphyteEditor::loadShaders()
 	ResourceManager::LoadShader("Assets/shaders/ShadowMap.vert", "Assets/shaders/ShadowMap.frag", nullptr, "ShadowMap");
 
 	// ACTUAL SHADERS
-	ResourceManager::LoadShader("Assets/shaders/Standard.vert", "Assets/shaders/Standard.frag", nullptr, "Standard");
+	//ResourceManager::LoadShader("Assets/shaders/PBR.vert", "Assets/shaders/PBR.frag", nullptr, "Standard");
+	ResourceManager::LoadShader("Assets/shaders/StandardV2.vert", "Assets/shaders/StandardV2.frag", nullptr, "Standard");
 	ResourceManager::LoadShader("Assets/shaders/Unlit.vert", "Assets/shaders/Unlit.frag", nullptr, "Unlit");
 
 	//ResourceManager::LoadShader("Assets/shaders/Lighting.vert", "Assets/shaders/Lighting.frag", nullptr, "Lighting");

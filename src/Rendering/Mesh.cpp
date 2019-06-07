@@ -43,50 +43,21 @@ void Mesh::RecalculateNormals()
 {
 	normals.clear();
 
-	int faces = vertices.size() % 4;
-
-#define V1
-#ifdef V1
 	for (int i = 0; i < vertices.size(); i++)
 	{
-		normals.push_back(Vector3(0, 0, 1));
+		normals.push_back(Vector3(1, 1, 1));
 	}
 
-	for (int i = 0; i < faces; i++)
+	for (int i = 0; i < vertices.size(); i += 4)
 	{
-		//Vector3 normal = glm::normalize(glm::cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]));
+		Vector3 normal = glm::normalize(glm::cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]));
 
-		//normals[i] = normal;
-		//normals[i + 1] = normal;
-		//normals[i + 2] = normal;
-		//normals[i + 3] = normal;
-	}
-#else
-	for (int i = 0; i < vertices.size(); i++) 
-	{ 
-		normals.push_back(Vector3(0, 0, 0));
+		normals[i] = normal;
+		normals[i + 1] = normal;
+		normals[i + 2] = normal;
+		normals[i + 3] = normal;
 	}
 
-	for (int i = 0; i < faces; i++)
-	{
-		int ia = i;
-		int ib = i + 1;
-		int ic = i + 2;
-
-		Vector3 e1 = vertices[ia] - vertices[ib];
-		Vector3 e2 = vertices[ic] - vertices[ib];
-		Vector3 no = cross(e1, e2);
-
-		normals[ia] += no;
-		normals[ib] += no;
-		normals[ic] += no;
-	}
-
-	for (int i = 0; i < vertices.size(); i++) 
-	{
-		normals[i] = glm::normalize(normals[i]);
-	}
-#endif
 }
 
 void Mesh::RenderLines()
@@ -207,10 +178,12 @@ void Mesh::SetupMesh()
 		// UV positions
 		if (uvArraySize > 0) // TODO: Do this somehow else
 			glBufferSubData(GL_ARRAY_BUFFER, vertexArraySize + normalArraySize, uvArraySize, &uvs[0]);
+		
 		// VBO END
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+		if (indices.size() > 0) {
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+		}
 
 		// set the vertex attribute pointers
 		// vertex Positions

@@ -26,6 +26,11 @@ namespace Graphyte {
 		float specularPower = 32;
 		Vector3 objectColor = Vector3(1, 1, 1);
 
+
+		float roughness = 0.5f;
+		float metallic = 0.0f;
+		float ao = 0.5f;
+
 		// Constructor
 		MeshRenderer();
 		MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::string directory);
