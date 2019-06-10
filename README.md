@@ -21,5 +21,9 @@ A small game engine, built out of boredom and curiosity and as a good way of lea
 
 
 ### FAQ
+```
+Whats the performance like?
+- Nonexistant, since barely any optimizations have been made
+```
 
 ### Links
