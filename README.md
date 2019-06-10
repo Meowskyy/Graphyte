@@ -4,7 +4,7 @@
 
 ### Information
 
-A small game engine, built out of boredom and curiosity.
+A small game engine, built out of boredom and curiosity and as a good way of learning C++.
 
 ### Requirements
 - CMake
