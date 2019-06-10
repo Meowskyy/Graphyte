@@ -174,7 +174,7 @@ void Scene::RenderDepth(Camera& camera)
 	ResourceManager::GetShader("Standard").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
 }
 
-void Scene::RenderObjects(Camera & camera)
+void Scene::RenderObjects(Camera& camera)
 {
 	m_shadowMap.BindForReading(GL_TEXTURE1);
 
