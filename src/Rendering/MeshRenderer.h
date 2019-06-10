@@ -26,10 +26,12 @@ namespace Graphyte {
 		float specularPower = 32;
 		Vector3 objectColor = Vector3(1, 1, 1);
 
-
 		float roughness = 0.5f;
 		float metallic = 0.0f;
 		float ao = 0.5f;
+
+		bool drawCollider = false;
+		Collider* col;
 
 		// Constructor
 		MeshRenderer();
@@ -41,8 +43,10 @@ namespace Graphyte {
 
 		void RecalculateBoundingBox();
 
+		void DrawMesh();
 		void DrawLines();
 		void DrawLine(const Vector3 color);
+
 		void DrawUI();
 	};
 }

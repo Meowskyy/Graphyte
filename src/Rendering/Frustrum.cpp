@@ -4,9 +4,9 @@
 
 using namespace Graphyte;
 
-Frustum::Frustum(const glm::mat4& v, const glm::mat4& p)
+Frustum::Frustum(const Matrix4& v, const Matrix4& p)
 {
-	glm::mat4 clip;
+	Matrix4 clip;
 
 	clip[0][0] = v[0][0] * p[0][0] + v[0][1] * p[1][0] + v[0][2] * p[2][0] + v[0][3] * p[3][0];
 	clip[1][0] = v[0][0] * p[0][1] + v[0][1] * p[1][1] + v[0][2] * p[2][1] + v[0][3] * p[3][1];
@@ -69,7 +69,7 @@ bool Frustum::TestIntersection(const Transform& transform)
 	for (int i = 0; i < 6; i++)
 	{
 		const float pos = planes[i].w;
-		const Vector3 normal = glm::vec3(planes[i]);
+		const Vector3 normal = Vector3(planes[i]);
 
 		if (glm::dot(normal, transform.boundingBox.getPositiveVertex(normal) + transform.position) + pos < 0.0f)
 		{

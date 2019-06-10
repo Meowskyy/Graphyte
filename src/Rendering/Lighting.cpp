@@ -16,7 +16,7 @@ bool Lighting::Init()
 void Lighting::SetDirectionalLight(const Light& Light)
 {
 	Shader& shader = ResourceManager::GetShader("Standard").Use();
-	shader.SetVector3f("directionalLight.Direction", Light.transform->getForwardVector());
+	shader.SetVector3f("directionalLight.Direction", Light.transform->GetForwardVector());
 	shader.SetFloat("directionalLight.Base.AmbientIntensity", Light.ambientIntensity);
 	shader.SetFloat("directionalLight.Base.DiffuseIntensity", Light.diffuseIntensity);
 	shader.SetVector3f("directionalLight.Base.Color", Light.color);

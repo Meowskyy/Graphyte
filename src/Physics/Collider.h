@@ -5,42 +5,30 @@
 class Mesh;
 
 namespace Graphyte {
-	class Bounds {
-	public:
-		Vector3 center;
-		Vector3 max;
-		Vector3 min;
+	class Triangle {
+		Vector3 v1, v2, v3;
 	};
 
 	class Collider : public Component {
 	private:
-		std::vector<Vector3> points;
-		std::vector<unsigned int> pointIndices;
+		std::vector<Vector3> points = std::vector<Vector3>();
+		std::vector<unsigned int> pointIndices = std::vector<unsigned int>();
 
 	public:
-		Mesh *mesh;
-		Bounds bounds;
+		Mesh* mesh;
 		bool isConvex = true;
 		bool showInEditor = false;
 
-		Collider()
-		{
-
-		}
-
 		void OnComponentAdded();
+
+		bool hasCollision = true;
 
 		// Useful for spheres
 		Vector3 ClosestPoint(const Vector3& position);
+		bool CheckForTriangleIntersection(const Triangle& triangleA, const Triangle& triangleB);
 
 		void CreateConvex();
 
-		void Update() {
-			if (showInEditor)
-			{
-				DrawCollider();
-			}
-		}
 		void DrawCollider();
 
 		void DrawUI() {

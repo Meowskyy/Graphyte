@@ -22,6 +22,8 @@ namespace Graphyte {
 		static std::vector<GameObject*> gameObjects;
 		static UniformGrid uniformGrid;
 
+		float updateTimer;
+
 		Scene() = default;
 		~Scene();
 

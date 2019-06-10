@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <Physics\Collider.h>
+
 using namespace Graphyte;
 
 void GameObject::Update() const
@@ -72,12 +74,12 @@ void GameObject::OnSceneLoad() const
 	}
 }
 
-void GameObject::OnCollisionEnter(GameObject& gameObject) 
+void GameObject::OnCollisionEnter(Collider& collider) 
 {
 	bool hasCollision = false;
 
 	// If the gameObject is not in the list
-	if (std::find(collisionList.begin(), collisionList.end(), &gameObject) == collisionList.end())
+	if (std::find(collisionList.begin(), collisionList.end(), &collider) == collisionList.end())
 	{
 		//std::cout << transform.name << " collision enter: " << gameObject.transform.name << "\n";
 		hasCollision = true;
@@ -85,11 +87,11 @@ void GameObject::OnCollisionEnter(GameObject& gameObject)
 
 	if (hasCollision) 
 	{
-		collisionList.push_back(&gameObject);
+		collisionList.push_back(&collider);
 
 		for (auto& component : components)
 		{
-			component->OnCollisionEnter(gameObject);
+			component->OnCollisionEnter(collider);
 		}
 	}
 }
@@ -100,7 +102,7 @@ void GameObject::CheckCollisions()
 	for (int i = 0; i < collisionList.size(); i++) {
 
 		// Check if still touching
-		if (BoundingBox::TestAABBOverlap(transform, collisionList[i]->transform)) {
+		if (AxisAlignedBoundingBox::TestOverlap(transform.boundingBox, collisionList[i]->transform->boundingBox)) {
 			//std::cout << transform.name << " is still touching: " << collisionList[i]->transform.name << "\n";
 
 			for (auto& component : components)
@@ -119,13 +121,13 @@ void GameObject::CheckCollisions()
 	}
 }
 
-void GameObject::OnCollisionExit(GameObject& gameObject)
+void GameObject::OnCollisionExit(Collider& collider)
 {
-	std::cout << transform.name << " collision exit: " << gameObject.transform.name << "\n";
+	std::cout << transform.name << " collision exit: " << collider.transform->name << "\n";
 
 	for (auto& component : components)
 	{
-		component->OnCollisionExit(gameObject);
+		component->OnCollisionExit(collider);
 	}
 }
 
@@ -203,10 +205,10 @@ void GameObject::DrawChildren()
 	ImGui::PopStyleVar();
 }
 
-void GameObject::AddChild(GameObject& gameObject)
+void GameObject::AddChild(GameObject* gameObject)
 {
-	gameObject.transform.parent = &transform;
-	children.push_back(&gameObject);
+	gameObject->transform.parent = &transform;
+	children.push_back(gameObject);
 
 	++childCount;
 }

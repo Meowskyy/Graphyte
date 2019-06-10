@@ -14,7 +14,7 @@ namespace Graphyte {
 		{
 			sf::Listener::setPosition(transform->position.x, transform->position.y, transform->position.y);
 
-			Vector3 forwardDirection = transform->getForwardVector();
+			Vector3 forwardDirection = transform->GetForwardVector();
 			sf::Listener::setDirection(forwardDirection.x, forwardDirection.y, forwardDirection.z);
 		}
 	};

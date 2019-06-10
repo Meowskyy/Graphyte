@@ -1,5 +1,5 @@
-#include "Custom Behaviours\WorldGenerator.h"
-#include "Custom Behaviours\Chunk.h"
+#include "Custom Components\WorldGenerator.h"
+#include "Custom Components\Chunk.h"
 
 #include "Math\PerlinNoise.h"
 

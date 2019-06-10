@@ -2,42 +2,70 @@
 
 #include "Math\Math.h"
 
+#include <vector>
+
 namespace Graphyte {
 	class Transform;
 	class Collider;
 
-	struct BoundingBox
+	class Bounds {
+	public:
+		Vector3 center;
+		Vector3 max;
+		Vector3 min;
+
+		Bounds() = default;
+
+		Bounds(const Vector3& min, const Vector3 max) 
+		{
+			this->min = min;
+			this->max = max;
+
+			this->center = Vector3((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2);
+		}
+
+		// Tests for bounds overlap
+		bool Contains(const Vector3 position) const;
+		bool Contains(const Bounds bounds) const;
+		bool Contains(const Transform& transform) const;
+	};
+
+	struct AxisAlignedBoundingBox
 	{
 	private:
+		float maxFloat = std::numeric_limits<float>::max();
+		float minFloat = std::numeric_limits<float>::min();
 
+		std::vector<Vector3> corners = std::vector<Vector3>(8);
 	public:
-		Vector3 min;
-		Vector3 max;
-		Vector3 center;
-		Vector3 size;
-		Vector3* position;
+		Bounds bounds;
+
+		Vector3 min;		// Min of the AABB
+		Vector3 max;		// Max of the AABB
+		Vector3 center;		// Center of the AABB
+		Vector3 size;		// Size of the AABB
 		Transform* transform;
 
-		BoundingBox() = default;
-		BoundingBox(const Vector3& min, const Vector3& max);
+		AxisAlignedBoundingBox() = default;
+		AxisAlignedBoundingBox(Transform* trans) : transform(trans) {};
+		AxisAlignedBoundingBox(const Vector3& min, const Vector3& max);
+
+		void SetSize(const Vector3 min, const Vector3 max);
 
 		void Recalculate();
 
-		bool Contains(const BoundingBox& otherBoundingBox) const;
-		bool Contains(const Transform& transform) const;
+		Bounds GetBounds();
+
+		bool Contains(const AxisAlignedBoundingBox& otherBoundingBox) const;
 
 		// Is this touching the other Collider
 		bool Touching(const Transform& transform) const;
 		bool Touching(const Collider& transform) const;
 
-		Vector3 BoundingBox::getPositiveVertex(const Vector3& normal) const;
+		Vector3 getPositiveVertex(const Vector3& normal) const;
+		Vector3 getNegativeVertex(const Vector3& normal) const;
 
-		Vector3 BoundingBox::getNegativeVertex(const Vector3& normal) const;
-
-		// Tests for bounding box overlap
-		static bool TestAABBOverlap(const BoundingBox& a, const BoundingBox& b);
-
-		// Tests for bounding box overlap with Transforms
-		static bool TestAABBOverlap(const Transform& a, const Transform& b);
+		// Tests for AABB overlap
+		static bool TestOverlap(const AxisAlignedBoundingBox& a, const AxisAlignedBoundingBox& b);
 	};
 }

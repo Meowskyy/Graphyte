@@ -7,60 +7,52 @@
 #include "Rendering\ExtraRenderer.h"
 
 #include <vector>
+#include <queue>
+
+#include <map>
 
 const int minSize = 8;
+const int maxSize = 65536;
 
 namespace Graphyte {
 	class UniformGrid {
 	private:
-		static float size;
+		float size;
 
-		// Child grids
-		std::vector<UniformGrid*> childGrid = std::vector<UniformGrid*>(8);
 		bool activeChildren[8];
 		int activeChildCount = 0;
+		std::vector<UniformGrid> childGrid;
 
-		std::vector<GameObject*> gameObjects;	// GameObjects that this grid contains
+		static std::map<GameObject*, std::vector<Collider*>> PendingColliders;
+		static std::queue<Collider*> pendingColliders;			// Colliders that will be added later
+		static std::vector<Collider*> allColliders;
+		std::vector<Collider*> colliders;
 
-		UniformGrid(const BoundingBox& boundaries)
-		{
-			this->boundaries = boundaries;
-		}
+		UniformGrid(const Bounds& boundaries);					// Create UniformGrid with boundaries
+		UniformGrid CreateNode(const Bounds& boundary); 		// Create child with boundaries
 
-		// Create with only boundaries
-		UniformGrid* CreateNode(const BoundingBox& boundary)
-		{
-			UniformGrid* ret = new UniformGrid(boundary);
-			ret->parent = this;
-			return ret;
-		}
 	public:
-		BoundingBox boundaries;
-		UniformGrid* parent;
-
-		static std::vector<GameObject*> pendingGameObjects;		// GameObjects that will be added later
+		static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
 		static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
 
-		static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
+		UniformGrid* parent;
 
-		// Default constructor
-		UniformGrid() : boundaries(BoundingBox(Vector3(0, 0, 0), Vector3(0, 0, 0)))
-		{
+		Bounds boundaries;
 
-		}
+		// CONSTRUCTORS
+		UniformGrid();					// Default
+		UniformGrid(const int size); 	// With size
 
-		// Constructor with size
-		UniformGrid(const int size);
+		bool isRoot() const;
 
-		bool isRoot() const
-		{
-			return (parent == nullptr);
-		}
+		static void AddCollider(Collider* col);
 
-		bool InsertGameObject(GameObject& gameObject);
+		bool InsertCollider(Collider& collider);
 
-		void CollidingObjects(GameObject& gameObject) const;
-		void CollidingObjects(GameObject& gameObject, const int index) const;
+		void CollidingObjects(Collider& collider) const;
+		void CollidingObjects(Collider& collider, const int index) const;
+
+		bool IsInsideBounds(const Transform& transform) const;
 
 		void RebuildGrid();
 		void Update();

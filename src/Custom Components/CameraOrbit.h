@@ -7,10 +7,8 @@
 #include "Cursor\Cursor.h"
 
 namespace Graphyte {
-	class EditorCamera : public Component {
+	class CameraOrbit : public Component {
 	public:
-		float mouseSensitivity = 0.005f;
-
 		float x = 0.0;
 		float y = 0.0;
 
@@ -18,34 +16,43 @@ namespace Graphyte {
 
 		void OnComponentAdded()
 		{
-			x = 0;
-			y = PI;
+			x = transform->rotation.y * PI;
+			y = transform->rotation.x * PI;
 		}
 
-		// LateUpdate is called at the end of every frame
-		void LateUpdate() 
+		void Update()
 		{
-			Movement();
+			if (Input::GetKeyDown(GLFW_KEY_C)) {
+				ExtraRenderer::DrawLine(transform->position + transform->GetForwardVector(), Physics::RaycastMousePosition(100));
+			}
+
+			if (Input::GetKeyDown(GLFW_KEY_K))
+				Scene::DestroyLast();
+		}
+
+		// Update is called every frame
+		void LateUpdate() {
+			movement();
 
 			//MouseCursor::SetVisible(!Input::GetMouseButtonDown(1));
 			if (Input::GetMouseButtonDown(1))
 			{
-				Rotation();
+				rotation();
 			}
 		}
 
 		float flightSpeed = 3;
 
-		void Movement()
+		void movement()
 		{
 			if (Input::GetKeyDown(GLFW_KEY_W))
-				transform->position += transform->getForwardVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+				transform->position += transform->GetForwardVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
 			if (Input::GetKeyDown(GLFW_KEY_S))
-				transform->position -= transform->getForwardVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+				transform->position -= transform->GetForwardVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
 			if (Input::GetKeyDown(GLFW_KEY_A))
-				transform->position -= transform->getRightVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+				transform->position -= transform->GetRightVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
 			if (Input::GetKeyDown(GLFW_KEY_D))
-				transform->position += transform->getRightVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
+				transform->position += transform->GetRightVector() * Time::deltaTime * flightSpeed * flightSpeedMul;
 
 			if (Input::GetKeyDown(GLFW_KEY_W) || Input::GetKeyDown(GLFW_KEY_S) || Input::GetKeyDown(GLFW_KEY_D) || Input::GetKeyDown(GLFW_KEY_A)) {
 				flightSpeedMul += 1.5f * Time::deltaTime;
@@ -55,7 +62,9 @@ namespace Graphyte {
 			}
 		}
 
-		void Rotation()
+		float mouseSensitivity = 0.005f;
+
+		void rotation()
 		{
 			x -= Input::GetAxis("Mouse X") * mouseSensitivity;
 			y += Input::GetAxis("Mouse Y") * mouseSensitivity;
@@ -70,5 +79,12 @@ namespace Graphyte {
 
 			transform->rotation = Quaternion(Vector3(y, x, 0));
 		}
+
+		/*
+		void DrawUI() {
+			ImGui::DragFloat("Rotation X", &x);
+			ImGui::DragFloat("Rotation Y", &y);
+		}
+		*/
 	};
 }

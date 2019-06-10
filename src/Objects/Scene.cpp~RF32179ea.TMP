@@ -1,11 +1,11 @@
 #include "Scene.h"
 
 #include "ECS.h"
-#include "Custom Components\CameraOrbit.h"
+#include "Custom Behaviours\CameraOrbit.h"
 #include "Audio\AudioListener.h"
 #include "Rendering\Camera.h"
 #include "Rendering\MeshRenderer.h"
-#include "Custom Components\WorldGenerator.h"
+#include "Custom Behaviours\WorldGenerator.h"
 
 #include "IO\ModelLoader.h"
 
@@ -13,12 +13,9 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "Rendering/Lighting.h"
+#include "Rendering\Lighting.h"
 
 #include "Rendering/Screen.h"
-
-#include "Physics/Rigidbody.h"
-#include "Physics/Collider.h"
 
 using namespace Graphyte;
 
@@ -74,6 +71,7 @@ void Scene::OnSceneLoad()
 void Scene::Update()
 {
 	auto updateStart = std::chrono::high_resolution_clock::now();
+	auto updateEnd = std::chrono::high_resolution_clock::now();
 
 	// Call Update on all components
 	for (auto& gameObject : gameObjects)
@@ -81,9 +79,7 @@ void Scene::Update()
 		gameObject->Update();
 	}
 
-	auto updateEnd = std::chrono::high_resolution_clock::now();
-
-	//std::cout << "Time elapsed in Update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(updateEnd - updateStart).count() << " ns\n";
+	std::cout << "Time elapsed to rebuild UniformGrid: " << std::chrono::duration_cast<std::chrono::nanoseconds>(updateEnd - updateStart).count() << " ns\n";
 
 }
 
@@ -243,12 +239,12 @@ void Scene::AddPlane()
 		2, 1, 0
 	};
 
+	//object->AddComponent<Collider>();
+
 	meshRenderer->RecalculateBoundingBox();
 	
 	mesh->RecalculateNormals();
 	mesh->SetupMesh();
-
-	object->AddComponent<Collider>();
 }
 
 void Scene::AddCube()
@@ -299,14 +295,12 @@ void Scene::AddCube()
 		6, 7, 3
 	};
 
+	//object->AddComponent<Collider>();
+
 	meshRenderer->RecalculateBoundingBox();
 	
 	mesh->RecalculateNormals();
 	mesh->SetupMesh();
-
-	object->AddComponent<Collider>();
-
-	object->AddComponent<Rigidbody>();
 }
 
 void Scene::AddSphere()
@@ -343,6 +337,8 @@ void Scene::AddCameraObject()
 	object->transform.position = Vector3(0, 10, 10);
 	object->transform.rotation = Quaternion(Vector3(0, PI, 0));
 
+	object->hasCollision = false;
+
 	Camera::mainCamera = &object->AddComponent<Camera>();
 	object->AddComponent<AudioListener>();
 
@@ -360,6 +356,7 @@ void Scene::AddGrid()
 	GameObject* object = Instantiate(new GameObject());
 
 	object->transform.name = "Grid";
+	object->hasCollision = false;
 
 	// MESH RENDERER
 	MeshRenderer* meshRenderer = &object->AddComponent<MeshRenderer>();
@@ -414,6 +411,11 @@ void Scene::AddWorld()
 GameObject* Scene::Instantiate(GameObject* original) {
 	gameObjects.push_back(original);
 
+	if (uniformGrid.gridReady) 
+	{
+		uniformGrid.AddGameObject(original);
+	}
+
 	return original;
 }
 
@@ -421,12 +423,23 @@ GameObject* Scene::Instantiate(GameObject* original, GameObject& parent) {
 	parent.AddChild(original);
 	original->transform.parent = &parent.transform;
 
+	if (uniformGrid.gridReady)
+	{
+		uniformGrid.AddGameObject(original);
+	}
+
 	return original;
 }
 
 GameObject* Scene::Instantiate(GameObject* original, const Vector3 &position) {
 	original->transform.position = position;
 	gameObjects.push_back(original);
+
+	if (uniformGrid.gridReady)
+	{
+		//uniformGrid.InsertGameObject(*gameObjects[gameObjects.size() - 1]);
+		//uniformGrid.pendingGameObjects.push_back(gameObjects[gameObjects.size() - 1]);
+	}
 
 	return original;
 }

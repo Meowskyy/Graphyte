@@ -12,20 +12,21 @@
 
 using namespace Graphyte;
 
-void ExtraRenderer::DrawAABB(const BoundingBox& box, const Vector3& position) {
-
+void ExtraRenderer::DrawAABB(const AxisAlignedBoundingBox& box) 
+{
 	MeshRenderer meshRenderer = MeshRenderer();
 
 	meshRenderer.mesh.vertices = std::vector<Vector3>
 	{
-		Vector3(-0.5, -0.5, -0.5),
-		Vector3(0.5, -0.5, -0.5),
-		Vector3(0.5,  0.5, -0.5),
-		Vector3(-0.5,  0.5, -0.5),
-		Vector3(-0.5, -0.5,  0.5),
-		Vector3(0.5, -0.5,  0.5),
-		Vector3(0.5,  0.5,  0.5),
-		Vector3(-0.5,  0.5,  0.5),
+		Vector3(box.min.x, box.min.y,  box.max.z),	// OK
+		Vector3(box.max.x, box.min.y,  box.max.z),	// OK
+		box.max,									// OK
+		Vector3(box.min.x, box.max.y,  box.max.z),	// OK
+
+		box.min,									// OK
+		Vector3(box.max.x, box.min.y, box.min.z),	// OK
+		Vector3(box.max.x, box.max.y, box.min.z),	// OK
+		Vector3(box.min.x, box.max.y, box.min.z)	// OK
 	};
 
 	meshRenderer.mesh.indices = std::vector<unsigned int>
@@ -36,14 +37,7 @@ void ExtraRenderer::DrawAABB(const BoundingBox& box, const Vector3& position) {
 		2, 6, 3, 7
 	};
 
-	// TODO: Calculate bounding box based on rotation
-	float width = box.max.x - box.min.x;
-	float height = box.max.y - box.min.y;
-	float depth = box.max.z - box.min.z;
-
-	meshRenderer.transform->position = position + Vector3(box.min.x + width / 2, box.min.y + height / 2, box.min.z + depth / 2);
-
-	meshRenderer.transform->scale = Vector3(width, height, depth);
+	meshRenderer.transform->position = box.transform->position;
 
 	meshRenderer.OnComponentAdded();
 
@@ -51,33 +45,29 @@ void ExtraRenderer::DrawAABB(const BoundingBox& box, const Vector3& position) {
 	meshRenderer.DrawLines();
 }
 
-void ExtraRenderer::DrawUniformBox(const BoundingBox& box) {
+void ExtraRenderer::DrawBounds(const Bounds& box) {
 	MeshRenderer meshRenderer = MeshRenderer();
 
 	meshRenderer.mesh.vertices = std::vector<Vector3>
 	{
-		Vector3(-0.5, -0.5, -0.5),
-		Vector3(0.5, -0.5, -0.5),
-		Vector3(0.5,  0.5, -0.5),
-		Vector3(-0.5,  0.5, -0.5),
-		Vector3(-0.5, -0.5,  0.5),
-		Vector3(0.5, -0.5,  0.5),
-		Vector3(0.5,  0.5,  0.5),
-		Vector3(-0.5,  0.5,  0.5),
+		Vector3(box.min.x, box.min.y,  box.max.z),	// OK
+		Vector3(box.max.x, box.min.y,  box.max.z),	// OK
+		box.max,									// OK
+		Vector3(box.min.x, box.max.y,  box.max.z),	// OK
+
+		box.min,											// OK
+		Vector3(box.max.x, box.min.y, box.min.z),	// OK
+		Vector3(box.max.x, box.max.y, box.min.z),	// OK
+		Vector3(box.min.x, box.max.y, box.min.z)	// OK
 	};
 
 	meshRenderer.mesh.indices = std::vector<unsigned int>
-	{ 
+	{
 		0, 1, 2, 3,
 		4, 5, 6, 7,
 		0, 4, 1, 5,
 		2, 6, 3, 7
 	};
-
-	float size = box.max.x - box.min.x;
-
-	meshRenderer.transform->position = Vector3(box.min.x + size / 2, box.min.y + size / 2, (box.min.z + size / 2));
-	meshRenderer.transform->scale = Vector3(size, size, size);
 
 	meshRenderer.OnComponentAdded();
 
@@ -109,7 +99,7 @@ void ExtraRenderer::DrawLine(const Vector3& start, const Vector3& end, const Vec
 void ExtraRenderer::DrawSelectionArrows(const Transform* transf, const float distance)
 {
 	glDisable(GL_DEPTH_TEST);
-	DrawLine(transf->position, transf->getForwardVector() * distance, Vector3(0, 1, 0));
-	DrawLine(transf->position, transf->getRightVector()* distance, Vector3(1, 0, 0));
-	DrawLine(transf->position, transf->getUpVector()* distance, Vector3(0, 0, 1));
+	DrawLine(transf->position, transf->GetForwardVector() * distance, Vector3(0, 1, 0));
+	DrawLine(transf->position, transf->GetRightVector()* distance, Vector3(1, 0, 0));
+	DrawLine(transf->position, transf->GetUpVector()* distance, Vector3(0, 0, 1));
 }

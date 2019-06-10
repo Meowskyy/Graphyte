@@ -4,6 +4,7 @@
 #include <vector>
 #include <bitset>
 #include <array>
+#include <chrono>
 
 #include "Physics\Physics3D.h"
 #include "Physics\BoundingBox.h"
@@ -46,23 +47,23 @@ namespace Graphyte {
 		std::string name = "GameObject";
 
 		Transform* parent; // Parent transform
-		GameObject* gameObject; // THE GAMEOBJECT THIS BELONGS TO
+		GameObject* gameObject; // The GameObject this transform belongs to
 
 		Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
 		Quaternion rotation;
 		Vector3 scale = Vector3(1, 1, 1);
 
-		BoundingBox boundingBox;
+		AxisAlignedBoundingBox boundingBox;
 
-		Transform() : position(Vector3(0.0f, 0.0f, 0.0f)), scale(Vector3(1, 1, 1))
-		{
-			boundingBox.transform = this;
-		}
+		Transform() : position(Vector3(0.0f, 0.0f, 0.0f)), scale(Vector3(1, 1, 1)), boundingBox(this) {}
+
+		Matrix4 GetTransformMatrix() const;
+		Matrix4 GetRotScaleMatrix() const;
 
 		// Transform direction methods
-		Vector3 getForwardVector() const;
-		Vector3 getRightVector() const;
-		Vector3 getUpVector() const;
+		Vector3 GetForwardVector() const;
+		Vector3 GetRightVector() const;
+		Vector3 GetUpVector() const;
 
 		// Position Parent + Local
 		Vector3 GetWorldPosition() const;
@@ -96,7 +97,7 @@ namespace Graphyte {
 		}
 
 		void Rotate(const Vector3 direction, const float speed);
-		void setParent(Transform& transform);
+		void SetParent(Transform& transform);
 	};
 
 	class Component {
@@ -140,9 +141,9 @@ namespace Graphyte {
 
 		// Functions : Physics
 		// Called every time the collider hits something
-		virtual void OnCollisionEnter(GameObject& gameObject) {}
-		virtual void OnCollisionStay(GameObject& gameObject) {}
-		virtual void OnCollisionExit(GameObject& gameObject) {}
+		virtual void OnCollisionEnter(Collider& collider) {}
+		virtual void OnCollisionStay(Collider& collider) {}
+		virtual void OnCollisionExit(Collider& collider) {}
 
 		virtual void DrawUI() {}	// Draws info about the component, only if in _DEBUG is defined
 	};
@@ -158,7 +159,7 @@ namespace Graphyte {
 		Transform transform = Transform();
 
 		std::vector<GameObject*> children;
-		std::vector<GameObject*> collisionList;
+		std::vector<Collider*> collisionList;
 
 		~GameObject()
 		{
@@ -174,8 +175,6 @@ namespace Graphyte {
 			}
 		}
 
-		bool hasCollision = true;
-
 		bool enabled = true;
 
 		int componentCount = 0;
@@ -187,15 +186,15 @@ namespace Graphyte {
 		void LateUpdate() const;
 		void OnSceneLoad() const;
 
-		void OnCollisionEnter(GameObject& gameObject);
+		void OnCollisionEnter(Collider& collider);
 		void CheckCollisions();
-		void OnCollisionExit(GameObject& gameObject);
+		void OnCollisionExit(Collider& collider);
 		// SCRIPT PART END
 
 		void DrawComponents();
 		void DrawChildren();
 
-		void AddChild(GameObject& gameObject);
+		void AddChild(GameObject* gameObject);
 
 		// Adds a components of type T to the object
 		template<typename T, typename... TArgs>

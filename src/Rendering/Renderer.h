@@ -15,9 +15,9 @@ namespace Graphyte {
 		virtual void Render(Camera& camera) {}
 	public:
 		bool drawBoundingBox = false;
-		bool isVisible = true;
+		bool isVisible = false;
 		bool drawMesh = true;
-		BoundingBox boundaries;
+		Bounds boundaries;
 
 		std::vector<Material> materials;
 

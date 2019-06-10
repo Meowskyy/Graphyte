@@ -13,9 +13,9 @@
 
 #include "ExtraRenderer.h"
 
-#include "imgui.h"
-
 #include "Camera.h"
+
+#include "Physics\Collider.h"
 
 using namespace Graphyte;
 
@@ -53,7 +53,7 @@ void MeshRenderer::RecalculateBoundingBox()
 	//std::cout << "Min: " << min.x << std::endl;
 	//std::cout << "Max: " << max.x << std::endl;
 
-	transform->boundingBox = BoundingBox(min, max);
+	transform->boundingBox.SetSize(min, max);
 	//transform->position = center;
 }
 
@@ -62,6 +62,7 @@ void MeshRenderer::DrawUI()
 	ImGui::Checkbox("Draw mesh", &drawMesh);
 	ImGui::Checkbox("Draw bounding box", &drawBoundingBox);
 	ImGui::Checkbox("Is visible", &isVisible);
+	ImGui::Checkbox("Draw collider", &drawCollider);
 
 	for (int i = 0; i < materials.size(); i++) 
 	{
@@ -107,7 +108,9 @@ void MeshRenderer::Render(Camera& camera)
 {
 	// TODO: Update only if camera moves/rotates or this moves/rotates/scales
 	// If mesh is visible in mainCamera
-	this->isVisible = camera.frustrum.TestIntersection(*transform);
+	// Works with Camera::mainCamera but not with camera? why
+	transform->boundingBox.Recalculate();
+	this->isVisible = camera.IsTransformInView(*transform);
 
 	/*
 	if (
@@ -125,10 +128,7 @@ void MeshRenderer::Render(Camera& camera)
 		// TODO: Bugged
 		//materials[0].Use();
 
-		Matrix4 RotationMatrix = glm::mat4_cast(transform->rotation);
-		Matrix4 TranslationMatrix = glm::translate(Matrix4(), transform->position);
-		Matrix4 ScaleMatrix = glm::scale(Matrix4(), transform->scale);
-		Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
+		Matrix4 ModelMatrix = transform->GetTransformMatrix();
 
 		for (int i = 0; i < materials.size(); i++) {
 			materials[i].shader.SetMatrix4("model", ModelMatrix);
@@ -155,45 +155,58 @@ void MeshRenderer::Render(Camera& camera)
 
 		// Unbinding VAO
 		glBindVertexArray(0);
-
-		// TODO: Remove from release
-		RenderExtras();
 	}
+
+	// TODO: Remove from release
+	RenderExtras();
 }
 
 void MeshRenderer::RenderExtras() 
 {
-	if (drawBoundingBox) {
-		ExtraRenderer::DrawAABB(transform->boundingBox, transform->position);
+	if (drawBoundingBox) 
+	{
+		ExtraRenderer::DrawAABB(transform->boundingBox);
 	}
+
+	if (drawCollider)
+	{
+		col->DrawCollider();
+	}
+}
+
+void MeshRenderer::DrawMesh()
+{
+	Matrix4 ModelMatrix = transform->GetTransformMatrix();
+
+	ResourceManager::GetShader("Standard").SetMatrix4("model", ModelMatrix, true);
+
+	mesh.Bind();
+	// draw mesh
+	if (mesh.indices.size() > 0) {
+		glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+	}
+	else {
+		glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
+	}
+
+	// Unbinding VAO
+	glBindVertexArray(0);
 }
 
 void MeshRenderer::DrawLines()
 {
-	// create transformations
-	glm::mat4 model = glm::mat4();
-	model = glm::scale(model, transform->scale);					// SCALE
-	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
+	Matrix4 ModelMatrix = transform->GetTransformMatrix();
 
-	model = model * rot;
-
-	ResourceManager::GetShader("Unlit").SetMatrix4("model", model);
+	ResourceManager::GetShader("Unlit").SetMatrix4("model", ModelMatrix, true);
 
 	mesh.RenderLines();
 }
 
 void MeshRenderer::DrawLine(const Vector3 color)
 {
-	// create transformations
-	glm::mat4 model = glm::mat4();
-	model = glm::scale(model, transform->scale);					// SCALE
-	model = glm::translate(model, transform->GetWorldPosition());	// POSITION
-	glm::mat4 rot = glm::mat4_cast(transform->rotation);			// ROTATION
+	Matrix4 ModelMatrix = transform->GetTransformMatrix();
 
-	model = model * rot;
-
-	ResourceManager::GetShader("Unlit").SetMatrix4("model", model);
+	ResourceManager::GetShader("Unlit").SetMatrix4("model", ModelMatrix);
 
 	mesh.RenderLine(color);
 }

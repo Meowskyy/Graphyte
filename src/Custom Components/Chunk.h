@@ -5,7 +5,7 @@
 #include "Time\Timers.h"
 #include "Graphyte\Graphyte.h"
 #include "Rendering\MeshRenderer.h"
-#include "Custom Behaviours\WorldGenerator.h"
+#include "Custom Components\WorldGenerator.h"
 
 #include <math.h>
 

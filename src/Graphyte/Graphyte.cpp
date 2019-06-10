@@ -15,15 +15,15 @@
 #include "IO\ModelLoader.h"
 
 // EDITOR COMPONENTS
-#include "Custom Behaviours\EditorCamera.h"
+#include "Custom Components\EditorCamera.h"
 
 // SFML AUDIO
 #include "Audio\AudioListener.h"
 #include "Audio\AudioEmitter.h"
 
 // CUSTOM
-#include "Custom Behaviours\MoveAround.h"
-#include "Custom Behaviours\CameraOrbit.h"
+#include "Custom Components\MoveAround.h"
+#include "Custom Components\CameraOrbit.h"
 
 // PHYSICS
 #include "Physics\Rigidbody.h"
@@ -163,14 +163,6 @@ void GraphyteEditor::mainLoop()
 
 	while (!glfwWindowShouldClose(mainWindow)) 
 	{
-		UpdateProjectionMatrix();
-
-#ifdef _DEBUG
-		UpdateViewMatrix(*editorCamera);
-#else
-		UpdateViewMatrix(*Camera::mainCamera);
-#endif
-
 		mouseOnGui = ImGui::IsMouseHoveringAnyWindow();
 		//std::cout << "START OF FRAME" << std::endl;
 		Input::UpdateKeyStates();
@@ -193,7 +185,6 @@ void GraphyteEditor::mainLoop()
 		glViewport(0, 0, display_w, display_h);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 		float newTime = glfwGetTime();
 		float frameTime = newTime - currentTime;
@@ -231,10 +222,14 @@ void GraphyteEditor::mainLoop()
 		currentScene.Update();
 		currentScene.LateUpdate();
 
+		UpdateProjectionMatrix();
+
 #ifndef EDITOR
+		UpdateViewMatrix(*editorCamera);
 		editorCameraObject->LateUpdate();
 		currentScene.Render(*editorCamera);
 #else
+		UpdateViewMatrix(*Camera::mainCamera);
 		currentScene.Render(*Camera::mainCamera);
 #endif
 
@@ -435,10 +430,12 @@ void GraphyteEditor::DrawEditorUI()
 
 			ImGui::Text("Parent: ", (float*)&selectedGameObject->transform.parent->name);
 
-			ImGui::DragFloat3("Bounding Box Min", (float*)&selectedGameObject->transform.boundingBox.min);
-			ImGui::DragFloat3("Bounding Box Max", (float*)&selectedGameObject->transform.boundingBox.max);
+			ImGui::DragFloat3("AABB Min", (float*)&selectedGameObject->transform.boundingBox.min);
+			ImGui::DragFloat3("AABB Max", (float*)&selectedGameObject->transform.boundingBox.max);
+			ImGui::DragFloat3("AABB Size", (float*)&selectedGameObject->transform.boundingBox.size);
 
-			ImGui::DragFloat3("Bounding Box Size", (float*)&selectedGameObject->transform.boundingBox.size);
+			ImGui::DragFloat3("Bounds Min", (float*)&selectedGameObject->transform.boundingBox.bounds.min);
+			ImGui::DragFloat3("Bounds Max", (float*)&selectedGameObject->transform.boundingBox.bounds.max);
 
 			static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 			int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.

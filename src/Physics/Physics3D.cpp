@@ -20,15 +20,15 @@ Vector3 Physics::RaycastMousePosition(const float distance) {
 	// clip space
 	Vector4 ray_clip = Vector4(ray_nds.x, ray_nds.y, -1.0, 1.0);
 	// eye space
-	glm::mat4 projection = Camera::mainCamera->GetProjectionMatrix();
+	Matrix4 projection = Camera::mainCamera->GetProjectionMatrix();
 	Vector4 ray_eye = glm::inverse(projection) * ray_clip;
 	ray_eye = Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0);
 	// world space
-	glm::mat4 view = Camera::mainCamera->GetViewMatrix();
+	Matrix4 view = Camera::mainCamera->GetViewMatrix();
 	Vector3 ray_wor = Vector3(glm::inverse(view) * ray_eye);
 	// don't forget to normalise the vector at some point
 	ray_wor = glm::normalize(ray_wor);
-	return ray_wor * distance + Camera::mainCamera->transform->position + Camera::mainCamera->transform->getForwardVector();
+	return ray_wor * distance + Camera::mainCamera->transform->position + Camera::mainCamera->transform->GetForwardVector();
 }
 
 Vector3 Physics::RaycastMouseDirection() {

@@ -4,6 +4,8 @@
 
 #include "imgui.h"
 
+#include "Physics\Collider.h"
+
 using namespace Graphyte;
 
 Vector3 Rigidbody::ComputeForces() const {
@@ -43,6 +45,7 @@ void Rigidbody::DrawUI()
 	for (int i = 0; i < gameObject->collisionList.size(); i++) {
 		ImGui::Text("Colliding Object: ");
 		ImGui::SameLine();
-		ImGui::Text(gameObject->collisionList[i]->transform.name.c_str());
+		//ImGui::Text(gameObject->collisionList[i]-transform.name.c_str());
+		ImGui::Text(gameObject->collisionList[i]->transform->name.c_str());
 	}
 }

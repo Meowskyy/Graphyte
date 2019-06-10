@@ -7,6 +7,8 @@ bool ShadowMap::Init(unsigned int width, unsigned int height)
 	this->width = width;
 	this->height = height;
 
+	std::cout << "Shadow map Initialized with size: " << width << ", " << height << "\n";
+
 	// Texture
 	glGenTextures(1, &m_fboTexture);
 	glBindTexture(GL_TEXTURE_2D, m_fboTexture);

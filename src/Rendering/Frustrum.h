@@ -24,10 +24,10 @@ namespace Graphyte {
 		// model * view * projection = model space
 		// view * projection = world space
 		// projection = eye-space
-		Frustum(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
+		Frustum(const Matrix4& viewMatrix, const Matrix4& projectionMatrix);
 
 		// TODO: Not in use currently
-		Frustum(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::mat4& modelMatrix);
+		Frustum(Matrix4& viewMatrix, const Matrix4& projectionMatrix, const Matrix4& modelMatrix);
 
 		bool TestIntersection(const Transform& transform);
 
