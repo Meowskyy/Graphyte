@@ -16,7 +16,7 @@ void Collider::OnComponentAdded()
 
 	gameObject->GetComponent<MeshRenderer>().col = this;
 
-	CreateConvex();
+	//CreateConvex();
 
 	UniformGrid::AddCollider(this);
 }
@@ -28,8 +28,6 @@ Vector3 Collider::ClosestPoint(const Vector3 & position)
 
 bool Collider::CheckForTriangleIntersection(const Triangle& triangleA, const Triangle& triangleB)
 {
-
-
 	return false;
 }
 

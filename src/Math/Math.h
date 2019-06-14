@@ -33,8 +33,15 @@ namespace Graphyte {
 		float m[4][4];
 	};
 
-	template <typename t>
 	class Math {
+	public:
+
+		template <typename t>
+		static t lerp(t x, t y, t time) {
+			return x * (1.f - time) + y * time;
+		}
+
+		template <typename t>
 		static t Clamp(t value, t min, t max)
 		{
 			if (value < min) value = min;
@@ -42,6 +49,7 @@ namespace Graphyte {
 			return value;
 		}
 
+		template <typename t>
 		static t Clamp01(t value)
 		{
 			return Clamp(value, 0, 1);

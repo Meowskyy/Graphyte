@@ -8,6 +8,12 @@
 namespace Graphyte {
 	class GraphyteEditor {
 	private:
+		static void UpdateProjectionMatrix();
+
+		static void window_size_callback(GLFWwindow* window, int width, int height);
+		static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+		static void glfw_error_callback(int error, const char* description);
+
 		void initWindow();
 		void setupCallbacks();
 		void loadShaders();

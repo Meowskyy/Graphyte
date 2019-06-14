@@ -17,6 +17,7 @@ namespace Graphyte {
 		std::string name;
 		Shader shader;
 		std::vector<Texture2D> textures;
+		bool transparent = false;
 
 		// Constructor
 		Material();

@@ -7,6 +7,8 @@
 #include "Rendering\MeshRenderer.h"
 #include "Custom Components\WorldGenerator.h"
 
+#include "Physics\Collider.h"
+
 #include <math.h>
 
 namespace Graphyte {
@@ -36,6 +38,8 @@ namespace Graphyte {
 
 			meshRenderer->SetMaterial(ResourceManager::GetMaterial("TerrainMaterial"));
 			//meshRenderer->SetMaterial(ResourceManager::GetMaterial("Standard"));
+
+			gameObject->AddComponent<Collider>();
 		}
 
 		void InitializeChunk()

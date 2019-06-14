@@ -188,9 +188,6 @@ void MeshRenderer::DrawMesh()
 	else {
 		glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
 	}
-
-	// Unbinding VAO
-	glBindVertexArray(0);
 }
 
 void MeshRenderer::DrawLines()

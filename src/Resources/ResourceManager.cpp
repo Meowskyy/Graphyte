@@ -94,6 +94,7 @@ Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLch
 		// Open files
 		std::ifstream vertexShaderFile(vShaderFile);
 		std::ifstream fragmentShaderFile(fShaderFile);
+
 		std::stringstream vShaderStream, fShaderStream;
 		// Read file's buffer contents into streams
 		vShaderStream << vertexShaderFile.rdbuf();

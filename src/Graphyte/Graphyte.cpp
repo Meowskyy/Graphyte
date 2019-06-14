@@ -48,17 +48,6 @@ GameObject* GraphyteEditor::selectedGameObject;
 
 bool mouseOnGui = false;
 
-static void glfw_error_callback(int error, const char* description)
-{
-	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-}
-
-void window_size_callback(GLFWwindow* window, int width, int height);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
-void UpdateProjectionMatrix();
-void UpdateViewMatrix(Camera& camera);
-
 // timing
 float lastFrame = 0.0f;
 static float frameTimes[500];
@@ -146,8 +135,6 @@ void GraphyteEditor::mainLoop()
 	// Once the scene is loaded
 	currentScene.OnSceneLoad();
 
-	//UpdateProjection();
-
 	float previousState = 0;
 	float currentState = 0;
 
@@ -160,6 +147,7 @@ void GraphyteEditor::mainLoop()
 	editorCamera = &editorCameraObject->AddComponent<Camera>();
 	editorCameraObject->AddComponent<EditorCamera>();
 	editorCamera->transform->position = Vector3(0, 0, -20);
+	Camera::mainCamera = editorCamera;
 
 	while (!glfwWindowShouldClose(mainWindow)) 
 	{
@@ -224,12 +212,13 @@ void GraphyteEditor::mainLoop()
 
 		UpdateProjectionMatrix();
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 #ifndef EDITOR
-		UpdateViewMatrix(*editorCamera);
 		editorCameraObject->LateUpdate();
 		currentScene.Render(*editorCamera);
 #else
-		UpdateViewMatrix(*Camera::mainCamera);
 		currentScene.Render(*Camera::mainCamera);
 #endif
 
@@ -255,10 +244,10 @@ void GraphyteEditor::mainLoop()
 					// - but also the AABB (defined with aabb_min and aabb_max) into an OBB
 					Matrix4 RotationMatrix = glm::mat4_cast(currentScene.gameObjects[i]->children[j]->transform.rotation);
 					Matrix4 TranslationMatrix = glm::translate(Matrix4(), currentScene.gameObjects[i]->children[j]->transform.position);
-					Matrix4 ScaleMatrix = glm::scale(Matrix4(), currentScene.gameObjects[i]->children[j]->transform.scale);
-					Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
+					//Matrix4 ScaleMatrix = glm::scale(Matrix4(), currentScene.gameObjects[i]->children[j]->transform.scale);
+					Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix;
 
-					if (Physics::TestRayOBBIntersection(editorCamera->transform->position, Physics::RaycastMouseDirection(), aabb_min, aabb_max, ModelMatrix, intersection_distance))
+					if (Physics::TestRayOBBIntersection(editorCamera->transform->position, Physics::RaycastMouseDirection(*editorCamera), aabb_min, aabb_max, ModelMatrix, intersection_distance))
 					{
 						if (closestObject == nullptr || intersection_distance < distToClosest)
 						{
@@ -282,7 +271,7 @@ void GraphyteEditor::mainLoop()
 				//Matrix4 ScaleMatrix = glm::scale(Matrix4(), currentScene.gameObjects[i]->transform.scale);
 				Matrix4 ModelMatrix = TranslationMatrix * RotationMatrix;
 
-				if (Physics::TestRayOBBIntersection(editorCamera->transform->position, Physics::RaycastMouseDirection(), aabb_min, aabb_max, ModelMatrix, intersection_distance))
+				if (Physics::TestRayOBBIntersection(editorCamera->transform->position, Physics::RaycastMouseDirection(*editorCamera), aabb_min, aabb_max, ModelMatrix, intersection_distance))
 				{
 					if (i > 2) {
 						if (closestObject == nullptr || intersection_distance < distToClosest)
@@ -299,7 +288,7 @@ void GraphyteEditor::mainLoop()
 				if (closestObject)
 					selectedGameObject = closestObject;
 
-				//ExtraRenderer::DrawLine(currentScene.gameObjects[i]->transform.position, Physics::RaycastMouseDirection());
+				ExtraRenderer::DrawLine(currentScene.gameObjects[i]->transform.position, Physics::RaycastMouseDirection(*editorCamera));
 			}
 		}
 
@@ -499,6 +488,9 @@ void GraphyteEditor::DrawEditorUI()
 		if (ImGui::Button("Create Cube"))
 			currentScene.AddCube();
 
+		if (ImGui::Button("Add Particle System"))
+			currentScene.AddParticleSystemObject();
+
 		static int selection_mask = (1 << 2); // Dumb representation of what may be user-side selection state. You may carry selection state inside or outside your objects in whatever format you see fit.
 		int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 		
@@ -590,8 +582,12 @@ void GraphyteEditor::loadShaders()
 
 	// ACTUAL SHADERS
 	//ResourceManager::LoadShader("Assets/shaders/PBR.vert", "Assets/shaders/PBR.frag", nullptr, "Standard");
-	ResourceManager::LoadShader("Assets/shaders/StandardV2.vert", "Assets/shaders/StandardV2.frag", nullptr, "Standard");
+	ResourceManager::LoadShader("Assets/shaders/Standard/StandardV2.vert", "Assets/shaders/Standard/StandardV2.frag", nullptr, "Standard");
 	ResourceManager::LoadShader("Assets/shaders/Unlit.vert", "Assets/shaders/Unlit.frag", nullptr, "Unlit");
+	//ResourceManager::LoadShader("Assets/shaders/Particles/Particles.vert", "Assets/shaders/Particles/Particles.frag", "Assets/shaders/Particles/Particles.geom", "Particles");
+	ResourceManager::LoadShader("Assets/shaders/Particles/Particles.vert", "Assets/shaders/Particles/Particles.frag", nullptr, "Particles");
+
+
 
 	//ResourceManager::LoadShader("Assets/shaders/Lighting.vert", "Assets/shaders/Lighting.frag", nullptr, "Lighting");
 
@@ -609,6 +605,8 @@ void GraphyteEditor::loadTextures()
 
 	ResourceManager::LoadTexture("Assets/textures/GrassTexture.psd", false, false, "GrassTexture");
 	ResourceManager::GetTexture("GrassTexture").SetFiltering(false);
+
+	ResourceManager::LoadTexture("Assets/textures/particle.psd", false, true, "Particle");
 }
 
 // TODO: Moving these somewhere more appropriate
@@ -623,6 +621,10 @@ void GraphyteEditor::loadMaterials()
 
 	ResourceManager::LoadMaterial("LightingMat");
 	ResourceManager::GetMaterial("LightingMat").shader = ResourceManager::GetShader("Lighting");
+
+	ResourceManager::LoadMaterial("Particles");
+	ResourceManager::GetMaterial("Particles").shader = ResourceManager::GetShader("Particles");
+	ResourceManager::GetMaterial("Particles").textures.push_back(ResourceManager::GetTexture("Particle"));
 }
 
 // TODO: Moving these somewhere more appropriate
@@ -648,7 +650,12 @@ void GraphyteEditor::setupCallbacks()
 	glfwSetFramebufferSizeCallback(mainWindow, framebuffer_size_callback);
 }
 
-void window_size_callback(GLFWwindow* window, int width, int height)
+void GraphyteEditor::glfw_error_callback(int error, const char* description)
+{
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+void GraphyteEditor::window_size_callback(GLFWwindow* window, int width, int height)
 {
 	std::cout << "New size: " << width << "x" << height << "\n";
 
@@ -657,17 +664,12 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 	UpdateProjectionMatrix();
 }
 
-void UpdateProjectionMatrix() 
+void GraphyteEditor::UpdateProjectionMatrix()
 {
 	ResourceManager::UpdateProjection(Camera::mainCamera->GetProjectionMatrix());
 }
 
-void UpdateViewMatrix(Camera& camera)
-{
-	ResourceManager::UpdateView(camera.GetViewMatrix());
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void GraphyteEditor::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	std::cout << "New framebuffer size: " << width << "x" << height << "\n";
 

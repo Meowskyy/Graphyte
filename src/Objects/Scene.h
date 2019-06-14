@@ -53,6 +53,9 @@ namespace Graphyte {
 		void AddCube();
 		void AddSphere();
 
+		// PARTICLES
+		void AddParticleSystemObject();
+
 		void AddLight();
 		void AddCameraObject();
 

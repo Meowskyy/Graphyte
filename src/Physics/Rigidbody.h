@@ -17,6 +17,7 @@ namespace Graphyte {
 
 	public:
 		float mass = 1000;
+		float bounciness = 0.0f;
 		Vector3 momentum;
 		Vector3 velocity;
 		Vector3 force;

@@ -20,6 +20,8 @@
 #include "Physics/Rigidbody.h"
 #include "Physics/Collider.h"
 
+#include "Rendering\ParticleSystem.h"
+
 using namespace Graphyte;
 
 // Camera
@@ -68,6 +70,7 @@ void Scene::OnSceneLoad()
 	uniformGrid.RebuildGrid();
 
 	AddPlane();
+	//AddParticleSystemObject();
 }
 
 // Update on Components
@@ -145,8 +148,8 @@ void Scene::RenderDepth(Camera& camera)
 
 	// 1. render depth of scene to texture (from light's perspective)
 	// --------------------------------------------------------------
-	glm::mat4 lightProjection, lightView;
-	glm::mat4 lightSpaceMatrix;
+	Matrix4 lightProjection, lightView;
+	Matrix4 lightSpaceMatrix;
 	lightProjection = glm::ortho(-light->size, light->size, -light->size, light->size, light->nearClipPlane, light->farClipPlane);
 
 	Vector3 position = Vector3(light->transform->position.x, light->transform->position.y, light->transform->position.z);
@@ -322,6 +325,18 @@ void Scene::Add1000GameObjects()
 	for (int i = 0; i < 1000; i++) {
 		AddGameObject();
 	}
+}
+
+void Graphyte::Scene::AddParticleSystemObject()
+{
+	GameObject* object = Instantiate(new GameObject());
+	object->transform.name = "Particle System";
+
+	// MESH RENDERER
+	ParticleSystem* particleSystem = &object->AddComponent<ParticleSystem>();
+	particleSystem->SetMaterial(ResourceManager::GetMaterial("Particles"));
+
+	particleSystem->Init();
 }
 
 void Graphyte::Scene::AddLight()

@@ -85,6 +85,8 @@ void Mesh::RenderLines()
 
 	glEnable(GL_LINE_SMOOTH);
 
+	GLfloat lineWidthRange[2] = { 0.0f, 0.0f };
+
 	glBindVertexArray(VAO);
 
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);

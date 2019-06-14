@@ -42,6 +42,9 @@ void ExtraRenderer::DrawAABB(const AxisAlignedBoundingBox& box)
 	meshRenderer.OnComponentAdded();
 
 	ResourceManager::GetShader("Unlit").SetVector3f("Color", Vector3(1, 1, 1), true);
+
+	ResourceManager::GetShader("Unlit").SetMatrix4("view", Camera::mainCamera->GetViewMatrix());
+
 	meshRenderer.DrawLines();
 }
 
@@ -72,6 +75,8 @@ void ExtraRenderer::DrawBounds(const Bounds& box) {
 	meshRenderer.OnComponentAdded();
 
 	ResourceManager::GetShader("Unlit").SetVector3f("Color", Vector3(1, 1, 1), true);
+	ResourceManager::GetShader("Unlit").SetMatrix4("view", Camera::mainCamera->GetViewMatrix());
+
 	meshRenderer.DrawLines();
 }
 

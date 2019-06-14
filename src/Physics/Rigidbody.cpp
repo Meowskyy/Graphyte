@@ -23,7 +23,7 @@ void Rigidbody::FixedUpdate()
 
 	if (gameObject->collisionList.size() > 0) 
 	{
-		velocity.y = 0;
+		velocity.y = velocity.y * -bounciness;
 	}
 
 	transform->position.x += velocity.x * Time::fixedDeltaTime;
@@ -41,6 +41,7 @@ void Rigidbody::DrawUI()
 	ImGui::DragFloat("Mass", &mass);
 
 	ImGui::DragFloat3("Velocity", (float*)&velocity);
+	ImGui::DragFloat("Bounciness", &bounciness, 0.05, 0, 1);
 
 	for (int i = 0; i < gameObject->collisionList.size(); i++) {
 		ImGui::Text("Colliding Object: ");

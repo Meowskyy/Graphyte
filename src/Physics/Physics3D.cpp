@@ -3,6 +3,7 @@
 #include "Input\Input.h"
 
 #include "Rendering\Screen.h"
+#include "Rendering\Camera.h"
 
 using namespace Graphyte;
 
@@ -29,6 +30,29 @@ Vector3 Physics::RaycastMousePosition(const float distance) {
 	// don't forget to normalise the vector at some point
 	ray_wor = glm::normalize(ray_wor);
 	return ray_wor * distance + Camera::mainCamera->transform->position + Camera::mainCamera->transform->GetForwardVector();
+}
+
+Vector3 Physics::RaycastMouseDirection(const Camera& camera) {
+	Vector2 mousePos = Input::GetMousePosition();
+
+	// screen space (viewport coordinates)
+	float x = (2.0f * mousePos.x) / Screen::width - 1.0f;
+	float y = 1.0f - (2.0f * -mousePos.y) / Screen::height;
+	float z = 1.0f;
+	// normalised device space
+	Vector3 ray_nds = Vector3(x, y, z);
+	// clip space
+	Vector4 ray_clip = Vector4(ray_nds.x, ray_nds.y, -1.0, 1.0);
+	// eye space
+	Matrix4 projection = camera.GetProjectionMatrix();
+	Vector4 ray_eye = glm::inverse(projection) * ray_clip;
+	ray_eye = Vector4(ray_eye.x, ray_eye.y, -1.0, 0.0);
+	// world space
+	Matrix4 view = camera.GetViewMatrix();
+	Vector3 ray_wor = Vector3(glm::inverse(view) * ray_eye);
+	// don't forget to normalise the vector at some point
+	ray_wor = glm::normalize(ray_wor);
+	return ray_wor;
 }
 
 Vector3 Physics::RaycastMouseDirection() {
