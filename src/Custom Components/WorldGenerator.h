@@ -3,10 +3,10 @@
 
 namespace Graphyte {
 	// The size of one chunk X, Y, Z
-	const int CHUNK_SIZE = 32;
-	const int WORLD_SIZE_X = 4;
-	const int WORLD_SIZE_Y = 4;
-	const int WORLD_SIZE_Z = 4;
+	const int CHUNK_SIZE = 16;
+	const int WORLD_SIZE_X = 1;
+	const int WORLD_SIZE_Y = 1;
+	const int WORLD_SIZE_Z = 1;
 
 	class WorldGenerator : public Component {
 	private:

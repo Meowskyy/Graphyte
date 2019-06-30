@@ -2,18 +2,17 @@
 
 #include "glad\glad.h"
 
-class Framebuffer {
-protected:
-	GLuint m_fbo;
-	GLuint m_fboTexture;
-private:
+namespace Graphyte {
+	class Framebuffer {
+	protected:
+		GLuint framebuffer;
+		GLuint rbo;
+	public:
+		int width, height;
+		GLuint framebufferTexture;
 
-public:
-	int width, height;
-
-	virtual bool Init(unsigned int width, unsigned int height);
-
-	virtual void BindForWriting();
-
-	virtual void BindForReading(GLenum TextureUnit);
-};
+		virtual bool Init(unsigned int width, unsigned int height);
+		virtual void BindForWriting();
+		virtual void BindForReading(GLenum TextureUnit);
+	};
+}

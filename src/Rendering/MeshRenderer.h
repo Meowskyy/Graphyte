@@ -31,6 +31,7 @@ namespace Graphyte {
 		float ao = 0.5f;
 
 		bool drawCollider = false;
+		bool drawNormals = false;
 		Collider* col;
 
 		// Constructor

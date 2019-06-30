@@ -31,6 +31,15 @@ namespace Graphyte {
 		static std::map<std::string, Texture2D> Textures;
 		static std::map<std::string, Material> Materials;
 
+		static Shader currentShader;
+
+		static void LoadDefaults();
+
+		static void LoadShaders();
+		static void LoadTextures();
+		static void LoadMaterials();
+		static void LoadModels();
+
 		static void UpdateProjection(Matrix4 projection);
 		static void UpdateView(Matrix4 view);
 

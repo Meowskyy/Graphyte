@@ -35,18 +35,17 @@ void MeshRenderer::RecalculateBoundingBox()
 	Vector3 max;
 
 	if (mesh.vertices.size() > 0) {
-		min.x = max.x = mesh.vertices[0].x;
-		min.y = max.y = mesh.vertices[0].y;
-		min.z = max.z = mesh.vertices[0].z;
+		min = max = mesh.vertices[0];
 	}
 
 	for (auto& vertex : mesh.vertices) 
 	{
 		if (vertex.x < min.x) { min.x = vertex.x; }
-		if (vertex.x > max.x) { max.x = vertex.x; }
 		if (vertex.y < min.y) { min.y = vertex.y; }
-		if (vertex.y > max.y) { max.y = vertex.y; }
 		if (vertex.z < min.z) { min.z = vertex.z; }
+
+		if (vertex.x > max.x) { max.x = vertex.x; }
+		if (vertex.y > max.y) { max.y = vertex.y; }
 		if (vertex.z > max.z) { max.z = vertex.z; }
 	}
 
@@ -63,6 +62,7 @@ void MeshRenderer::DrawUI()
 	ImGui::Checkbox("Draw bounding box", &drawBoundingBox);
 	ImGui::Checkbox("Is visible", &isVisible);
 	ImGui::Checkbox("Draw collider", &drawCollider);
+	ImGui::Checkbox("Draw Normals", &drawNormals);
 
 	for (int i = 0; i < materials.size(); i++) 
 	{
@@ -106,42 +106,24 @@ MeshRenderer::MeshRenderer(const aiMesh* mesh, const aiScene* scene, const std::
 
 void MeshRenderer::Render(Camera& camera)
 {
-	// TODO: Update only if camera moves/rotates or this moves/rotates/scales
-	// If mesh is visible in mainCamera
-	// Works with Camera::mainCamera but not with camera? why
-	transform->boundingBox.Recalculate();
-	this->isVisible = camera.IsTransformInView(*transform);
-
-	/*
-	if (
-		Camera::mainCamera->transform->positionHasChanged() || Camera::mainCamera->transform->rotationHasChanged() ||
-		this->transform->positionHasChanged() || this->transform->rotationHasChanged() || this->transform->scaleHasChanged()
-		) 
-	{
-		this->isVisible = Camera::mainCamera->frustrum.TestIntersection(*transform);
-	}
-	*/
-
 	//std::cout << "Rendering " << transform->name << " with shader: " << Shader::currentShader << std::endl;
-	if (isVisible && drawMesh && mesh.vertices.size() > 0)
+	if (drawMesh && mesh.vertices.size() > 0)
 	{
-		// TODO: Bugged
-		//materials[0].Use();
-
 		Matrix4 ModelMatrix = transform->GetTransformMatrix();
+		Matrix4 MVP = camera.GetProjectionMatrix() * camera.GetViewMatrix() * transform->GetTransformMatrix();
 
-		for (int i = 0; i < materials.size(); i++) {
-			materials[i].shader.SetMatrix4("model", ModelMatrix);
+		ResourceManager::currentShader.SetMatrix4("model", ModelMatrix);
+		ResourceManager::currentShader.SetMatrix4("mvp", MVP);
+
+		/*
+		for (int i = 0; i < materials.size(); ++i) {
+			//materials[i].shader.SetMatrix4("model", ModelMatrix);
+			materials[i].shader.SetMatrix4("mvp", MVP);
 			materials[i].shader.SetVector3f("objectColor", objectColor);
 			materials[i].shader.SetFloat("specularIntensity", specularIntensity);
 			materials[i].shader.SetFloat("specularPower", specularPower);
-
-			materials[i].shader.SetVector3f("albedo", objectColor);
-			materials[i].shader.SetFloat("roughness", roughness);
-			materials[i].shader.SetFloat("metallic", metallic);
-			materials[i].shader.SetFloat("ao", ao);
-			//materials[i].shader.SetBool("blinn", false);
 		}
+		*/
 
 		// Bind VAO
 		mesh.Bind();
@@ -158,7 +140,7 @@ void MeshRenderer::Render(Camera& camera)
 	}
 
 	// TODO: Remove from release
-	RenderExtras();
+	//RenderExtras();
 }
 
 void MeshRenderer::RenderExtras() 
@@ -172,13 +154,18 @@ void MeshRenderer::RenderExtras()
 	{
 		col->DrawCollider();
 	}
+
+	if (drawNormals)
+	{
+		ExtraRenderer::DrawNormals(*this);
+	}
 }
 
 void MeshRenderer::DrawMesh()
 {
 	Matrix4 ModelMatrix = transform->GetTransformMatrix();
 
-	ResourceManager::GetShader("Standard").SetMatrix4("model", ModelMatrix, true);
+	//ResourceManager::GetShader("Standard").SetMatrix4("model", ModelMatrix, true);
 
 	mesh.Bind();
 	// draw mesh

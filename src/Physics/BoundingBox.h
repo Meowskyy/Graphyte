@@ -38,13 +38,12 @@ namespace Graphyte {
 
 		std::vector<Vector3> corners = std::vector<Vector3>(8);
 	public:
+		Transform* transform;
+
 		Bounds bounds;
 
-		Vector3 min;		// Min of the AABB
-		Vector3 max;		// Max of the AABB
 		Vector3 center;		// Center of the AABB
-		Vector3 size;		// Size of the AABB
-		Transform* transform;
+		Vector3 halfSize;	// Halfsize of the AABB
 
 		AxisAlignedBoundingBox() = default;
 		AxisAlignedBoundingBox(Transform* trans) : transform(trans) {};
@@ -54,18 +53,15 @@ namespace Graphyte {
 
 		void Recalculate();
 
-		Bounds GetBounds();
+		Bounds GetBounds() const;
 
 		bool Contains(const AxisAlignedBoundingBox& otherBoundingBox) const;
 
-		// Is this touching the other Collider
-		bool Touching(const Transform& transform) const;
-		bool Touching(const Collider& transform) const;
-
-		Vector3 getPositiveVertex(const Vector3& normal) const;
-		Vector3 getNegativeVertex(const Vector3& normal) const;
+		Vector3 GetPositiveVertex(const Vector3& normal) const;
+		Vector3 GetNegativeVertex(const Vector3& normal) const;
 
 		// Tests for AABB overlap
 		static bool TestOverlap(const AxisAlignedBoundingBox& a, const AxisAlignedBoundingBox& b);
+		static bool TestOverlapExp(const AxisAlignedBoundingBox & a, const AxisAlignedBoundingBox & b);
 	};
 }

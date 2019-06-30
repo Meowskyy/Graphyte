@@ -62,12 +62,12 @@ namespace Graphyte {
 			}
 		}
 
-		float mouseSensitivity = 0.005f;
+		float mouseSensitivity = 0.25f;
 
 		void rotation()
 		{
 			x -= Input::GetAxis("Mouse X") * mouseSensitivity;
-			y += Input::GetAxis("Mouse Y") * mouseSensitivity;
+			y -= Input::GetAxis("Mouse Y") * mouseSensitivity;
 
 			bool constrainPitch = true;
 
@@ -77,14 +77,12 @@ namespace Graphyte {
 			if (y < -89.0f)
 				y = -89.0f;
 
-			transform->rotation = Quaternion(Vector3(y, x, 0));
+			transform->rotation = Quaternion(Vector3(y * (PI / 180), x * (PI / 180), 0));
 		}
 
-		/*
 		void DrawUI() {
 			ImGui::DragFloat("Rotation X", &x);
 			ImGui::DragFloat("Rotation Y", &y);
 		}
-		*/
 	};
 }

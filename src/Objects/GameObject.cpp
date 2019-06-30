@@ -76,55 +76,25 @@ void GameObject::OnSceneLoad() const
 
 void GameObject::OnCollisionEnter(Collider& collider) 
 {
-	bool hasCollision = false;
-
-	// If the gameObject is not in the list
-	if (std::find(collisionList.begin(), collisionList.end(), &collider) == collisionList.end())
+	//std::cout << transform.name << " collision enter: " << collider.transform->name << "\n";
+	for (auto& component : components)
 	{
-		//std::cout << transform.name << " collision enter: " << gameObject.transform.name << "\n";
-		hasCollision = true;
-	}
-
-	if (hasCollision) 
-	{
-		collisionList.push_back(&collider);
-
-		for (auto& component : components)
-		{
-			component->OnCollisionEnter(collider);
-		}
+		component->OnCollisionEnter(collider);
 	}
 }
 
-// Check if still colliding with other objects
-void GameObject::CheckCollisions()
+void GameObject::OnCollisionStay(Collider& collider)
 {
-	for (int i = 0; i < collisionList.size(); i++) {
-
-		// Check if still touching
-		if (AxisAlignedBoundingBox::TestOverlap(transform.boundingBox, collisionList[i]->transform->boundingBox)) {
-			//std::cout << transform.name << " is still touching: " << collisionList[i]->transform.name << "\n";
-
-			for (auto& component : components)
-			{
-				component->OnCollisionStay(*collisionList[i]);
-			}
-		}
-		else 
-		{
-			OnCollisionExit(*collisionList[i]);
-
-			// Clear out the NULL pointers.
-			collisionList.erase(collisionList.begin() + i);
-			i--;
-		}
+	//std::cout << transform.name << " collision stay: " << collider.transform->name << "\n";
+	for (auto& component : components)
+	{
+		component->OnCollisionStay(collider);
 	}
 }
 
 void GameObject::OnCollisionExit(Collider& collider)
 {
-	std::cout << transform.name << " collision exit: " << collider.transform->name << "\n";
-
+	//std::cout << transform.name << " collision exit: " << collider.transform->name << "\n";
 	for (auto& component : components)
 	{
 		component->OnCollisionExit(collider);
@@ -141,7 +111,7 @@ void GameObject::DrawComponents()
 	int node_clicked = -1;                // Temporary storage of what node we have clicked to process selection at the end of the loop. May be a pointer to your own node type, etc.
 	ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.
 
-	for (int i = 0; i < components.size(); i++)
+	for (int i = 0; i < components.size(); ++i)
 	{
 		// Disable the default open on single-click behavior and pass in Selected flag according to our selection state.
 		ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ((selection_mask & (1 << i)) ? ImGuiTreeNodeFlags_Selected : 0);

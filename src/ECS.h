@@ -5,6 +5,7 @@
 #include <bitset>
 #include <array>
 #include <chrono>
+#include <map>
 
 #include "Physics\Physics3D.h"
 #include "Physics\BoundingBox.h"
@@ -107,7 +108,6 @@ namespace Graphyte {
 		bool enabled = true;
 
 		GameObject* gameObject;
-
 		Transform* transform;
 
 		Component() : transform(new Transform()) {}
@@ -187,7 +187,7 @@ namespace Graphyte {
 		void OnSceneLoad() const;
 
 		void OnCollisionEnter(Collider& collider);
-		void CheckCollisions();
+		void OnCollisionStay(Collider& collider);
 		void OnCollisionExit(Collider& collider);
 		// SCRIPT PART END
 
@@ -201,6 +201,7 @@ namespace Graphyte {
 		T& AddComponent(TArgs &&... mArgs)
 		{
 			T* component(new T(std::forward<TArgs>(mArgs)...));
+			//T* component(new T(transform));
 			component->transform = &transform;
 			component->gameObject = this;
 

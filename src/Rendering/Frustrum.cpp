@@ -71,12 +71,12 @@ bool Frustum::TestIntersection(const Transform& transform)
 		const float pos = planes[i].w;
 		const Vector3 normal = Vector3(planes[i]);
 
-		if (glm::dot(normal, transform.boundingBox.getPositiveVertex(normal) + transform.position) + pos < 0.0f)
+		if (glm::dot(normal, transform.boundingBox.GetPositiveVertex(normal) + transform.position) + pos < 0.0f)
 		{
 			return false;
 		}
 
-		if (glm::dot(normal, transform.boundingBox.getNegativeVertex(normal) + transform.position) + pos < 0.0f)
+		if (glm::dot(normal, transform.boundingBox.GetNegativeVertex(normal) + transform.position) + pos < 0.0f)
 		{
 			result = true;
 		}

@@ -6,13 +6,13 @@
 
 #include "Camera.h"
 
+#include "ShadowMap.h"
+
 using namespace Graphyte;
 
 std::map<std::string, std::vector<Renderer*>> Renderer::renderers;
 
-Renderer::Renderer()
-{
-}
+Renderer::Renderer(){}
 
 // TODO: Sorting transparent materials to the end of the map
 void Renderer::SetMaterial(Material material)
@@ -36,6 +36,7 @@ void Renderer::SetMaterial(Material material)
 
 void Renderer::RenderAllGrouped(Camera& camera)
 {
+	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -44,6 +45,8 @@ void Renderer::RenderAllGrouped(Camera& camera)
 	{
 		ResourceManager::GetMaterial(materialName).Use();
 		ResourceManager::GetMaterial(materialName).shader.SetMatrix4("view", camera.GetViewMatrix());
+
+		ResourceManager::currentShader = ResourceManager::GetMaterial(materialName).shader;
 
 		// FOREACH 
 		for (int i = 0; i < renderer.size(); i++) {
@@ -58,8 +61,18 @@ void Renderer::RenderAllDepth(Camera& camera)
 	for (auto const&[key, val] : renderers)
 	{
 		for (int i = 0; i < val.size(); i++) {
-			if (val[i]->enabled)
-				val[i]->Render(camera);
+			if (val[i]->enabled) 
+			{
+				Transform& transf = *val[i]->transform;
+				transf.boundingBox.Recalculate();
+				bool isVisible = camera.IsTransformInView(transf);
+				isVisible = true;
+
+				if (isVisible) 
+				{
+					val[i]->Render(camera);
+				}
+			}
 		}
 	}
 }

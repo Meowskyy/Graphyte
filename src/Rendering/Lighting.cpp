@@ -21,10 +21,8 @@ void Lighting::SetDirectionalLight(const Light& Light)
 	shader.SetFloat("directionalLight.Base.DiffuseIntensity", Light.diffuseIntensity);
 	shader.SetVector3f("directionalLight.Base.Color", Light.color);
 	shader.SetVector3f("directionalLight.Base.Position", Light.transform->position);
-	shader.SetVector3f("objectColor", Vector3(1, 1, 1));
-
-	shader.SetVector3f("lightPositions[0]", Light.transform->position);
-	shader.SetVector3f("lightColors[0]", Light.color);
+	shader.SetFloat("directionalLight.Base.Bias", Light.bias);
+	shader.SetFloat("directionalLight.Base.NormalBias", Light.normalBias);
 }
 
 void Lighting::SetPointLights(unsigned int NumLights, const PointLight* pLights)

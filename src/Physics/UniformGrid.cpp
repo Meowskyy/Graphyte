@@ -8,11 +8,11 @@
 
 using namespace Graphyte;
 
-std::vector<std::string> UniformGrid::collidingGameObjects;
-
 std::map<GameObject*, std::vector<Collider*>> UniformGrid::PendingColliders; // Colliders that will be added later *TBD*
+std::map<int, std::vector<int>> UniformGrid::currentlyCollidingObjects;
 
-std::queue<Collider*> UniformGrid::pendingColliders;			// Colliders that will be added later
+//std::queue<Collider*> UniformGrid::pendingColliders;			// Colliders that will be added later
+std::queue<int> UniformGrid::pendingColliders;			// Colliders that will be added later
 std::vector<Collider*> UniformGrid::allColliders;				// All the colliders that are in the scene
 
 bool UniformGrid::gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
@@ -23,7 +23,7 @@ UniformGrid::UniformGrid(const Bounds & boundaries)
 	this->boundaries = boundaries;
 }
 
-UniformGrid Graphyte::UniformGrid::CreateNode(const Bounds & boundary)
+UniformGrid Graphyte::UniformGrid::CreateNode(const Bounds& boundary)
 {
 	UniformGrid ret = UniformGrid(boundary);
 	ret.parent = this;
@@ -62,15 +62,76 @@ bool Graphyte::UniformGrid::isRoot() const
 void UniformGrid::AddCollider(Collider* col)
 {
 
-	std::cout << "Inserting " << col->gameObject->transform.name << "\n";
+	std::cout << "Inserting " << col->gameObject->transform.name << " collider size: " << sizeof(Collider) << " bytes\n";
 
 	allColliders.push_back(col);
 
-	pendingColliders.push(col);
+	//pendingColliders.push(col);
+	pendingColliders.push(allColliders.size() - 1);
 
 	PendingColliders[col->gameObject].push_back(col);
+}
 
-	//return root->InsertCollider(*col);
+bool UniformGrid::InsertCollider(int colliderPosition)
+{
+	// If the object doesnt fit try inserting it in the parent grid
+	if (!boundaries.Contains(*allColliders[colliderPosition]->transform))
+	{
+		if (isRoot())
+		{
+			RebuildGrid();
+			return false;	// Didnt fit anywhere so return false
+		}
+		else
+		{
+			std::cout << "Trying to insert into parent\n";
+			return this->parent->InsertCollider(colliderPosition);
+		}
+	}
+
+	// If the bounds are minimum size insert object here
+	Vector3 dimensions = boundaries.max - boundaries.min;
+	if (dimensions.x <= minSize && dimensions.y <= minSize && dimensions.z <= minSize)
+	{
+		colliders.push_back(colliderPosition);
+		return true;
+	}
+
+	Vector3 half = (boundaries.max - boundaries.min) / 2.0f;
+	Vector3 center = boundaries.min + half;
+
+	Bounds childGrids[8];
+
+	// Bottom 4
+	childGrids[0] = Bounds(boundaries.min, center);		// BOTTOM LEFT																		// WORKS / TESTED
+	childGrids[1] = Bounds(Vector3(center.x, boundaries.min.y, boundaries.min.z), Vector3(boundaries.max.x, center.y, center.z));	// WORKS / TESTED
+	childGrids[2] = Bounds(Vector3(boundaries.min.x, boundaries.min.y, center.z), Vector3(center.x, center.y, boundaries.max.z));	// WORKS / TESTED
+	childGrids[3] = Bounds(Vector3(center.x, boundaries.min.y, center.z), Vector3(boundaries.max.x, center.y, boundaries.max.z));	// WORKS / TESTED
+
+	// Top 4
+	childGrids[4] = Bounds(Vector3(boundaries.min.x, center.y, boundaries.min.z), Vector3(center.x, boundaries.max.y, center.z));	// WORKS / TESTED
+	childGrids[5] = Bounds(Vector3(center.x, center.y, boundaries.min.z), Vector3(boundaries.max.x, boundaries.max.y, center.z));	// WORKS / TESTED
+	childGrids[6] = Bounds(Vector3(boundaries.min.x, center.y, center.z), Vector3(center.x, boundaries.max.y, boundaries.max.z));	// WORKS / TESTED
+	childGrids[7] = Bounds(center, boundaries.max);																				// WORKS / TESTED
+
+	for (int childIndex = 0; childIndex < 8; ++childIndex)
+	{
+		if (childGrids[childIndex].Contains(*allColliders[colliderPosition]->transform))
+		{
+			//std::cout << "Inserted Into child: " << childIndex << " & Size: " << childGrids[childIndex].min.x << ", " << childGrids[childIndex].max.x << std::endl;
+			childGrid[childIndex] = CreateNode(childGrids[childIndex]);
+			childGrid[childIndex].parent = this;
+
+			activeChildren[childIndex] = true;
+			++activeChildCount;
+
+			return childGrid[childIndex].InsertCollider(colliderPosition);
+		}
+	}
+
+	//std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << "\n";
+	colliders.push_back(colliderPosition);
+	return false;
 }
 
 void UniformGrid::RebuildGrid()
@@ -98,7 +159,7 @@ void UniformGrid::RebuildGrid()
 
 	for (int i = 0; i < allColliders.size(); ++i)
 	{
-		InsertCollider(*allColliders[i]);
+		InsertCollider(i);
 	}
 
 	gridReady = true;
@@ -112,7 +173,7 @@ void UniformGrid::Update() {
 	if (gridReady)
 	{
 		while (!pendingColliders.empty()) {
-			InsertCollider(*pendingColliders.front());
+			InsertCollider(pendingColliders.front());
 			pendingColliders.pop();
 		}
 
@@ -129,6 +190,7 @@ void UniformGrid::Update() {
 		// And then loop through all their colliders
 
 		// For each GameObject
+		/*
 		for (auto const&[gameObject, colliders] : PendingColliders)
 		{
 			// For each collider
@@ -138,16 +200,17 @@ void UniformGrid::Update() {
 				}
 			}
 		}
+		*/
 
 		for (int i = 0; i < colliders.size(); ++i)
 		{
-			if (colliders[i]->transform->positionHasChanged() && IsInsideBounds(*colliders[i]->transform))
+			if (allColliders[colliders[i]]->transform->positionHasChanged() && IsInsideWorldBounds(*allColliders[colliders[i]]->transform))
 			{
 				bool inserted = false;
 
-				if (boundaries.Contains(*colliders[i]->transform))
+				if (boundaries.Contains(*allColliders[colliders[i]]->transform))
 				{
-					InsertCollider(*colliders[i]);
+					InsertCollider(colliders[i]);
 
 					colliders.erase(colliders.begin() + i--);
 				}
@@ -157,11 +220,11 @@ void UniformGrid::Update() {
 
 					if (parent != nullptr)
 					{
-						inserted = parent->InsertCollider(*colliders[i]);
+						inserted = parent->InsertCollider(colliders[i]);
 					}
 					else
 					{
-						inserted = InsertCollider(*colliders[i]);
+						inserted = InsertCollider(colliders[i]);
 					}
 
 					if (inserted && !colliders.empty())
@@ -175,14 +238,14 @@ void UniformGrid::Update() {
 		int listSize = colliders.size();
 		for (int a = 0; a < listSize; a++)
 		{
-			if (colliders[a] == nullptr)
+			if (allColliders[colliders[a]] == nullptr)
 			{
 				std::cout << "Deleted nullptr" << std::endl;
 				colliders.erase(colliders.begin() + a--);
 				listSize--;
 			}
 
-			if (!boundaries.Contains(*colliders[a]->transform))
+			if (!boundaries.Contains(*allColliders[colliders[a]]->transform))
 			{
 				std::cout << "Deleted gameObject that left grid" << std::endl;
 				colliders.erase(colliders.begin() + a--);
@@ -204,148 +267,120 @@ void UniformGrid::Update() {
 		}
 
 		// Get collisions
-		for (int i = 0; i < colliders.size(); i++)
-		{
-			CollidingObjects(*colliders[i], i);
-		}
+		//std::cout << "Checking collisions\n";
+		CheckCollisions();
 	}
 }
 
-bool UniformGrid::InsertCollider(Collider& collider)
+void UniformGrid::CheckCollisions() 
 {
-	// If the object doesnt fit try inserting it in the parent grid
-	if (!boundaries.Contains(*collider.transform))
+	// Get collisions
+	for (int i = 0; i < colliders.size(); ++i)
 	{
-		if (isRoot())
-		{
-			RebuildGrid();
-			return false;	// Didnt fit anywhere so return false
-		}
-		else
-		{
-			std::cout << "Trying to insert into parent\n";
-			return this->parent->InsertCollider(collider);
-		}
+		CollidingObjects(colliders[i]);
 	}
-
-	// If the bounds are minimum size insert object here
-	Vector3 dimensions = boundaries.max - boundaries.min;
-	if (dimensions.x <= minSize && dimensions.y <= minSize && dimensions.z <= minSize)
-	{
-		colliders.push_back(&collider);
-		return true;
-	}
-
-	Vector3 half = (boundaries.max - boundaries.min) / 2.0f;
-	Vector3 center = boundaries.min + half;
-
-	Bounds childGrids[8];
-
-	// Bottom 4
-	childGrids[0] = Bounds(boundaries.min, center);		// BOTTOM LEFT																		// WORKS / TESTED
-	childGrids[1] = Bounds(Vector3(center.x, boundaries.min.y, boundaries.min.z), Vector3(boundaries.max.x, center.y, center.z));	// WORKS / TESTED
-	childGrids[2] = Bounds(Vector3(boundaries.min.x, boundaries.min.y, center.z), Vector3(center.x, center.y, boundaries.max.z));	// WORKS / TESTED
-	childGrids[3] = Bounds(Vector3(center.x, boundaries.min.y, center.z), Vector3(boundaries.max.x, center.y, boundaries.max.z));	// WORKS / TESTED
-
-	// Top 4
-	childGrids[4] = Bounds(Vector3(boundaries.min.x, center.y, boundaries.min.z), Vector3(center.x, boundaries.max.y, center.z));	// WORKS / TESTED
-	childGrids[5] = Bounds(Vector3(center.x, center.y, boundaries.min.z), Vector3(boundaries.max.x, boundaries.max.y, center.z));	// WORKS / TESTED
-	childGrids[6] = Bounds(Vector3(boundaries.min.x, center.y, center.z), Vector3(center.x, boundaries.max.y, boundaries.max.z));	// WORKS / TESTED
-	childGrids[7] = Bounds(center, boundaries.max);																				// WORKS / TESTED
-
-	for (int childIndex = 0; childIndex < 8; ++childIndex)
-	{
-		if (childGrids[childIndex].Contains(*collider.transform))
-		{
-			//std::cout << "Inserted Into child: " << childIndex << " & Size: " << childGrids[childIndex].min.x << ", " << childGrids[childIndex].max.x << std::endl;
-			childGrid[childIndex] = CreateNode(childGrids[childIndex]);
-			childGrid[childIndex].parent = this;
-
-			activeChildren[childIndex] = true;
-			++activeChildCount;
-
-			return childGrid[childIndex].InsertCollider(collider);
-		}
-	}
-
-	//std::cout << "Inserted Into root: " << (boundaries.max.x - boundaries.min.x) << "\n";
-	colliders.push_back(&collider);
-	return false;
 }
 
-void UniformGrid::CollidingObjects(Collider& collider) const
+void UniformGrid::CollidingObjects(const int colliderIndex)
 {
-	// Check for collisions in this grid
-	for (int i = 0; i < colliders.size(); ++i) 
+	Collider& colliderA = *allColliders[colliderIndex];
+	const AxisAlignedBoundingBox& boundingBoxA = colliderA.transform->boundingBox;
+
+	std::vector<int> touchingObjects = currentlyCollidingObjects[colliderIndex];
+	// Check for new collisions
+	for (int i = 0; i < colliders.size(); ++i)
 	{
-		if (&collider == colliders[i]) 
+		if (colliders[i] == colliderIndex) 
 		{
 			continue;
 		}
 
-		if (colliders[i]->hasCollision) 
+		bool foundCollision = false;
+		int collisionIndex;
+		for (int j = 0; j < touchingObjects.size(); ++j) 
 		{
-			if (AxisAlignedBoundingBox::TestOverlap(collider.transform->boundingBox, colliders[i]->transform->boundingBox))
+			if (colliders[i] == touchingObjects[j]) 
 			{
-				collider.gameObject->OnCollisionEnter(*colliders[i]);
-				colliders[i]->gameObject->OnCollisionEnter(collider);
+				foundCollision = true;
+				collisionIndex = j;
+				break;
+			}
+		}
+
+		Collider& colliderB = *allColliders[colliders[i]];
+
+		if (!foundCollision) {
+			if (colliderB.hasCollision)
+			{
+				const AxisAlignedBoundingBox& boundingBoxB = colliderB.transform->boundingBox;
+				if (AxisAlignedBoundingBox::TestOverlap(boundingBoxA, boundingBoxB))
+				{
+					std::cout << "Collision Enter in UniformGrid\n";
+
+					colliderA.CheckCollision(colliderB);
+					colliderB.CheckCollision(colliderA);
+
+					//colliderA.gameObject->OnCollisionEnter(colliderB);
+					//colliderB.gameObject->OnCollisionEnter(colliderA);
+
+					currentlyCollidingObjects[colliderIndex].push_back(colliders[i]);
+					currentlyCollidingObjects[colliders[i]].push_back(colliderIndex);
+				}
+			}
+		}
+		else { 
+			// Check if exited or still staying
+			if (colliderB.hasCollision)
+			{
+				const AxisAlignedBoundingBox& boundingBoxB = colliderB.transform->boundingBox;
+				if (AxisAlignedBoundingBox::TestOverlap(boundingBoxA, boundingBoxB))
+				{
+					//std::cout << "Collision Stay in UniformGrid " << i << "\n";
+
+					//colliderA.gameObject->OnCollisionStay(colliderB);
+					//colliderB.gameObject->OnCollisionStay(colliderA);
+
+					colliderA.CheckCollision(colliderB);
+					colliderB.CheckCollision(colliderA);
+				}
+				else {
+					std::cout << "Collision Exit in UniformGrid\n";
+
+					colliderA.gameObject->OnCollisionExit(colliderB);
+					colliderB.gameObject->OnCollisionExit(colliderA);
+
+					currentlyCollidingObjects[colliderIndex].erase(std::remove(currentlyCollidingObjects[colliderIndex].begin(), currentlyCollidingObjects[colliderIndex].end(), colliders[i]), currentlyCollidingObjects[colliderIndex].end());
+					currentlyCollidingObjects[colliders[i]].erase(std::remove(currentlyCollidingObjects[colliders[i]].begin(), currentlyCollidingObjects[colliders[i]].end(), colliderIndex), currentlyCollidingObjects[colliders[i]].end());
+				}
 			}
 		}
 	}
 
 	// Loop through children
 	// and check for collisions
-	if (activeChildCount > 0) 
+	if (activeChildCount > 0)
 	{
-		for (int childIndex = 0; childIndex < 8; ++childIndex) 
+		for (int childIndex = 0; childIndex < 8; ++childIndex)
 		{
 			if (activeChildren[childIndex] == true)
 			{
-				childGrid[childIndex].CollidingObjects(collider);
+				childGrid[childIndex].CollidingObjects(colliderIndex);
 			}
 		}
 	}
 }
 
-void UniformGrid::CollidingObjects(Collider& collider, const int index) const
-{	
-	// Check for collisions in this grid
-	for (int i = index; i < colliders.size(); ++i)
-	{
-		if (&collider == colliders[i]) 
-		{
-			continue;
-		}
-
-		if (colliders[i]->hasCollision) 
-		{
-			if (AxisAlignedBoundingBox::TestOverlap(collider.transform->boundingBox, colliders[i]->transform->boundingBox))
-			{
-				collider.gameObject->OnCollisionEnter(*colliders[i]);
-				colliders[i]->gameObject->OnCollisionEnter(collider);
-			}
-		}
-	}
-
-	// Loop through children
-	// and check for collisions
-	if (activeChildCount > 0) 
-	{
-		for (int childIndex = 0; childIndex < 8; childIndex++) 
-		{
-			if (activeChildren[childIndex] == true)
-			{
-				childGrid[childIndex].CollidingObjects(collider);
-			}
-		}
-	}
-}
-
-bool UniformGrid::IsInsideBounds(const Transform & transform) const
+/*
+std::vector<Renderer*> Graphyte::UniformGrid::GetObjectsToRender(Camera & camera)
 {
-	if (maxSize > transform.position.x + transform.boundingBox.max.x &&
-		maxSize > transform.position.y + transform.boundingBox.max.y &&
-		maxSize > transform.position.z + transform.boundingBox.max.z
+}
+*/
+
+bool UniformGrid::IsInsideWorldBounds(const Transform& transform) const
+{
+	if (maxSize > transform.position.x + transform.boundingBox.halfSize.x &&
+		maxSize > transform.position.y + transform.boundingBox.halfSize.y &&
+		maxSize > transform.position.z + transform.boundingBox.halfSize.z
 		)
 	{
 		return true;
@@ -388,8 +423,8 @@ void UniformGrid::DrawExtra() const
 			ImGui::Text("GameObject: ");
 			ImGui::SameLine();
 
-			if (colliders[i] != nullptr)
-				ImGui::Text(colliders[i]->transform->name.c_str());
+			if (allColliders[colliders[i]] != nullptr)
+				ImGui::Text(allColliders[colliders[i]]->transform->name.c_str());
 		}
 	}
 

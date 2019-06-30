@@ -32,7 +32,6 @@ namespace Graphyte {
 		void Update();		// Run after every frame
 		void LateUpdate();	// Run at the end of every frame
 		void FixedUpdate(); // Called multiple times during physics checks
-		void CheckCollisions(); // Check collisions for each gameObject once each frame
 
 		// RENDERING OBJECTS
 		void Render(Camera& camera);		// Render meshes on screen

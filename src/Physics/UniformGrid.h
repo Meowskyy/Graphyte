@@ -17,6 +17,8 @@ const int maxSize = 65536;
 namespace Graphyte {
 	class UniformGrid {
 	private:
+		static std::map<int, std::vector<int>> currentlyCollidingObjects;
+
 		float size;
 
 		bool activeChildren[8];
@@ -24,16 +26,19 @@ namespace Graphyte {
 		std::vector<UniformGrid> childGrid;
 
 		static std::map<GameObject*, std::vector<Collider*>> PendingColliders;
-		static std::queue<Collider*> pendingColliders;			// Colliders that will be added later
+
+		//static std::queue<Collider*> pendingColliders;			// Colliders that will be added later
+		static std::queue<int> pendingColliders;			// Colliders that will be added later
 		static std::vector<Collider*> allColliders;
-		std::vector<Collider*> colliders;
+
+		//std::vector<Collider*> colliders;
+		std::vector<int> colliders;
 
 		UniformGrid(const Bounds& boundaries);					// Create UniformGrid with boundaries
 		UniformGrid CreateNode(const Bounds& boundary); 		// Create child with boundaries
 
 	public:
-		static bool gridReady; // FALSE by default. the tree has a few objects which need to be inserted before it is complete 
-		static std::vector<std::string> collidingGameObjects;	// GameObjects that are touching currently
+		static bool gridReady; // Is the grid ready to accept colliders?
 
 		UniformGrid* parent;
 
@@ -47,15 +52,17 @@ namespace Graphyte {
 
 		static void AddCollider(Collider* col);
 
-		bool InsertCollider(Collider& collider);
-
-		void CollidingObjects(Collider& collider) const;
-		void CollidingObjects(Collider& collider, const int index) const;
-
-		bool IsInsideBounds(const Transform& transform) const;
+		bool InsertCollider(const int colliderPosition);
 
 		void RebuildGrid();
 		void Update();
+
+		void CheckCollisions();
+		void CollidingObjects(const int colliderIndex);
+
+		//std::vector<Renderer*> GetObjectsToRender(Camera& camera);
+
+		bool IsInsideWorldBounds(const Transform& transform) const;
 
 		void DrawGrid() const;
 		void DrawExtra() const;

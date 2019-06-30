@@ -2,7 +2,10 @@
 
 #include "Rendering\Framebuffer.h"
 
-class ShadowMap : public Framebuffer {
-public:
-	bool Init(unsigned int width, unsigned int height);
-};
+namespace Graphyte {
+	class ShadowMap : public Framebuffer {
+	public:
+		bool Init(unsigned int width, unsigned int height);
+		void BindForWriting();
+	};
+}

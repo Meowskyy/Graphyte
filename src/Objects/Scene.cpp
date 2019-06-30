@@ -46,14 +46,14 @@ Scene::~Scene()
 
 void Scene::OnSceneLoad()
 {
-	m_shadowMap.Init(64, 64);
+	m_shadowMap.Init(512, 512);
 	m_lighting = new Lighting();
 	m_lighting->Init();
 
 	AddLight();
 	AddCameraObject();
 
-	ResourceManager::GetShader("Standard").SetInteger("mainTexture", 0);
+	ResourceManager::GetShader("Standard").Use().SetInteger("mainTexture", 0);
 	ResourceManager::GetShader("Standard").SetInteger("shadowMap", 1);
 
 #ifdef _DEBUG
@@ -87,7 +87,6 @@ void Scene::Update()
 	auto updateEnd = std::chrono::high_resolution_clock::now();
 
 	//std::cout << "Time elapsed in Update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(updateEnd - updateStart).count() << " ns\n";
-
 }
 
 // LateUpdate on Components
@@ -111,14 +110,6 @@ void Scene::FixedUpdate()
 	uniformGrid.Update();
 }
 
-void Scene::CheckCollisions()
-{
-	for (auto& gameObject : gameObjects)
-	{
-		gameObject->CheckCollisions();
-	}
-}
-
 void Scene::Render(Camera& camera)
 {
 	ResourceManager::GetShader("Grid").SetVector3f("cameraPosition", camera.transform->position, true);
@@ -129,7 +120,9 @@ void Scene::Render(Camera& camera)
 	glViewport(0, 0, Screen::width, Screen::height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifdef EDITOR
 	uniformGrid.DrawGrid();
+#endif
 
 	RenderObjects(camera);
 
@@ -137,44 +130,36 @@ void Scene::Render(Camera& camera)
 	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
 	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Standard"));
 	//Renderer::RenderAllWithShader(ResourceManager::GetMaterial("Unlit"));
+
+	//std::vector<Renderer*> objectsToRender = uniformGrid.GetObjectsToRender(camera);
+
+	// TODO: Remove after checking stuff
+	//uniformGrid.Update();
+
+	ResourceManager::GetShader("ScreenShader").SetFloat("near_plane", light->nearClipPlane, true);
+	ResourceManager::GetShader("ScreenShader").SetFloat("far_plane", light->farClipPlane);
+
+	//m_shadowMap.BindForReading(GL_TEXTURE1);
+	//ExtraRenderer::DrawTextureOnScreen(m_shadowMap.framebufferTexture);
 }
 
 void Scene::RenderDepth(Camera& camera) 
 {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
 
-	glViewport(0, 0, m_shadowMap.width, m_shadowMap.height);
-
-	// 1. render depth of scene to texture (from light's perspective)
-	// --------------------------------------------------------------
-	Matrix4 lightProjection, lightView;
-	Matrix4 lightSpaceMatrix;
-	lightProjection = glm::ortho(-light->size, light->size, -light->size, light->size, light->nearClipPlane, light->farClipPlane);
-
-	Vector3 position = Vector3(light->transform->position.x, light->transform->position.y, light->transform->position.z);
-	Vector3 upVector = Vector3(light->transform->GetUpVector().x, light->transform->GetUpVector().y, light->transform->GetUpVector().z);
-	Vector3 forwardVector = Vector3(light->transform->GetForwardVector().x, light->transform->GetForwardVector().y, light->transform->GetForwardVector().z);
-
-	lightView = glm::lookAt(position, position + forwardVector, upVector);
-
-	lightSpaceMatrix = lightProjection * lightView;
-	// render scene from light's point of view
-	ResourceManager::GetShader("ShadowMap").Use();
-	ResourceManager::GetShader("ShadowMap").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+	Matrix4 lightSpaceMatrix = light->GetLightSpaceMatrix();
+	ResourceManager::GetShader("ShadowMap").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix, true);
+	ResourceManager::currentShader = ResourceManager::GetShader("ShadowMap");
 
 	m_shadowMap.BindForWriting();
-
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_FRONT);
 
 	Renderer::RenderAllDepth(camera);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// render scene from light's point of view
-	ResourceManager::GetShader("Standard").Use();
-	ResourceManager::GetShader("Standard").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+	ResourceManager::GetShader("Standard").SetMatrix4("lightSpaceMatrix", lightSpaceMatrix, true);
 }
 
 void Scene::RenderObjects(Camera& camera)
@@ -183,7 +168,6 @@ void Scene::RenderObjects(Camera& camera)
 
 	m_lighting->SetDirectionalLight(*light);
 
-	//glDisable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	Renderer::RenderAllGrouped(camera);
 }
@@ -226,7 +210,7 @@ void Scene::AddPlane()
 	// VERTICES
 	for (int z = 0; z < 2; z++) {
 		for (int x = 0; x < 2; x++) {
-			vertices.push_back(Vector3(x - 0.5f, 0, z - 0.5f));
+			vertices.push_back(Vector3(-x + 0.5f, 0, z - 0.5f));
 		}
 	}
 
@@ -242,8 +226,8 @@ void Scene::AddPlane()
 
 	mesh->indices = std::vector<unsigned int>
 	{
-		2, 3, 1,
-		2, 1, 0
+		2, 1, 3,
+		2, 0, 1
 	};
 
 	meshRenderer->RecalculateBoundingBox();
@@ -268,12 +252,11 @@ void Scene::AddCube()
 
 	mesh->vertices = std::vector<Vector3>
 	{
-		// front
 		Vector3(-1.0, -1.0,  1.0),
 		Vector3(1.0, -1.0,  1.0),
 		Vector3(1.0,  1.0,  1.0),
 		Vector3(-1.0,  1.0,  1.0),
-		// back
+
 		Vector3(-1.0, -1.0, -1.0),
 		Vector3(1.0, -1.0, -1.0),
 		Vector3(1.0,  1.0, -1.0),
@@ -346,6 +329,8 @@ void Graphyte::Scene::AddLight()
 
 	light = &object->AddComponent<Light>();
 	light->transform->name = "Directional Light";
+
+	//object->AddComponent<MoveAround>();
 }
 
 void Scene::AddCameraObject()
@@ -359,9 +344,12 @@ void Scene::AddCameraObject()
 	object->transform.rotation = Quaternion(Vector3(0, PI, 0));
 
 	Camera::mainCamera = &object->AddComponent<Camera>();
+	//object->AddComponent<Camera>();
 	object->AddComponent<AudioListener>();
 
-	object = nullptr;
+#ifndef EDITOR
+	object->AddComponent<CameraOrbit>();
+#endif
 }
 
 std::vector<GameObject*> Scene::GetAllRootObjects() const

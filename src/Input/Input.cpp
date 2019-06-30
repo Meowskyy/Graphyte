@@ -29,15 +29,15 @@ void Input::key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		switch (action) {
 		case 0: // RELEASED
 			keys[key] = Released;
-			std::cout << "Key " << key << " state set to 'Released'" << std::endl;
+			//std::cout << "Key " << key << " state set to 'Released'" << std::endl;
 			break;
 		case 1: // PRESSED
 			keys[key] = Pressed;
-			std::cout << "Key " << key << " state set to 'Pressed'" << std::endl;
+			//std::cout << "Key " << key << " state set to 'Pressed'" << std::endl;
 			break;
 		case 2: // DOWN
 			keys[key] = Down;
-			std::cout << "Key " << key << " state set to 'Down'" << std::endl;
+			//std::cout << "Key " << key << " state set to 'Down'" << std::endl;
 			break;
 		}
 	}
@@ -73,15 +73,15 @@ void Input::mouse_button_callback(GLFWwindow* window, int button, int action, in
 		switch (action) {
 		case 0: // RELEASED
 			mouseKeys[button] = Released;
-			std::cout << "Mouse button " << button << " state set to 'Released'" << std::endl;
+			//std::cout << "Mouse button " << button << " state set to 'Released'" << std::endl;
 			break;
 		case 1: // PRESSED
 			mouseKeys[button] = Pressed;
-			std::cout << "Mouse button " << button << " state set to 'Pressed'" << std::endl;
+			//std::cout << "Mouse button " << button << " state set to 'Pressed'" << std::endl;
 			break;
 		case 2: // DOWN
 			mouseKeys[button] = Down;
-			std::cout << "Mouse button " << button << " state set to 'Down'" << std::endl;
+			//std::cout << "Mouse button " << button << " state set to 'Down'" << std::endl;
 			break;
 		}
 	}
@@ -105,11 +105,11 @@ void Input::UpdateKeyStates() {
 				switch (mouseKeys[key]) {
 				case Pressed:
 					mouseKeys[key] = Down;
-					std::cout << "Mouse button " << key << " state set to 'Down'" << std::endl;
+					//std::cout << "Mouse button " << key << " state set to 'Down'" << std::endl;
 					break;
 				case Released:
 					mouseKeys[key] = NotPressed;
-					std::cout << "Mouse button " << key << " state set to 'NotPressed'" << std::endl;
+					//std::cout << "Mouse button " << key << " state set to 'NotPressed'" << std::endl;
 					break;
 				}
 			}
@@ -120,11 +120,11 @@ void Input::UpdateKeyStates() {
 			switch (keys[key]) {
 			case Pressed:
 				keys[key] = Down;
-				std::cout << "key " << key << " state set to 'Down'" << std::endl;
+				//std::cout << "key " << key << " state set to 'Down'" << std::endl;
 				break;
 			case Released:
 				keys[key] = NotPressed;
-				std::cout << "key " << key << " state set to 'NotPressed'" << std::endl;
+				//std::cout << "key " << key << " state set to 'NotPressed'" << std::endl;
 				break;
 			}
 		}

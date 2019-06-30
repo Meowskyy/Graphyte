@@ -9,7 +9,7 @@ in vec2 TexCoords;
 out vec4 FragColor;
 
 float near = 0.1;
-float far  = 10.0;
+float far  = 50.0;
 
 float LinearizeDepth(float depth)
 {
@@ -20,7 +20,7 @@ float LinearizeDepth(float depth)
 void main(void)
 {
 	float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
-	//vec4 color = texture(texture_diffuse1, TexCoords) * vec4(1.0, 1.0, 1.0, 1.0 - vec3(depth));
-  vec4 color = texture(texture_diffuse1, TexCoords) * vec4(1.0, 1.0, 1.0, 0.3);
+	vec4 color = texture(texture_diffuse1, TexCoords) * vec4(1.0, 1.0, 1.0, 1.0 - vec3(depth));
+	//vec4 color = texture(texture_diffuse1, TexCoords) * vec4(1.0, 1.0, 1.0, 0.3);
 	FragColor = color;
 }

@@ -21,12 +21,12 @@ bool Camera::IsTransformInView(const Transform& transform) const
 		const float pos = frustrum.planes[i].w;
 		const Vector3 normal = Vector3(frustrum.planes[i]);
 
-		if (glm::dot(normal, transform.boundingBox.getPositiveVertex(normal) + transform.position) + pos < 0.0f)
+		if (glm::dot(normal, transform.boundingBox.GetPositiveVertex(normal)) + pos <= 0.0f)
 		{
 			return false;
 		}
 
-		if (glm::dot(normal, transform.boundingBox.getNegativeVertex(normal) + transform.position) + pos < 0.0f)
+		if (glm::dot(normal, transform.boundingBox.GetNegativeVertex(normal)) + pos <= 0.0f)
 		{
 			result = true;
 		}
@@ -38,9 +38,9 @@ bool Camera::IsTransformInView(const Transform& transform) const
 // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
 Matrix4 Camera::GetViewMatrix() const
 {
-	Vector3 position = Vector3(transform->position.x, transform->position.y, transform->position.z);
-	Vector3 upVector = Vector3(transform->GetUpVector().x, transform->GetUpVector().y, transform->GetUpVector().z);
-	Vector3 forwardVector = Vector3(transform->GetForwardVector().x, transform->GetForwardVector().y, transform->GetForwardVector().z);
+	Vector3 position = transform->position;
+	Vector3 upVector = transform->GetUpVector();
+	Vector3 forwardVector = transform->GetForwardVector();
 
 	return glm::lookAt(position, position + forwardVector, upVector);
 }

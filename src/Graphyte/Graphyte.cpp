@@ -56,19 +56,17 @@ int currentFrame = 0;
 
 void GraphyteEditor::run() 
 {
-	initWindow();
+	InitWindow();
 
-	loadShaders();
-	loadTextures();
-	loadMaterials();
-	loadModels();
+	// TODO: Will probably need changes
+	ResourceManager::LoadDefaults();
 
-	mainLoop();
+	MainLoop();
 
-	cleanup();
+	Cleanup();
 }
 
-void GraphyteEditor::initWindow()
+void GraphyteEditor::InitWindow()
 {
 	// Setup window
 	glfwSetErrorCallback(glfw_error_callback);
@@ -117,20 +115,11 @@ void GraphyteEditor::initWindow()
 
 	SetupIMGUI();
 
-	setupCallbacks();
+	SetupCallbacks();
 }
 
-ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-// TODO: Move somewhere more appropriate
-double lastTime = glfwGetTime();
-float lastFPSCount = 0;
-float frameTime = 0;
-int nbFrames = 0;
-float inputTime = 0;
-
 // Physics loop based off https://gafferongames.com/post/fix_your_timestep/
-void GraphyteEditor::mainLoop() 
+void GraphyteEditor::MainLoop() 
 {
 	// Once the scene is loaded
 	currentScene.OnSceneLoad();
@@ -143,11 +132,13 @@ void GraphyteEditor::mainLoop()
 
 	float distToSelectedObject = 10000;
 
+#ifdef EDITOR
 	GameObject* editorCameraObject = new GameObject();
 	editorCamera = &editorCameraObject->AddComponent<Camera>();
 	editorCameraObject->AddComponent<EditorCamera>();
 	editorCamera->transform->position = Vector3(0, 0, -20);
 	Camera::mainCamera = editorCamera;
+#endif
 
 	while (!glfwWindowShouldClose(mainWindow)) 
 	{
@@ -174,38 +165,37 @@ void GraphyteEditor::mainLoop()
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		float newTime = glfwGetTime();
-		float frameTime = newTime - currentTime;
+		if (physicsEnabled) {
+			float newTime = glfwGetTime();
+			float frameTime = newTime - currentTime;
 
-		if (frameTime > 0.25f) 
-		{
-			frameTime = 0.25f;
+			if (frameTime > 0.25f)
+			{
+				frameTime = 0.25f;
+			}
+			currentTime = newTime;
+
+			accumulator += frameTime;
+
+			while (accumulator >= Time::fixedTimestep)
+			{
+				previousState = currentState;
+				currentState = currentState + Time::fixedTimestep;
+				currentState += Time::fixedTimestep;
+
+				accumulator -= Time::fixedTimestep;
+
+				currentScene.FixedUpdate();
+			}
+
+			float alpha = accumulator / Time::fixedTimestep;
+
+			Time::deltaTime = frameTime;
+
+			// TODO: Blending physics based on alpha
+			// std::cout << "Remainder: " << alpha << "\n";
+			// std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedDeltaTime << std::endl;
 		}
-		currentTime = newTime;
-
-		accumulator += frameTime;
-
-		while (accumulator >= Time::fixedTimestep)
-		{
-			previousState = currentState;
-			currentState = currentState + Time::fixedTimestep;
-			currentState += Time::fixedTimestep;
-
-			accumulator -= Time::fixedTimestep;
-
-			currentScene.FixedUpdate();
-		}
-
-		float alpha = accumulator / Time::fixedTimestep;
-
-		Time::deltaTime = frameTime;
-
-		// TODO: Blending physics based on alpha
-		// std::cout << "Remainder: " << alpha << "\n";
-		// std::cout << "Physics updates per second: " << Time::deltaTime / Time::fixedDeltaTime << std::endl;
-
-		// TODO: Is it better if this is after or before Update()
-		currentScene.CheckCollisions();
 
 		currentScene.Update();
 		currentScene.LateUpdate();
@@ -215,16 +205,18 @@ void GraphyteEditor::mainLoop()
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#ifndef EDITOR
+#ifdef EDITOR
+		editorCameraObject->Update();
 		editorCameraObject->LateUpdate();
 		currentScene.Render(*editorCamera);
+
+		if (selectedGameObject)
+			ExtraRenderer::DrawSelectionArrows(selectedGameObject->transform);
 #else
 		currentScene.Render(*Camera::mainCamera);
 #endif
 
-		if (selectedGameObject)
-			ExtraRenderer::DrawSelectionArrows(&selectedGameObject->transform);
-
+		/*
 		if (Input::GetMouseButtonPressed(0) && !mouseOnGui) 
 		{
 			selectedGameObject = nullptr;
@@ -299,41 +291,19 @@ void GraphyteEditor::mainLoop()
 				//selectedGameObject->transform.position = Physics::RaycastMousePosition(distToSelectedObject);
 			}
 		}
+		*/
 
 		//std::cout << "END OF FRAME" << std::endl;
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		frameTimes[currentFrame] = 1000.0f / ImGui::GetIO().Framerate;
-		currentFrame++;
-
-		if (currentFrame > 500) {
-			currentFrame = 0;
-		}
-
 		glfwMakeContextCurrent(mainWindow);
 		glfwSwapBuffers(mainWindow);
 	}
-
-	//delete editorCameraObject;
-	//editorCameraObject = nullptr;
 }
 
-bool show_demo_window = true;
-bool show_transform_window = true;
-bool show_camera_window = true;
-bool show_scene_window = true;
-bool backFaceCulling = false;
-bool wireframe = false;
-bool alpha = false;
 void GraphyteEditor::DrawEditorUI()
 {
-	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-	if (show_demo_window) 
-	{
-		ImGui::ShowDemoWindow(&show_demo_window);
-	}
-
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 	{
 		static float f = 0.0f;
@@ -342,6 +312,8 @@ void GraphyteEditor::DrawEditorUI()
 		ImGui::Begin("Debug Window");
 
 		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+		ImGui::Checkbox("Physics Enabled", &physicsEnabled);
 
 		if (ImGui::Checkbox("Backface Culling", &backFaceCulling)) {
 			if (backFaceCulling) 
@@ -391,9 +363,6 @@ void GraphyteEditor::DrawEditorUI()
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-		frameTimeOffset = (frameTimeOffset + 1) % IM_ARRAYSIZE(frameTimes);
-		ImGui::PlotLines("Frame Times", frameTimes, IM_ARRAYSIZE(frameTimes), frameTimeOffset,"", 0.0f, 16.0F, ImVec2(0, 80));
-
 		ImGui::End();
 	}
 
@@ -419,9 +388,8 @@ void GraphyteEditor::DrawEditorUI()
 
 			ImGui::Text("Parent: ", (float*)&selectedGameObject->transform.parent->name);
 
-			ImGui::DragFloat3("AABB Min", (float*)&selectedGameObject->transform.boundingBox.min);
-			ImGui::DragFloat3("AABB Max", (float*)&selectedGameObject->transform.boundingBox.max);
-			ImGui::DragFloat3("AABB Size", (float*)&selectedGameObject->transform.boundingBox.size);
+			ImGui::DragFloat3("AABB Center", (float*)&selectedGameObject->transform.boundingBox.center);
+			ImGui::DragFloat3("AABB Halfsize", (float*)&selectedGameObject->transform.boundingBox.halfSize);
 
 			ImGui::DragFloat3("Bounds Min", (float*)&selectedGameObject->transform.boundingBox.bounds.min);
 			ImGui::DragFloat3("Bounds Max", (float*)&selectedGameObject->transform.boundingBox.bounds.max);
@@ -431,6 +399,7 @@ void GraphyteEditor::DrawEditorUI()
 			ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, ImGui::GetFontSize() * 3); // Increase spacing to differentiate leaves from expanded contents.
 			
 			selectedGameObject->DrawComponents();
+
 			ImGui::PopStyleVar();
 
 			// TODO: Making all of the following dynamic instead?
@@ -561,7 +530,7 @@ void GraphyteEditor::SetupIMGUI()
 	//IM_ASSERT(font != NULL);
 }
 
-void GraphyteEditor::cleanup() 
+void GraphyteEditor::Cleanup() 
 {
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
@@ -571,72 +540,7 @@ void GraphyteEditor::cleanup()
 	glfwTerminate();
 }
 
-// TODO: Moving these somewhere more appropriate
-void GraphyteEditor::loadShaders() 
-{
-	// EDITOR STUFF
-	ResourceManager::LoadShader("Assets/shaders/Grid.vert", "Assets/shaders/Grid.frag", nullptr, "Grid");
-	//ResourceManager::LoadShader("Assets/shaders/SimpleDepth.vert", "Assets/shaders/SimpleDepth.frag", nullptr, "SimpleDepth");
-	ResourceManager::LoadShader("Assets/shaders/DepthDebug.vert", "Assets/shaders/DepthDebug.frag", nullptr, "DepthDebug");
-	ResourceManager::LoadShader("Assets/shaders/ShadowMap.vert", "Assets/shaders/ShadowMap.frag", nullptr, "ShadowMap");
-
-	// ACTUAL SHADERS
-	//ResourceManager::LoadShader("Assets/shaders/PBR.vert", "Assets/shaders/PBR.frag", nullptr, "Standard");
-	ResourceManager::LoadShader("Assets/shaders/Standard/StandardV2.vert", "Assets/shaders/Standard/StandardV2.frag", nullptr, "Standard");
-	ResourceManager::LoadShader("Assets/shaders/Unlit.vert", "Assets/shaders/Unlit.frag", nullptr, "Unlit");
-	//ResourceManager::LoadShader("Assets/shaders/Particles/Particles.vert", "Assets/shaders/Particles/Particles.frag", "Assets/shaders/Particles/Particles.geom", "Particles");
-	ResourceManager::LoadShader("Assets/shaders/Particles/Particles.vert", "Assets/shaders/Particles/Particles.frag", nullptr, "Particles");
-
-
-
-	//ResourceManager::LoadShader("Assets/shaders/Lighting.vert", "Assets/shaders/Lighting.frag", nullptr, "Lighting");
-
-	//ResourceManager::LoadShader("Assets/shaders/ScreenShader.vert", "Assets/shaders/ScreenShader.frag", nullptr, "ScreenShader");
-	//ResourceManager::GetShader("Grid").shaderName = "Grid";
-
-	//ResourceManager::GetTexture("Grid").SetFiltering(false);
-}
-
-// TODO: Moving these somewhere more appropriate
-void GraphyteEditor::loadTextures() 
-{
-	//ResourceManager::LoadTexture("Textures/Grid/texture_diffuse.psd", true, true, "Grid");
-	ResourceManager::LoadTexture("Assets/textures/Grid/texture_diffuse.psd", false, true, "Grid");
-
-	ResourceManager::LoadTexture("Assets/textures/GrassTexture.psd", false, false, "GrassTexture");
-	ResourceManager::GetTexture("GrassTexture").SetFiltering(false);
-
-	ResourceManager::LoadTexture("Assets/textures/particle.psd", false, true, "Particle");
-}
-
-// TODO: Moving these somewhere more appropriate
-void GraphyteEditor::loadMaterials()
-{
-	ResourceManager::LoadMaterial("GridMaterial");
-	ResourceManager::GetMaterial("GridMaterial").textures.push_back(ResourceManager::GetTexture("Grid"));
-	ResourceManager::GetMaterial("GridMaterial").shader = ResourceManager::GetShader("Grid");
-	
-	ResourceManager::LoadMaterial("TerrainMaterial");
-	ResourceManager::GetMaterial("TerrainMaterial").textures.push_back(ResourceManager::GetTexture("GrassTexture"));
-
-	ResourceManager::LoadMaterial("LightingMat");
-	ResourceManager::GetMaterial("LightingMat").shader = ResourceManager::GetShader("Lighting");
-
-	ResourceManager::LoadMaterial("Particles");
-	ResourceManager::GetMaterial("Particles").shader = ResourceManager::GetShader("Particles");
-	ResourceManager::GetMaterial("Particles").textures.push_back(ResourceManager::GetTexture("Particle"));
-}
-
-// TODO: Moving these somewhere more appropriate
-void GraphyteEditor::loadModels()
-{
-	//test = Model("Assets/resources/nanosuit/nanosuit.obj");
-
-	//TextRenderer::Init();
-	//TextRenderer::SetShader(ResourceManager::GetShader("GUIText"));
-}
-
-void GraphyteEditor::setupCallbacks()
+void GraphyteEditor::SetupCallbacks()
 {
 	// SET CALLBACKS
 
@@ -664,17 +568,15 @@ void GraphyteEditor::window_size_callback(GLFWwindow* window, int width, int hei
 	UpdateProjectionMatrix();
 }
 
+void GraphyteEditor::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	std::cout << "New framebuffer size: " << width << "x" << height << "\n";
+
+	glViewport(0, 0, width, height);
+}
+
 void GraphyteEditor::UpdateProjectionMatrix()
 {
 	ResourceManager::UpdateProjection(Camera::mainCamera->GetProjectionMatrix());
 }
 
-void GraphyteEditor::framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	std::cout << "New framebuffer size: " << width << "x" << height << "\n";
-
-	//Matrix4 projection = glm::perspective(Camera::mainCamera->fov, (float)width / (float)height, 0.1f, 1000.0f);
-	//ResourceManager::UpdateProjection(projection);
-
-	glViewport(0, 0, width, height);
-}

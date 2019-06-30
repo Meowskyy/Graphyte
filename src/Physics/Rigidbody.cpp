@@ -18,13 +18,11 @@ void Rigidbody::FixedUpdate()
 	Vector3 acceleration = Vector3 (force.x / mass, force.y / mass, force.z / mass);
 
 	velocity.x += acceleration.x * Time::fixedDeltaTime;
-	velocity.y += acceleration.y * Time::fixedDeltaTime;
-	velocity.z += acceleration.z * Time::fixedDeltaTime;
 
-	if (gameObject->collisionList.size() > 0) 
-	{
-		velocity.y = velocity.y * -bounciness;
-	}
+	if (!isGrounded && useGravity)
+		velocity.y += acceleration.y * Time::fixedDeltaTime;
+
+	velocity.z += acceleration.z * Time::fixedDeltaTime;
 
 	transform->position.x += velocity.x * Time::fixedDeltaTime;
 	transform->position.y += velocity.y * Time::fixedDeltaTime;
@@ -42,6 +40,7 @@ void Rigidbody::DrawUI()
 
 	ImGui::DragFloat3("Velocity", (float*)&velocity);
 	ImGui::DragFloat("Bounciness", &bounciness, 0.05, 0, 1);
+	ImGui::Checkbox("Gravity", &useGravity);
 
 	for (int i = 0; i < gameObject->collisionList.size(); i++) {
 		ImGui::Text("Colliding Object: ");

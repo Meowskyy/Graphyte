@@ -5,6 +5,10 @@
 
 #include <glad/glad.h> 
 
+#include <glm\gtx\normal.hpp>
+
+using namespace Graphyte;
+
 Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector3> normals, const std::vector<Vector2> uvs, const std::vector<unsigned int> indices)
 {
 	this->vertices = vertices;
@@ -20,7 +24,6 @@ Mesh::Mesh(const std::vector<Vector3> vertices, const std::vector<Vector2> uvs, 
 	this->vertices = vertices;
 	this->indices = indices;
 	this->uvs = uvs;
-	//this->normals = std::vector<Vector3>(0);
 
 	// now that we have all the required data, set the vertex buffers and its attribute pointers.
 	SetupMesh();
@@ -39,25 +42,150 @@ void Mesh::Bind() const
 	glBindVertexArray(VAO);
 }
 
+Vector3 Mesh::triangleNormalFromVertex(int face_id, int vertex_id) {
+	//This assumes that A->B->C is a counter-clockwise ordering
+	Vector3 A = faces[face_id].vertex[vertex_id];
+	Vector3 B = faces[face_id].vertex[(vertex_id + 1) % 3];
+	Vector3 C = faces[face_id].vertex[(vertex_id + 2) % 3];
+
+
+	Vector3 N = glm::cross(B - A, C - A);
+	float sin_alpha = glm::length(N) / (glm::length(B - A) * glm::length(C - A));
+	return glm::normalize(N) * glm::asin(sin_alpha);
+}
+
+int Mesh::index_of_v_in_triangle(int i, Vector3 vertex) {
+	for (int i = 0; i < indices.size(); i++) {
+		if (vertices[indices[i]] == vertex) 
+		{
+			return i % 3;
+		}
+	}
+}
+
 void Mesh::RecalculateNormals()
 {
 	normals.clear();
 
-	for (int i = 0; i < vertices.size(); i++)
-	{
-		normals.push_back(Vector3(1, 1, 1));
+	if (indices.size() > 0) {
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			normals.push_back(Vector3(1, 1, 1));
+		}
+
+		/*
+		for (int i = 0; i < indices.size() / 3; ++i)
+		{
+			Triangle triangle;
+
+			triangle.vertex[0] = vertices[indices[i * 3 + 0]];
+			triangle.vertex[1] = vertices[indices[i * 3 + 1]];
+			triangle.vertex[2] = vertices[indices[i * 3 + 2]];
+			triangle.vertex[3] = vertices[indices[i * 3 + 3]];
+
+			triangle.vertexID[0] = indices[i * 3 + 0];
+			triangle.vertexID[1] = indices[i * 3 + 1];
+			triangle.vertexID[2] = indices[i * 3 + 2];
+			triangle.vertexID[3] = indices[i * 3 + 3];
+
+			triangles.push_back(triangle);
+		}
+		*/
+
+		for (int i = 0; i < indices.size() / 3; ++i)
+		{
+			Triangle triangle;
+
+			triangle.vertex[0] = vertices[indices[i * 3 + 0]];
+			triangle.vertex[1] = vertices[indices[i * 3 + 1]];
+			triangle.vertex[2] = vertices[indices[i * 3 + 2]];
+			triangle.vertex[3] = vertices[indices[i * 3 + 0]];
+
+			triangle.vertexID[0] = indices[i * 3 + 0];
+			triangle.vertexID[1] = indices[i * 3 + 1];
+			triangle.vertexID[2] = indices[i * 3 + 2];
+			triangle.vertexID[3] = indices[i * 3 + 0];
+
+			triangles.push_back(triangle);
+		}
+
+		for (int i = 0; i < indices.size() / 6; ++i)
+		{
+			Face face;
+
+			face.vertex[0] = vertices[indices[i * 6 + 0]];
+			face.vertex[1] = vertices[indices[i * 6 + 1]];
+			face.vertex[2] = vertices[indices[i * 6 + 2]];
+			face.vertex[3] = vertices[indices[i * 6 + 3]];
+
+			face.vertexID[0] = indices[i * 6 + 0];
+			face.vertexID[1] = indices[i * 6 + 1];
+			face.vertexID[2] = indices[i * 6 + 2];
+			face.vertexID[3] = indices[i * 6 + 3];
+
+			faces.push_back(face);
+		}
+
+		int faceCount = indices.size() / 6;
+		int triangleCount = indices.size() / 3;
+
+		std::cout << "FaceCount: " << faceCount << "\n";
+		std::cout << "TriangleCount: " << triangleCount << "\n";
+
+		for (int i = 0; i < triangleCount; i++)
+		{
+			// FOR EACH VERTEX IN TRIANGLE
+			for (int j = 0; j < 3; j++) 
+			{
+				Vector3 vertexA = (j == 0) ? triangles[i].vertex[3] : triangles[i].vertex[j - 1];
+				Vector3 vertexB = triangles[i].vertex[j];
+				Vector3 vertexC = (j == 2) ? triangles[i].vertex[0] : triangles[i].vertex[j + 1];
+
+				//Vector3 normal = glm::normalize(glm::cross(vertexC - vertexA, vertexB - vertexA));
+
+				Vector3 normal = glm::normalize((vertexA + vertexB + vertexC) / 3.0f);
+
+				Vector3 V1 = (vertexC - vertexB);
+				Vector3 V2 = (vertexA - vertexB);
+				Vector3 surfaceNormal;
+				surfaceNormal.x = (V1.y * V2.z) - (V1.z - V2.y);
+				surfaceNormal.y = -((V2.z * V1.x) - (V2.x * V1.z));
+				surfaceNormal.z = (V1.x - V2.y) - (V1.y - V2.x);
+
+				// Dont forget to normalize if needed
+				surfaceNormal = glm::normalize(surfaceNormal);
+
+				normals[triangles[i].vertexID[j]] = normal;
+			}
+		}
+
+
+		for (int i = 0; i < vertices.size(); i += 4)
+		{
+			Vector3 normal = glm::normalize(glm::cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]) * Vector3(0, 1, 0));
+
+			normals[i] = normal;
+			normals[i + 1] = normal;
+			normals[i + 2] = normal;
+			normals[i + 3] = normal;
+		}
 	}
+	else {
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			normals.push_back(Vector3(1, 1, 1));
+		}
 
-	for (int i = 0; i < vertices.size(); i += 4)
-	{
-		Vector3 normal = glm::normalize(glm::cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]));
+		for (int i = 0; i < vertices.size(); i += 4)
+		{
+			Vector3 normal = glm::normalize(glm::cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]));
 
-		normals[i] = normal;
-		normals[i + 1] = normal;
-		normals[i + 2] = normal;
-		normals[i + 3] = normal;
+			normals[i] = normal;
+			normals[i + 1] = normal;
+			normals[i + 2] = normal;
+			normals[i + 3] = normal;
+		}
 	}
-
 }
 
 void Mesh::RenderLines()
@@ -86,8 +214,6 @@ void Mesh::RenderLines()
 	glEnable(GL_LINE_SMOOTH);
 
 	GLfloat lineWidthRange[2] = { 0.0f, 0.0f };
-
-	glBindVertexArray(VAO);
 
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
 	glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, (GLvoid*)(4 * sizeof(unsigned int)));

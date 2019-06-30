@@ -17,6 +17,75 @@ std::map<std::string, Texture2D>    ResourceManager::Textures;
 std::map<std::string, Shader>       ResourceManager::Shaders;
 std::map<std::string, Material>     ResourceManager::Materials;
 
+Shader     ResourceManager::currentShader;
+
+void Graphyte::ResourceManager::LoadDefaults()
+{
+	ResourceManager::LoadShaders();
+	ResourceManager::LoadTextures();
+	ResourceManager::LoadMaterials();
+	ResourceManager::LoadModels();
+}
+
+// TODO: Moving these somewhere more appropriate
+void ResourceManager::LoadShaders()
+{
+	// EDITOR STUFF
+	ResourceManager::LoadShader("Assets/shaders/Grid.vert", "Assets/shaders/Grid.frag", nullptr, "Grid");
+	//ResourceManager::LoadShader("Assets/shaders/SimpleDepth.vert", "Assets/shaders/SimpleDepth.frag", nullptr, "SimpleDepth");
+	ResourceManager::LoadShader("Assets/shaders/DepthDebug.vert", "Assets/shaders/DepthDebug.frag", nullptr, "DepthDebug");
+	ResourceManager::LoadShader("Assets/shaders/ShadowMap.vert", "Assets/shaders/ShadowMap.frag", nullptr, "ShadowMap");
+	ResourceManager::LoadShader("Assets/shaders/Editor/ScreenShader.vert", "Assets/shaders/Editor/ScreenShader.frag", nullptr, "ScreenShader");
+
+	// DEFAULT SHADERS
+	//ResourceManager::LoadShader("Assets/shaders/PBR.vert", "Assets/shaders/PBR.frag", nullptr, "Standard");
+	ResourceManager::LoadShader("Assets/shaders/Standard/StandardV2.vert", "Assets/shaders/Standard/StandardV2.frag", nullptr, "Standard");
+	ResourceManager::LoadShader("Assets/shaders/Unlit.vert", "Assets/shaders/Unlit.frag", nullptr, "Unlit");
+	//ResourceManager::LoadShader("Assets/shaders/Particles/Particles.vert", "Assets/shaders/Particles/Particles.frag", "Assets/shaders/Particles/Particles.geom", "Particles");
+	ResourceManager::LoadShader("Assets/shaders/Particles/Particles.vert", "Assets/shaders/Particles/Particles.frag", nullptr, "Particles");
+
+	//ResourceManager::LoadShader("Assets/shaders/Lighting.vert", "Assets/shaders/Lighting.frag", nullptr, "Lighting");
+	//ResourceManager::LoadShader("Assets/shaders/ScreenShader.vert", "Assets/shaders/ScreenShader.frag", nullptr, "ScreenShader");
+}
+
+// TODO: Moving these somewhere more appropriate
+void ResourceManager::LoadTextures()
+{
+	ResourceManager::LoadTexture("Assets/textures/Grid/texture_diffuse.psd", false, true, "Grid");
+
+	ResourceManager::LoadTexture("Assets/textures/GrassTexture.psd", false, false, "GrassTexture");
+	ResourceManager::GetTexture("GrassTexture").SetFiltering(false);
+
+	ResourceManager::LoadTexture("Assets/textures/particle.psd", false, true, "Particle");
+}
+
+// TODO: Moving these somewhere more appropriate
+void ResourceManager::LoadMaterials()
+{
+	ResourceManager::LoadMaterial("GridMaterial");
+	ResourceManager::GetMaterial("GridMaterial").textures.push_back(ResourceManager::GetTexture("Grid"));
+	ResourceManager::GetMaterial("GridMaterial").shader = ResourceManager::GetShader("Grid");
+
+	ResourceManager::LoadMaterial("TerrainMaterial");
+	ResourceManager::GetMaterial("TerrainMaterial").textures.push_back(ResourceManager::GetTexture("GrassTexture"));
+
+	ResourceManager::LoadMaterial("LightingMat");
+	ResourceManager::GetMaterial("LightingMat").shader = ResourceManager::GetShader("Lighting");
+
+	ResourceManager::LoadMaterial("Particles");
+	ResourceManager::GetMaterial("Particles").shader = ResourceManager::GetShader("Particles");
+	ResourceManager::GetMaterial("Particles").textures.push_back(ResourceManager::GetTexture("Particle"));
+}
+
+// TODO: Moving these somewhere more appropriate
+void ResourceManager::LoadModels()
+{
+	//test = Model("Assets/resources/nanosuit/nanosuit.obj");
+
+	//TextRenderer::Init();
+	//TextRenderer::SetShader(ResourceManager::GetShader("GUIText"));
+}
+
 void ResourceManager::UpdateProjection(Matrix4 projection)
 {
 	// Set projection uniform in all shaders

@@ -8,6 +8,7 @@
 
 namespace Graphyte {
 	class Camera;
+	class ShadowMap;
 
 	class Renderer : public Component {
 	private:

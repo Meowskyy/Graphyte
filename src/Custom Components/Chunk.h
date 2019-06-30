@@ -21,6 +21,7 @@ namespace Graphyte {
 
 		MeshRenderer* meshRenderer;
 		Mesh* mesh;
+		Collider* col;
 
 		Vector2 tStone = Vector2(0, 0);
 		float tUnit = 1.0f;
@@ -39,7 +40,7 @@ namespace Graphyte {
 			meshRenderer->SetMaterial(ResourceManager::GetMaterial("TerrainMaterial"));
 			//meshRenderer->SetMaterial(ResourceManager::GetMaterial("Standard"));
 
-			gameObject->AddComponent<Collider>();
+			col = &gameObject->AddComponent<Collider>();
 		}
 
 		void InitializeChunk()
@@ -99,6 +100,9 @@ namespace Graphyte {
 			mesh->RecalculateNormals();
 			mesh->SetupMesh();
 
+			//col->mesh = mesh;
+			col->SetMesh(*mesh);
+			//col->CreateConvex();
 
 			meshRenderer->RecalculateBoundingBox();
 		}

@@ -14,13 +14,14 @@ namespace Graphyte {
 
 	class Rigidbody : public Component {
 	private:
-
+		bool isGrounded = false;
 	public:
 		float mass = 1000;
 		float bounciness = 0.0f;
 		Vector3 momentum;
 		Vector3 velocity;
 		Vector3 force;
+		bool useGravity = true;
 
 		Rigidbody() = default;
 
@@ -29,13 +30,18 @@ namespace Graphyte {
 
 		void FixedUpdate();
 
-		void OnCollisionEnter(const GameObject& gameObject) {
-			//std::cout << "Collision with: " << gameObject->transform.name << "\n";
+		void OnCollisionEnter(Collider& collider) {
+			isGrounded = true;
+			velocity.y = 0;
 		}
 
-		void OnCollisionExit()
-		{
+		void OnCollisionStay(Collider& collider) {
+			//isGrounded = true;
+			//velocity.y = 0;
+		}
 
+		void OnCollisionExit(Collider& collider) {
+			isGrounded = false;
 		}
 
 		void Recalculate()

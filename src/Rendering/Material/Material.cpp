@@ -42,6 +42,4 @@ void Material::Use()
 		// and finally bind the texture
 		glBindTexture(GL_TEXTURE_2D, textures[i].ID);
 	}
-
-	glActiveTexture(GL_TEXTURE1);
 }
