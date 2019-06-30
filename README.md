@@ -25,6 +25,12 @@ and put it in the same folder as the Graphyte.exe that you built from the visual
 ```
 Whats the performance like?
 - Nonexistant, since barely any optimizations have been made
+
+Tested on
+- GPU: AMD R9 290X
+- CPU: Intel i7-5820k
 ```
+
+
 
 ### Links
